@@ -576,6 +576,10 @@ void RENDER_Init(Section * sec) {
 	render.pal.first=256;
 	render.pal.last=0;
 	render.aspect=section->Get_bool("aspect");
+	//################# XBRZ support ############################
+	//enforce xBRZ preconditions; alas there seems no single place to do this
+	render.aspect = false;
+	//################# /XBRZ support ############################
 	render.frameskip.max=section->Get_int("frameskip");
 	render.frameskip.count=0;
 	std::string cline;
@@ -590,6 +594,10 @@ void RENDER_Init(Section * sec) {
 	Prop_multival* prop = section->Get_multival("scaler");
 	scaler = prop->GetSection()->Get_string("type");
 	std::string f = prop->GetSection()->Get_string("force");
+	//################# XBRZ support ############################
+	//enforce xBRZ preconditions; alas there seems no single place to do this
+	scaler = "none";
+	//################# /XBRZ support ############################
 	render.scale.forced = false;
 	if(f == "forced") render.scale.forced = true;
    
