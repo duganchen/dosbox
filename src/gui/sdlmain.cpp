@@ -32,18 +32,19 @@
 #include <process.h>
 #endif
 
-//################# XBRZ support ############################
+#include "cross.h"
+#include "SDL.h"
+
+#include "dosbox.h"
+
+#ifdef C_XBRZ
 #include "xbrz.h"
 #include <tbb/task_scheduler_init.h>
 #include <tbb/parallel_for.h>
 #include <tbb/task_group.h>
 #include <cmath>
-//################# /XBRZ support ############################
+#endif
 
-#include "cross.h"
-#include "SDL.h"
-
-#include "dosbox.h"
 #include "video.h"
 #include "mouse.h"
 #include "pic.h"
