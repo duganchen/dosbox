@@ -892,7 +892,7 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 		return false;
 	switch (sdl.desktop.type) {
 	case SCREEN_SURFACE:
-		//################# XBRZ support ############################
+#ifdef C_XBRZ
 		if (supportsXBRZ(*sdl.surface->format)) //let dosbox render into a temporary buffer
 		{
 			renderBuffer.resize(sdl.draw.width * sdl.draw.height);
@@ -900,7 +900,7 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 			pitch  = sdl.draw.width * sizeof(uint32_t);
 		}
 		else
-		//################# /XBRZ support ############################
+#endif
 
 		if (sdl.blit.surface) {
 			if (SDL_MUSTLOCK(sdl.blit.surface) && SDL_LockSurface(sdl.blit.surface))
