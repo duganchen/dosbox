@@ -13,6 +13,8 @@
 // * do so, delete this exception statement from your version.                *
 // ****************************************************************************
 
+#ifdef C_XBRZ
+
 #include "xbrz.h"
 #include <cassert>
 #include <algorithm>
@@ -1082,3 +1084,5 @@ void xbrz::nearestNeighborScale(const uint32_t* src, int srcWidth, int srcHeight
             break;
     }
 }
+
+#endif
