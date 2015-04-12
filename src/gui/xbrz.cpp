@@ -13,6 +13,8 @@
 // * do so, delete this exception statement from your version.                *
 // ****************************************************************************
 
+#include "config.h"
+
 #ifdef C_XBRZ
 
 #include "xbrz.h"
