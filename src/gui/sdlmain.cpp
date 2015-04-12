@@ -962,7 +962,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 	switch (sdl.desktop.type) {
 	case SCREEN_SURFACE:
 
-		//################# XBRZ support ############################
+#ifdef C_XBRZ
 		if (supportsXBRZ(*sdl.surface->format))
 		{
 			const int srcWidth  = sdl.draw.width;
@@ -1091,7 +1091,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		}
 		else
 
-		//################# /XBRZ support ############################
+#endif
 
 		if (SDL_MUSTLOCK(sdl.surface)) {
 			if (sdl.blit.surface) {
