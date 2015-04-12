@@ -547,11 +547,12 @@ dosurface:
 		sdl.clip.w=width;
 		sdl.clip.h=height;
 		if (sdl.desktop.fullscreen) {
-			//################# XBRZ support ############################
+#ifdef C_XBRZ
 			// use full screen resolution for xBRZ scaling
 			if (true) {
-			// if (sdl.desktop.full.fixed) {
-			//################# XBRZ support ############################
+#else
+			if (sdl.desktop.full.fixed) {
+#endif
 				sdl.clip.x=(Sint16)((sdl.desktop.full.width-width)/2);
 				sdl.clip.y=(Sint16)((sdl.desktop.full.height-height)/2);
 				sdl.surface=SDL_SetVideoMode_Wrap(sdl.desktop.full.width,sdl.desktop.full.height,bpp,
@@ -873,7 +874,7 @@ void GFX_RestoreMode(void) {
 }
 
 
-//################# XBRZ support ############################
+#ifdef C_XBRZ
 std::vector<uint32_t> renderBuffer;
 
 bool supportsXBRZ(const SDL_PixelFormat& fmt)
@@ -883,7 +884,7 @@ bool supportsXBRZ(const SDL_PixelFormat& fmt)
 		   fmt.Gmask == 0x00ff00 && //xBRZ scaler needs BGRA byte order
 		   fmt.Bmask == 0x0000ff;   //
 }
-//################# /XBRZ support ############################
+#endif
 
 
 bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
