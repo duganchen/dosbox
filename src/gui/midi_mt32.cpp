@@ -1,3 +1,4 @@
+#include "config.h"
 #ifdef C_MUNT
 
 #include <SDL_thread.h>
