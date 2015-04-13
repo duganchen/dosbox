@@ -17,4 +17,4 @@ dosbox_LDADD = cpu/libcpu.a debug/libdebug.a dos/libdos.a fpu/libfpu.a  hardware
 
 EXTRA_DIST = winres.rc dosbox.ico
 
-
+LIBS +=  -lmt32emu
