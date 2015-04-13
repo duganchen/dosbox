@@ -1,3 +1,5 @@
+#ifdef C_MUNT
+
 #include <SDL_thread.h>
 #include <SDL_endian.h>
 #include "control.h"
@@ -263,3 +265,5 @@ void MidiHandler_mt32::MT32ReportHandler::printDebug(const char *fmt, va_list li
 		LOG_MSG(s);
 	}
 }
+
+#endif // C_MUNT
