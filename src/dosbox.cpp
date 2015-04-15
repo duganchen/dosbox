@@ -491,7 +491,12 @@ void DOSBOX_Init(void) {
 	
 	const char* mputypes[] = { "intelligent", "uart", "none",0};
 	// FIXME: add some way to offer the actually available choices.
-	const char *devices[] = { "default", "win32", "alsa", "oss", "coreaudio", "coremidi", "mt32", "fluidsynth", "none", 0};
+
+#ifdef C_FLUIDSYNTH
+	const char *devices[] = { "default", "win32", "alsa", "oss", "coreaudio", "coremidi", "fluidsynth", "none", 0};
+#else
+	const char *devices[] = { "default", "win32", "alsa", "oss", "coreaudio", "coremidi", "none", 0};
+#endif
 	Pstring = secprop->Add_string("mpu401",Property::Changeable::WhenIdle,"intelligent");
 	Pstring->Set_values(mputypes);
 	Pstring->Set_help("Type of MPU-401 to emulate.");
@@ -507,6 +512,7 @@ void DOSBOX_Init(void) {
 	                  "  In that case, add 'delaysysex', for example: midiconfig=2 delaysysex\n"
 	                  "  See the README/Manual for more details.");
 	
+#ifdef C_FLUIDSYNTH
 	const char *fluiddrivers[] = {"pulseaudio", "alsa", "oss", "coreaudio", "dsound", "portaudio", "sndman", "jack", "file", "default",0};
 	Pstring = secprop->Add_string("fluid.driver",Property::Changeable::WhenIdle,"default");
 	Pstring->Set_values(fluiddrivers);
@@ -571,6 +577,7 @@ void DOSBOX_Init(void) {
 	Pint = secprop->Add_int("fluid.chorus.type",Property::Changeable::WhenIdle,0);
 	Pint->Set_values(fluidchorustypes);
 	Pint->Set_help("Fluidsynth chorus type. 0 is sine wave, 1 is triangle wave.");
+#endif
 
 #if C_DEBUG
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
