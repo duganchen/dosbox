@@ -491,7 +491,12 @@ void DOSBOX_Init(void) {
 	
 	const char* mputypes[] = { "intelligent", "uart", "none",0};
 	// FIXME: add some way to offer the actually available choices.
+#ifdef C_MUNT
 	const char *devices[] = { "default", "win32", "alsa", "oss", "coreaudio", "coremidi", "mt32", "none", 0};
+#else
+	const char *devices[] = { "default", "win32", "alsa", "oss", "coreaudio", "coremidi", "none", 0};
+#endif
+
 	Pstring = secprop->Add_string("mpu401",Property::Changeable::WhenIdle,"intelligent");
 	Pstring->Set_values(mputypes);
 	Pstring->Set_help("Type of MPU-401 to emulate.");
