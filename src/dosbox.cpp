@@ -512,7 +512,9 @@ void DOSBOX_Init(void) {
 	                  "  In that case, add 'delaysysex', for example: midiconfig=2 delaysysex\n"
 	                  "  See the README/Manual for more details.");
 
+#ifdef C_MUNT
 #include "mt32options.h"
+#endif
 
 #if C_DEBUG
 	secprop=control->AddSection_prop("debug",&DEBUG_Init);
