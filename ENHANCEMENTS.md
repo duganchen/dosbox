@@ -1,6 +1,6 @@
 Currently in sync with revision 3910.
 
-# FluidSynth
+# Soundfont Support
 
 ## Requirements
 
