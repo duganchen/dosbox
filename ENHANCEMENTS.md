@@ -9,8 +9,9 @@ Currently in sync with revision 3910.
 ## Configuration
 
     [sdl]
-	output=surface
+	fullscreen=true
 	fullresolution=original
+	output=surface
 
 	[render]
 	aspect=false
