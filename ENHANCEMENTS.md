@@ -16,6 +16,6 @@ Currently in sync with revision 3910.
 	aspect=false
 	scaler=none
 
-## Patches:
+## Patch:
 
 * [xBRZ 1.3](http://www.vogons.org/viewtopic.php?t=34125)
