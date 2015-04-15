@@ -1430,11 +1430,6 @@ static void GUI_StartUp(Section * sec) {
 	sdl.mouse.sensitivity=section->Get_int("sensitivity");
 	std::string output=section->Get_string("output");
 
-#ifdef C_XBRZ
-    //enforce xBRZ preconditions; alas there seems no single place to do this
-    output = "surface";
-#endif
-
 	/* Setup Mouse correctly if fullscreen */
 	if(sdl.desktop.fullscreen) GFX_CaptureMouse();
 
