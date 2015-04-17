@@ -442,7 +442,7 @@ fi
 
 AH_TEMPLATE(C_NO_FLUIDSYNTH_NO_MUNT,[define to 1 if you have neither fluidsynt nor munt])
 if test x$have_fluidsynth_lib = xno -a x$have_mt32_lib = xno ; then
-	AC_DEFINE(,1)
+	AC_DEFINE(C_NO_FLUIDSYNTH_NO_MUNT,1)
 fi
 
 AH_TEMPLATE(C_MUNT_ONLY,[define to 1 if you have munt but not fluidsynth])
