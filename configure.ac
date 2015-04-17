@@ -428,6 +428,30 @@ if test x$have_tbb_lib = xyes ; then
    CXXFLAGS="$CXXFLAGS -std=c++11"
 else
 	AC_MSG_WARN([Cannot find tbb, xBRZ scaler disabled.])
+AH_TEMPLATE(C_MUNT,[define to 1 if you have munt lib])
+AC_CHECK_LIB(mt32emu, main, have_mt32emu_lib=yes, have_mt32emu_lib=no, )
+if test x$have_mt32emu_lib = xyes ; then
+   LIBS="$LIBS -lmt32emu"
+   AC_DEFINE(C_MUNT,1)
+   AC_MSG_RESULT(yes)
+else
+	AC_MSG_WARN([Cannot find munt, Roland MIDI device emulation disabled.])
+fi
+
+if test x$have_fluidsynth_lib = xno -a x$have_mt32_lib = xno ; then
+	AC_DEFINE(C_NO_FLUIDSYNTH_NO_MUNT,1)
+fi
+
+if test x$have_fluidsynth_lib = xno -a x$have_mt32_lib = xyes ; then
+	AC_DEFINE(C_MUNT_ONLY,1)
+fi
+
+if test x$have_fluidsynt_lib = xyes -a x$have_mt32_lib = xno ; then
+	AC_DEFINE(C_FLUIDSYNTH_ONLY,1)
+fi
+
+if test x$have_fluidsynth_lib = xyes -a x$have_mt32_lib = xyes ; then
+	AC_DEFINE(C_FLUIDSYNTH_AND_MUNT,1)
 fi
 
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
