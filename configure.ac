@@ -440,18 +440,22 @@ else
 	AC_MSG_WARN([Cannot find munt, Roland MIDI device emulation disabled.])
 fi
 
+AH_TEMPLATE(C_NO_FLUIDSYNTH_NO_MUNT,[define to 1 if you have neither fluidsynt nor munt])
 if test x$have_fluidsynth_lib = xno -a x$have_mt32_lib = xno ; then
-	AC_DEFINE(C_NO_FLUIDSYNTH_NO_MUNT,1)
+	AC_DEFINE(,1)
 fi
 
+AH_TEMPLATE(C_MUNT_ONLY,[define to 1 if you have munt but not fluidsynth])
 if test x$have_fluidsynth_lib = xno -a x$have_mt32_lib = xyes ; then
 	AC_DEFINE(C_MUNT_ONLY,1)
 fi
 
+AH_TEMPLATE(C_FLUIDSYNTH_ONLY,[define to 1 if you have fluidsynth but not munt])
 if test x$have_fluidsynt_lib = xyes -a x$have_mt32_lib = xno ; then
 	AC_DEFINE(C_FLUIDSYNTH_ONLY,1)
 fi
 
+AH_TEMPLATE(C_FLUIDSYNTH_AND_MUNT,[define to 1 if you have fluidsynth and munt])
 if test x$have_fluidsynth_lib = xyes -a x$have_mt32_lib = xyes ; then
 	AC_DEFINE(C_FLUIDSYNTH_AND_MUNT,1)
 fi
