@@ -410,7 +410,7 @@ fi
 
 AH_TEMPLATE(C_FLUIDSYNTH,[Define to 1 to enable fluidsynth MIDI synthesis])
 AC_CHECK_HEADER(fluidsynth.h,have_fluidsynth_h=yes,)
-AC_CHECK_LIB(fluidsynth, new_fluid_synth, have_fluidsynth_lib=yes,,)
+AC_CHECK_LIB(fluidsynth, new_fluid_synth, have_fluidsynth_lib=yes, have_fluidsynth_lib=no,)
 if test x$have_fluidsynth_lib = xyes -a x$have_fluidsynth_h = xyes ; then
   LIBS="$LIBS -lfluidsynth"
   AC_DEFINE(C_FLUIDSYNTH,1)
@@ -441,22 +441,22 @@ else
 fi
 
 AH_TEMPLATE(C_NO_FLUIDSYNTH_NO_MUNT,[define to 1 if you have neither fluidsynt nor munt])
-if test x$have_fluidsynth_lib = xno -a x$have_mt32_lib = xno ; then
+if test x$have_fluidsynth_lib = xno -a x$have_mt32emu_lib = xno ; then
 	AC_DEFINE(C_NO_FLUIDSYNTH_NO_MUNT,1)
 fi
 
 AH_TEMPLATE(C_MUNT_ONLY,[define to 1 if you have munt but not fluidsynth])
-if test x$have_fluidsynth_lib = xno -a x$have_mt32_lib = xyes ; then
+if test x$have_fluidsynth_lib = xno -a x$have_mt32emu_lib = xyes ; then
 	AC_DEFINE(C_MUNT_ONLY,1)
 fi
 
 AH_TEMPLATE(C_FLUIDSYNTH_ONLY,[define to 1 if you have fluidsynth but not munt])
-if test x$have_fluidsynt_lib = xyes -a x$have_mt32_lib = xno ; then
+if test x$have_fluidsynth_lib = xyes -a x$have_mt32emu_lib = xno ; then
 	AC_DEFINE(C_FLUIDSYNTH_ONLY,1)
 fi
 
 AH_TEMPLATE(C_FLUIDSYNTH_AND_MUNT,[define to 1 if you have fluidsynth and munt])
-if test x$have_fluidsynth_lib = xyes -a x$have_mt32_lib = xyes ; then
+if test x$have_fluidsynth_lib = xyes -a x$have_mt32emu_lib = xyes ; then
 	AC_DEFINE(C_FLUIDSYNTH_AND_MUNT,1)
 fi
 
