@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Enhanced DosBox Fork
 
 Currently in sync with revision 3910.
