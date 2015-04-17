@@ -427,7 +427,7 @@ if test x$have_tbb_lib = xyes ; then
    AC_MSG_RESULT(yes)
    CXXFLAGS="$CXXFLAGS -std=c++11"
 else
-	AC_MSG_WARN([Can't find tbb, xBRZ scaler disabled.])
+	AC_MSG_WARN([Cannot find tbb, xBRZ scaler disabled.])
 fi
 
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
