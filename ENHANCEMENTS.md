@@ -36,7 +36,7 @@ Set as shown.
 
 ## Soundfont Support
 
-Specify a General Midi soundfont for DosBox to use. You no longer need to have
+Specify a General MIDI soundfont for DosBox to use. You no longer need to have
 FluidSynth running as an ALSA server in the background.
 
 ### Requirements
