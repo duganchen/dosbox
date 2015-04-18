@@ -1,6 +1,12 @@
 # Enhanced DosBox Fork
 
-Currently in sync with revision 3910.
+This is an enhanced DosBox fork. It is targeted at Linux and has a number of added
+features. Each feature will be built if the needed dependency is available at build-time.
+If not, then it will be built without that feature.
+
+It is currently in sync with revision 3910.
+
+The features are:
 
 ## Soundfont Support
 
@@ -14,7 +20,7 @@ Set mididevice as shown, fluid.driver and fluid.soundfont as appropriate.
 
 	[midi]
 	mididevice=fluidsynth
-	fluid.driver=alsa # set as appropriate
+	fluid.driver=alsa
 	fluid.soundfont=/path/to/soundfont.sf2
 
 ### Patch:
