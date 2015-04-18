@@ -492,21 +492,23 @@ void DOSBOX_Init(void) {
 	const char* mputypes[] = { "intelligent", "uart", "none",0};
 	// FIXME: add some way to offer the actually available choices.
 	
-#ifdef C_FLUIDSYNTH_AND_MUNT
-	const char *devices[] = { "default", "win32", "alsa", "oss", "coreaudio", "coremidi", "fluidsynth", "mt32", "none", 0};
+	const char *devices[] = {
+		"default",
+		"win32",
+		"alsa",
+		"oss",
+		"coreaudio",
+		"coremidi",
+#ifdef C_FLUIDSYNTH
+		"fluidsynth",
 #endif
+#ifdef C_MUNT
+		"mt32",
+#endif
+		"none",
+		0
+	};
 
-#ifdef C_FLUIDSYNTH_ONLY
-	const char *devices[] = { "default", "win32", "alsa", "oss", "coreaudio", "coremidi", "fluidsynth", "none", 0};
-#endif
-
-#ifdef C_MUNT_ONLY
-	const char *devices[] = { "default", "win32", "alsa", "oss", "coreaudio", "coremidi", "mt32", "none", 0};
-#endif
-
-#ifdef C_NO_FLUIDSYNTH_NO_MUNT
-	const char *devices[] = { "default", "win32", "alsa", "oss", "coreaudio", "coremidi", "none", 0};
-#endif
 
 	Pstring = secprop->Add_string("mpu401",Property::Changeable::WhenIdle,"intelligent");
 	Pstring->Set_values(mputypes);
