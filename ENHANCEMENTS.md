@@ -59,8 +59,8 @@ Set mididevice as shown, fluid.driver and fluid.soundfont as appropriate.
 
 ## MT-32 Emulation
 
-Tell DosBox where your MT-32 ROMs, and DosBox will use them for MT-32 emulation.
-You no longer need to have Munt running in the background.
+Tell DosBox where your MT-32 ROMs are, and DosBox will use them for MT-32 emulation.
+You no longer need to have munt-qt running in the background.
 
 ### Requirements
 
