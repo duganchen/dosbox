@@ -8,26 +8,10 @@ It is currently in sync with revision 3910.
 
 The features are:
 
-## Soundfont Support
-
-### Requirements
-
-* [FluidSynth](http://www.fluidsynth.org/)
-
-### Configuration
-
-Set mididevice as shown, fluid.driver and fluid.soundfont as appropriate.
-
-	[midi]
-	mididevice=fluidsynth
-	fluid.driver=alsa
-	fluid.soundfont=/path/to/soundfont.sf2
-
-### Patch:
-
-* [FluidSynth](http://www.vogons.org/viewtopic.php?f=32&t=27831&start=20#p385413)
-
 ## xBRZ scaling
+
+Use the new xBRZ scaler. Like all scalers, this works best if the game uses pixel art that
+isn't already scaled. 
 
 ### Requirements
 
@@ -50,7 +34,33 @@ Set as shown.
 
 * [xBRZ 1.3](http://www.vogons.org/viewtopic.php?t=34125)
 
+## Soundfont Support
+
+Specify a General Midi soundfont for DosBox to use. You no longer need to have
+FluidSynth running as an ALSA server in the background.
+
+### Requirements
+
+* [FluidSynth](http://www.fluidsynth.org/)
+
+### Configuration
+
+Set mididevice as shown, fluid.driver and fluid.soundfont as appropriate.
+
+	[midi]
+	mididevice=fluidsynth
+	fluid.driver=alsa
+	fluid.soundfont=/path/to/soundfont.sf2
+
+### Patch:
+
+* [FluidSynth](http://www.vogons.org/viewtopic.php?f=32&t=27831&start=20#p385413)
+
+
 ## MT-32 Emulation
+
+Tell DosBox where your MT-32 ROMs, and DosBox will use them for MT-32 emulation.
+You no longer need to have Munt running in the background.
 
 ### Requirements
 
