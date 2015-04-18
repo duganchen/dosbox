@@ -36,6 +36,15 @@
 #include "SDL.h"
 
 #include "dosbox.h"
+
+#ifdef C_XBRZ
+#include "xbrz.h"
+#include <tbb/task_scheduler_init.h>
+#include <tbb/parallel_for.h>
+#include <tbb/task_group.h>
+#include <cmath>
+#endif
+
 #include "video.h"
 #include "mouse.h"
 #include "pic.h"
@@ -538,7 +547,12 @@ dosurface:
 		sdl.clip.w=width;
 		sdl.clip.h=height;
 		if (sdl.desktop.fullscreen) {
+#ifdef C_XBRZ
+			// use full screen resolution for xBRZ scaling
+			if (true) {
+#else
 			if (sdl.desktop.full.fixed) {
+#endif
 				sdl.clip.x=(Sint16)((sdl.desktop.full.width-width)/2);
 				sdl.clip.y=(Sint16)((sdl.desktop.full.height-height)/2);
 				sdl.surface=SDL_SetVideoMode_Wrap(sdl.desktop.full.width,sdl.desktop.full.height,bpp,
@@ -860,11 +874,34 @@ void GFX_RestoreMode(void) {
 }
 
 
+#ifdef C_XBRZ
+std::vector<uint32_t> renderBuffer;
+
+bool supportsXBRZ(const SDL_PixelFormat& fmt)
+{
+	return fmt.BytesPerPixel == sizeof(uint32_t) &&
+		   fmt.Rmask == 0xff0000 && //
+		   fmt.Gmask == 0x00ff00 && //xBRZ scaler needs BGRA byte order
+		   fmt.Bmask == 0x0000ff;   //
+}
+#endif
+
+
 bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 	if (!sdl.active || sdl.updating)
 		return false;
 	switch (sdl.desktop.type) {
 	case SCREEN_SURFACE:
+#ifdef C_XBRZ
+		if (supportsXBRZ(*sdl.surface->format)) //let dosbox render into a temporary buffer
+		{
+			renderBuffer.resize(sdl.draw.width * sdl.draw.height);
+			pixels = renderBuffer.empty() ? nullptr : reinterpret_cast<Bit8u*>(&renderBuffer[0]);
+			pitch  = sdl.draw.width * sizeof(uint32_t);
+		}
+		else
+#endif
+
 		if (sdl.blit.surface) {
 			if (SDL_MUSTLOCK(sdl.blit.surface) && SDL_LockSurface(sdl.blit.surface))
 				return false;
@@ -924,6 +961,138 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 	sdl.updating=false;
 	switch (sdl.desktop.type) {
 	case SCREEN_SURFACE:
+
+#ifdef C_XBRZ
+		if (supportsXBRZ(*sdl.surface->format))
+		{
+			const int srcWidth  = sdl.draw.width;
+			const int srcHeight = sdl.draw.height;
+			if (renderBuffer.size() == srcWidth * srcHeight &&
+				srcWidth > 0 && srcHeight > 0)
+			{
+				//we assume renderBuffer is *not* scaled!
+				//=> set dosbox.conf "scaler=none" and "aspect=false"
+
+				const int outputHeight = sdl.surface->h; //in full screen mode surface == screen
+				const int outputWidth  = sdl.surface->w; //
+
+				//scale to full screen (preserving input aspect)
+				//aspectOutput = outputWidth / outputHeight;
+				int clipX = 0;
+				int clipY = 0;
+				int clipWidth  = outputWidth;
+				int clipHeight = outputHeight;
+				//const double srcAspect = 1.0 * srcWidth / srcHeight;
+				const double srcAspect = 4.0 / 3;
+
+				if (outputWidth > srcAspect * outputHeight) //output broader than input => black bars left and right
+				{
+					clipWidth = static_cast<int>(outputHeight * srcAspect);
+					clipX	 = (outputWidth - clipWidth) / 2;
+				}
+				else //black bars top and bottom
+				{
+					clipHeight = static_cast<int>(outputWidth / srcAspect);
+					clipY = (outputHeight - clipHeight) / 2;
+				}
+
+				//1. xBRZ-scale renderBuffer into xbrzBuffer
+				int scalingFactor = static_cast<int>(std::sqrt(1.0 * clipWidth * clipHeight / (srcWidth * srcHeight)) + 0.5);
+				//the ideal scaling factor scales source image to have roughly similar pixel count like target
+
+				int xbrzWidth  = 0;
+				int xbrzHeight = 0;
+				static std::vector<uint32_t> xbrzBuffer;
+				if (scalingFactor >= 2)
+				{
+					scalingFactor = std::min(scalingFactor, 5); //xBRZ scaling supports up to 5xBRZ
+
+					xbrzWidth  = srcWidth  * scalingFactor;
+					xbrzHeight = srcHeight * scalingFactor;
+					xbrzBuffer.resize(xbrzWidth * xbrzHeight);
+
+					const uint32_t* renderBuf = &renderBuffer[0]; //help VS compiler a little + support capture by value
+					uint32_t*	   xbrzBuf   = &xbrzBuffer  [0];
+
+					const size_t TASK_GRANULARITY = 16; //may be as small as somewhere around 10 before slowing down
+					if (changedLines) //perf: in worst case similar to full input scaling
+					{
+						tbb::task_group parallelScale; //perf: task_group + parallel_for is slightly faster than pure prallel_for
+						int yLast = 0;
+						Bitu y = 0, index = 0;
+						while (y < sdl.draw.height)
+						{
+							if (!(index & 1))
+								y += changedLines[index];
+							else
+							{
+								const int sliceFirst = y;
+								const int sliceLast  = y + changedLines[index];
+								y += changedLines[index];
+
+								int yFirst = std::max(yLast, sliceFirst - 2); //we need to update two adjacent lines as well since they are analyzed by xBRZ!
+								yLast = std::min(srcHeight, sliceLast + 2);   //(and make sure to not overlap with last slice!)
+
+								if (yFirst < yLast)
+									parallelScale.run([=]
+								{
+									tbb::parallel_for(tbb::blocked_range<int>(yFirst, yLast, TASK_GRANULARITY),
+										[=](const tbb::blocked_range<int>& r)
+									{
+										xbrz::scale(scalingFactor, renderBuf, xbrzBuf, srcWidth, srcHeight, xbrz::ColorFormat::RGB, xbrz::ScalerCfg(), r.begin(), r.end());
+									});
+								});
+							}
+							index++;
+						}
+						parallelScale.wait();
+					}
+					else //process complete input image
+					{
+						tbb::parallel_for(tbb::blocked_range<int>(0, srcHeight, TASK_GRANULARITY),
+										  [=](const tbb::blocked_range<int>& r)
+						{
+							xbrz::scale(scalingFactor, renderBuf, xbrzBuf, srcWidth, srcHeight, xbrz::ColorFormat::RGB, xbrz::ScalerCfg(), r.begin(), r.end());
+						});
+					}
+				}
+				else //no scaling
+				{
+					xbrzWidth  = srcWidth;
+					xbrzHeight = srcHeight;
+					xbrzBuffer = renderBuffer;
+
+					//don't change aspect when showing unscaled image:
+					clipWidth  = std::min(srcWidth, outputWidth);
+					clipHeight = std::min(srcHeight, outputHeight);
+					clipX	 = (outputWidth  - clipWidth ) / 2;
+					clipY	 = (outputHeight - clipHeight) / 2;
+				}
+
+				//2. nearest-neighbor-scale xbrzBuffer into output surface clipping area
+				const bool mustLock = SDL_MUSTLOCK(sdl.surface);
+				if (mustLock) SDL_LockSurface(sdl.surface);
+				if (sdl.surface->pixels) //if locking fails, this can be nullptr
+				{
+					const size_t TASK_GRANULARITY = 8;
+					uint32_t* clipTrg = reinterpret_cast<uint32_t*>(static_cast<char*>(sdl.surface->pixels) + clipY * sdl.surface->pitch + clipX * sizeof(uint32_t));
+
+					tbb::parallel_for(tbb::blocked_range<int>(0, clipHeight, TASK_GRANULARITY),
+									  [=](const tbb::blocked_range<int>& r)
+					{
+						xbrz::nearestNeighborScale(&xbrzBuffer[0], xbrzWidth, xbrzHeight, xbrzWidth * sizeof(uint32_t),
+												   clipTrg, clipWidth, clipHeight, sdl.surface->pitch,
+												   xbrz::NN_SCALE_SLICE_TARGET, r.begin(), r.end()); //perf: going over target is by factor 4 faster than going over source for similar image sizes
+					});
+				}
+				if (mustLock) SDL_UnlockSurface(sdl.surface);
+				SDL_Flip(sdl.surface);
+			}
+		}
+		else
+
+#endif
+
 		if (SDL_MUSTLOCK(sdl.surface)) {
 			if (sdl.blit.surface) {
 				SDL_UnlockSurface(sdl.blit.surface);

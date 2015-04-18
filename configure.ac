@@ -408,6 +408,38 @@ else
    AC_MSG_RESULT(no)
 fi
 
+AH_TEMPLATE(C_FLUIDSYNTH,[Define to 1 to enable fluidsynth MIDI synthesis])
+AC_CHECK_HEADER(fluidsynth.h,have_fluidsynth_h=yes,)
+AC_CHECK_LIB(fluidsynth, new_fluid_synth, have_fluidsynth_lib=yes, have_fluidsynth_lib=no,)
+if test x$have_fluidsynth_lib = xyes -a x$have_fluidsynth_h = xyes ; then
+  LIBS="$LIBS -lfluidsynth"
+  AC_DEFINE(C_FLUIDSYNTH,1)
+else
+  AC_MSG_WARN([fluidsynth MIDI synthesis not available])
+fi
+
+AH_TEMPLATE(C_XBRZ,[Define to 1 to use xBRZ scaling support])
+AC_CHECK_LIB(tbb, main, have_tbb_lib=yes, have_tbb_lib=no , )
+AC_MSG_CHECKING(Intel(R) Thread Building Blocks)
+if test x$have_tbb_lib = xyes ; then
+   LIBS="$LIBS -ltbb"
+   AC_DEFINE(C_XBRZ,1)
+   AC_MSG_RESULT(yes)
+   CXXFLAGS="$CXXFLAGS -std=c++11"
+else
+	AC_MSG_WARN([Cannot find tbb, xBRZ scaler disabled.])
+fi
+	
+AH_TEMPLATE(C_MUNT,[define to 1 if you have munt lib])
+AC_CHECK_LIB(mt32emu, main, have_mt32emu_lib=yes, have_mt32emu_lib=no, )
+if test x$have_mt32emu_lib = xyes ; then
+   LIBS="$LIBS -lmt32emu"
+   AC_DEFINE(C_MUNT,1)
+   AC_MSG_RESULT(yes)
+else
+	AC_MSG_WARN([Cannot find munt, Roland MIDI device emulation disabled.])
+fi
+
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
 AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
 AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
