@@ -1,4 +1,4 @@
-Currently in sync with revision 3910.
+Currently in sync with revision 3911.
 
 # Soundfont Support
 
@@ -13,6 +13,6 @@ Currently in sync with revision 3910.
 	fluid.driver=alsa # set as appropriate
 	fluid.soundfont=/path/to/soundfont.sf2
 
-## Patch:
+## Credit:
 
 * [FluidSynth](http://www.vogons.org/viewtopic.php?f=32&t=27831&start=20#p385413)
