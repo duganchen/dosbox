@@ -19,7 +19,7 @@ files.
 Each shader comes in two parts: a vertex shader with a glslv extension, and a fragment shader with a glslf
 extension.
 
-In your dosbox-SVN.conf, set output as shown and glshader to taste. I recommend the SABR-XCOMified shader, which
+In your dosbox-SVN.conf, set output as shown and glshader to taste. I recommend the SABR shader, which
 is variation on the xBR shader.
 
     [sdl]
