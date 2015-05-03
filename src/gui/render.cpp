@@ -229,6 +229,9 @@ void RENDER_EndUpdate( bool abort ) {
 			total += render.frameskip.hadSkip[i];
 		LOG_MSG( "Skipped frame %d %d", PIC_Ticks, (total * 100) / RENDER_SKIP_CACHE );
 #endif
+		// Force output to update the screen even if nothing changed...
+		// works only with custom GLSL shaders (GFX_StartUpdate() was probably not even called)
+		if (render.forceUpdate) GFX_EndUpdate( 0 );
 	}
 	render.frameskip.index = (render.frameskip.index + 1) & (RENDER_SKIP_CACHE - 1);
 	render.updating=false;
@@ -563,6 +566,14 @@ static void ChangeScaler(bool pressed) {
 	RENDER_CallBack( GFX_CallBackReset );
 } */
 
+void RENDER_SetForceUpdate(bool f) {
+	render.forceUpdate = f;
+}
+
+bool RENDER_GetForceUpdate() {
+	return render.forceUpdate;
+}
+
 void RENDER_Init(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 
@@ -578,6 +589,7 @@ void RENDER_Init(Section * sec) {
 	render.aspect=section->Get_bool("aspect");
 	render.frameskip.max=section->Get_int("frameskip");
 	render.frameskip.count=0;
+	render.forceUpdate=false;
 	std::string cline;
 	std::string scaler;
 	//Check for commandline paramters and parse them through the configclass so they get checked against allowed values
