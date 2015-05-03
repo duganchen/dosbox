@@ -24,7 +24,7 @@ is variation on the xBR shader.
 
     [sdl]
 	output=openglnb
-	glshader=SABR-XCOMified
+	glshader=SABR
 
 ### Credit:
 
