@@ -17,11 +17,15 @@
  */
 
 
+#include "SDL_version.h"
+#include "dosbox.h"
+
+#if C_PHYSICAL_CDROM_MOUNT
+
 #if defined (WIN32)
 
 #include <ctype.h>
 
-#include "dosbox.h"
 #include "cdrom.h"
 #include "support.h"
 
@@ -766,3 +770,4 @@ bool CDROM_Interface_Aspi::ReadSectors(PhysPt buffer, bool raw, unsigned long se
 };
 
 #endif
+#endif /* C_PHYSICAL_CDROM_MOUNT */

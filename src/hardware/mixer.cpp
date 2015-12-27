@@ -412,6 +412,9 @@ static void MIXER_Mix_NoSound(void) {
 }
 
 static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
+#if SDL_VERSION_ATLEAST(2,0,0)
+	memset(stream, 0, len);
+#endif
 	Bitu need=(Bitu)len/MIXER_SSIZE;
 	Bit16s * output=(Bit16s *)stream;
 	Bitu reduce;

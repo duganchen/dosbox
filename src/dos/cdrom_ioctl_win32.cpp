@@ -17,6 +17,11 @@
  */
 
 
+#include "SDL_version.h"
+#include "cdrom.h"
+
+#if C_PHYSICAL_CDROM_MOUNT
+
 #if defined (WIN32)
 
 // *****************************************************************
@@ -34,8 +39,6 @@
 #endif
 
 #include <mmsystem.h>
-
-#include "cdrom.h"
 
 // for a more sophisticated implementation of the mci cdda functionality
 // see the SDL sources, which the mci_ functions are based on
@@ -621,3 +624,4 @@ void CDROM_Interface_Ioctl::Close(void) {
 }
 
 #endif
+#endif /* C_PHYSICAL_CDROM_MOUNT */
