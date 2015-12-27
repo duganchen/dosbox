@@ -23,7 +23,6 @@
 #include "mem.h"
 #include "inout.h"
 #include "int10.h"
-#include "mouse.h"
 #include "vga.h"
 
 #define _EGA_HALF_CLOCK		0x0001
@@ -146,7 +145,8 @@ VideoModeBlock ModeList_VGA_Text_350lines[]={
 { 0x000  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,350 ,_EGA_HALF_CLOCK	},
 { 0x001  ,M_TEXT   ,320 ,350 ,40 ,25 ,8 ,14 ,8 ,0xB8000 ,0x0800 ,50  ,449 ,40 ,350 ,_EGA_HALF_CLOCK	},
 { 0x002  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,350 ,0	},
-{ 0x003  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,350 ,0	}
+{ 0x003  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,8 ,0xB8000 ,0x1000 ,100 ,449 ,80 ,350 ,0	},
+{ 0x007  ,M_TEXT   ,720 ,350 ,80 ,25 ,9 ,14 ,8 ,0xB0000 ,0x1000 ,100 ,449 ,80 ,350 ,0	}
 };
 
 VideoModeBlock ModeList_VGA_Tseng[]={
@@ -442,13 +442,15 @@ static void FinishSetMode(bool clearmem) {
 	// Set active page 0
 	INT10_SetActivePage(0);
 	/* Set some interrupt vectors */
-	switch (CurMode->cheight) {
-	case 8:RealSetVec(0x43,int10.rom.font_8_first);break;
-	case 14:RealSetVec(0x43,int10.rom.font_14);break;
-	case 16:RealSetVec(0x43,int10.rom.font_16);break;
+	if (CurMode->mode<=3 || CurMode->mode==7)
+		RealSetVec(0x43,int10.rom.font_8_first);
+	else {
+		switch (CurMode->cheight) {
+		case 8:RealSetVec(0x43,int10.rom.font_8_first);break;
+		case 14:RealSetVec(0x43,int10.rom.font_14);break;
+		case 16:RealSetVec(0x43,int10.rom.font_16);break;
+		}
 	}
-	/* Tell mouse resolution change */
-	Mouse_NewVideoMode();
 }
 
 bool INT10_SetVideoMode_OTHER(Bit16u mode,bool clearmem) {
@@ -685,10 +687,14 @@ bool INT10_SetVideoMode(Bit16u mode) {
 			if ((modeset_ctl&0x90)==0x80) { // 200 lines emulation
 				if (CurMode->mode <= 3) {
 					CurMode = &ModeList_VGA_Text_200lines[CurMode->mode];
+				} else if (CurMode->mode == 7) {
+					CurMode = &ModeList_VGA_Text_350lines[4];
 				}
 			} else if ((modeset_ctl&0x90)==0x00) { // 350 lines emulation
 				if (CurMode->mode <= 3) {
 					CurMode = &ModeList_VGA_Text_350lines[CurMode->mode];
+				} else if (CurMode->mode == 7) {
+					CurMode = &ModeList_VGA_Text_350lines[4];
 				}
 			}
 		}
@@ -900,7 +906,7 @@ bool INT10_SetVideoMode(Bit16u mode) {
 	switch (CurMode->type) {
 	case M_TEXT:
 		max_scanline|=CurMode->cheight-1;
-		underline=mono_mode ? 0x0f : 0x1f; // mode 7 uses a diff underline position
+		underline=mono_mode ? CurMode->cheight-1 : 0x1f; // mode 7 uses underline position
 		break;
 	case M_VGA:
 		underline=0x40;
@@ -916,8 +922,10 @@ bool INT10_SetVideoMode(Bit16u mode) {
 	case M_CGA4:
 		max_scanline|=1;
 		break;
+	default:
+		if (CurMode->vdispend==350) underline=0x0f;
+		break;
 	}
-	if (CurMode->vdispend==350) underline=0x0f;
 
 	IO_Write(crtc_base,0x09);IO_Write(crtc_base+1,max_scanline);
 	IO_Write(crtc_base,0x14);IO_Write(crtc_base+1,underline);
@@ -1006,7 +1014,9 @@ bool INT10_SetVideoMode(Bit16u mode) {
 	if (svgaCard == SVGA_S3Trio) {
 		/* Setup the correct clock */
 		if (CurMode->mode>=0x100) {
-			misc_output|=0xef;		//Select clock 3 
+			if (CurMode->vdispend>480)
+				misc_output|=0xc0;	//480-line sync
+			misc_output|=0x0c;		//Select clock 3 
 			Bitu clock=CurMode->vtotal*8*CurMode->htotal*70;
 			VGA_SetClock(3,clock/1000);
 		}

@@ -212,6 +212,8 @@ struct SDL_Block {
 	Bitu num_joysticks;
 #if defined (WIN32)
 	bool using_windib;
+	// Time when sdl regains focus (alt-tab) in windowed mode
+	Bit32u focus_ticks;
 #endif
 	// state of alt-keys for certain special handlings
 	Bit8u laltstate;
@@ -221,7 +223,7 @@ struct SDL_Block {
 static SDL_Block sdl;
 
 #define SETMODE_SAVES 1  //Don't set Video Mode if nothing changes.
-#define SETMODE_SAVES_CLEAR 0 //Clear the screen, when the Video Mode is reused
+#define SETMODE_SAVES_CLEAR 1 //Clear the screen, when the Video Mode is reused
 SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 #if SETMODE_SAVES
 	static int i_height = 0;
@@ -232,6 +234,7 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 		// I don't see a difference, so disabled for now, as the code isn't finished either
 #if SETMODE_SAVES_CLEAR
 		//TODO clear it.
+#ifdef C_OPENGL
 		if ((flags & SDL_OPENGL)==0) 
 			SDL_FillRect(sdl.surface,NULL,SDL_MapRGB(sdl.surface->format,0,0,0));
 		else {
@@ -239,11 +242,14 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 			glClear(GL_COLOR_BUFFER_BIT);
 			SDL_GL_SwapBuffers();
 		}
-#endif 
+#else //C_OPENGL
+		SDL_FillRect(sdl.surface,NULL,SDL_MapRGB(sdl.surface->format,0,0,0));
+#endif //C_OPENGL
+#endif //SETMODE_SAVES_CLEAR
 		return sdl.surface;
 	}
 
-#endif
+
 #ifdef WIN32
 	//SDL seems to crash if we are in OpenGL mode currently and change to exactly the same size without OpenGL.
 	//This happens when DOSBox is in textmode with aspect=true and output=opengl and the mapper is started.
@@ -260,7 +266,8 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 	if ((i_flags&SDL_OPENGL) && !(flags&SDL_OPENGL) && height==i_height && width==i_width && height==480) {
 		height++;
 	}
-#endif
+#endif //WIN32
+#endif //SETMODE_SAVES
 	SDL_Surface* s = SDL_SetVideoMode(width,height,bpp,flags);
 #if SETMODE_SAVES
 	if (s == NULL) return s; //Only store when successful
@@ -1197,7 +1204,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.desktop.full.height = 0;
 	if(fullresolution && *fullresolution) {
 		char res[100];
-		strncpy( res, fullresolution, sizeof( res ));
+		safe_strncpy( res, fullresolution, sizeof( res ));
 		fullresolution = lowcase (res);//so x and X are allowed
 		if (strcmp(fullresolution,"original")) {
 			sdl.desktop.full.fixed = true;
@@ -1217,7 +1224,7 @@ static void GUI_StartUp(Section * sec) {
 	const char* windowresolution=section->Get_string("windowresolution");
 	if(windowresolution && *windowresolution) {
 		char res[100];
-		strncpy( res,windowresolution, sizeof( res ));
+		safe_strncpy( res,windowresolution, sizeof( res ));
 		windowresolution = lowcase (res);//so x and X are allowed
 		if(strcmp(windowresolution,"original")) {
 			char* height = const_cast<char*>(strchr(windowresolution,'x'));
@@ -1500,6 +1507,9 @@ void GFX_Events() {
 		case SDL_ACTIVEEVENT:
 			if (event.active.state & SDL_APPINPUTFOCUS) {
 				if (event.active.gain) {
+#ifdef WIN32
+					if (!sdl.desktop.fullscreen) sdl.focus_ticks = GetTicks();
+#endif
 					if (sdl.desktop.fullscreen && !sdl.mouse.locked)
 						GFX_CaptureMouse();
 					SetPriority(sdl.priority.focus);
@@ -1591,6 +1601,10 @@ void GFX_Events() {
 			if (event.key.keysym.sym==SDLK_RALT) sdl.raltstate = event.key.type;
 			if (((event.key.keysym.sym==SDLK_TAB)) &&
 				((sdl.laltstate==SDL_KEYDOWN) || (sdl.raltstate==SDL_KEYDOWN))) break;
+			// This can happen as well.
+			if (((event.key.keysym.sym == SDLK_TAB )) && (event.key.keysym.mod & KMOD_ALT)) break;
+			// ignore tab events that arrive just after regaining focus. (likely the result of alt-tab)
+			if ((event.key.keysym.sym == SDLK_TAB) && (GetTicks() - sdl.focus_ticks < 2)) break;
 #endif
 #if defined (MACOSX)			
 		case SDL_KEYDOWN:
