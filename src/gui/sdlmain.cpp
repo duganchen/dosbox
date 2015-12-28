@@ -892,6 +892,52 @@ void GFX_TearDown(void) {
 }
 #endif
 
+#if SDL_VERSION_ATLEAST(2,0,0)
+/* Create a GLSL shader object, load the shader source, and compile the shader.
+ */
+GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc )
+{
+	GLuint shader;
+	GLint compiled;
+
+	// Create the shader object
+	shader = glCreateShader ( type );
+
+	if ( shader == 0 )
+		return 0;
+
+	// Load the shader source
+	glShaderSource ( shader, 1, &shaderSrc, NULL );
+
+	// Compile the shader
+	glCompileShader ( shader );
+
+	// Check the compile status
+	glGetShaderiv ( shader, GL_COMPILE_STATUS, &compiled );
+
+	if ( !compiled ) 
+	{
+		GLint infoLen = 0;
+
+		glGetShaderiv ( shader, GL_INFO_LOG_LENGTH, &infoLen );
+
+		if ( infoLen > 1 )
+		{
+			char* infoLog = (char *) malloc (sizeof(char) * infoLen );
+
+			glGetShaderInfoLog ( shader, infoLen, NULL, infoLog );
+			LOG_MSG ( "Error compiling shader: %s", infoLog );
+
+			free ( infoLog );
+		}
+
+		glDeleteShader ( shader );
+		return 0;
+	}
+	return shader;
+}
+#endif
+
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t callback) {
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
