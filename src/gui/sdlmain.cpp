@@ -1271,6 +1271,63 @@ dosurface:
 #if SDL_VERSION_ATLEAST(2,0,0)
 		int windowHeight;
 		SDL_GetWindowSize(sdl.window, NULL, &windowHeight);
+
+		GLuint vertexShader = GFX_LoadGLShader ( GL_VERTEX_SHADER, sdl.opengl.vertex_shader_src );
+		if (!vertexShader) {
+			// NOTE: GFX_LoadGLShader reports an error on its own.
+			//LOG_MSG("SDL:OPENGL:Can't load vertex shader");
+			goto dosurface;
+		}
+		GLuint fragmentShader = GFX_LoadGLShader ( GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src );
+		if (!fragmentShader) {
+			glDeleteShader(vertexShader);
+			// NOTE: GFX_LoadGLShader reports an error on its own.
+			//LOG_MSG("SDL:OPENGL:Can't load fragment shader");
+			goto dosurface;
+		}
+		if (sdl.opengl.program_object) {
+			glDeleteProgram(sdl.opengl.program_object);
+		}
+		sdl.opengl.program_object = glCreateProgram();
+		if (!sdl.opengl.program_object) {
+			glDeleteShader(vertexShader);
+			glDeleteShader(fragmentShader);
+			LOG_MSG("SDL:OPENGL:Can't create program object, falling back to surface");
+			goto dosurface;
+		}
+		glAttachShader ( sdl.opengl.program_object, vertexShader );
+		glAttachShader ( sdl.opengl.program_object, fragmentShader );
+		// Link the program
+		glLinkProgram ( sdl.opengl.program_object );
+		// Even if we *are* successful, we may delete the shader objects
+		glDeleteShader(vertexShader);
+		glDeleteShader(fragmentShader);
+
+		// Check the link status
+		GLint isProgramLinked;
+		glGetProgramiv ( sdl.opengl.program_object, GL_LINK_STATUS, &isProgramLinked );
+		if ( !isProgramLinked )  {
+			GLint infoLen = 0;
+
+			glGetProgramiv ( sdl.opengl.program_object, GL_INFO_LOG_LENGTH, &infoLen );
+		
+			if ( infoLen > 1 )
+			{
+				char* infoLog = (char *) malloc (sizeof(char) * infoLen );
+
+				glGetProgramInfoLog ( sdl.opengl.program_object, infoLen, NULL, infoLog );
+				LOG_MSG("SDL:OPENGL:Error linking program:\n %s", infoLog);
+				free ( infoLog );
+			}
+
+			glDeleteProgram ( sdl.opengl.program_object );
+			goto dosurface;
+		}
+		extern void RENDER_SetForceUpdate(bool f);
+		RENDER_SetForceUpdate((sdl.opengl.vertex_shader_src != sdl.opengl.vertex_shader_default_src)
+		                      || (sdl.opengl.fragment_shader_src != sdl.opengl.fragment_shader_default_src));
+
+
 		glViewport(sdl.clip.x,windowHeight-(sdl.clip.y+sdl.clip.h),sdl.clip.w,sdl.clip.h);
 #else
 		glViewport(sdl.clip.x,sdl.surface->h-(sdl.clip.y+sdl.clip.h),sdl.clip.w,sdl.clip.h);
