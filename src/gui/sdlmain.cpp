@@ -1259,6 +1259,10 @@ dosurface:
 			LOG_MSG("SDL:OPENGL:Can't open drawing window, are you running in 16bpp(or higher) mode?");
 			goto dosurface;
 		}
+
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3); 
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2); 
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 		if (sdl.opengl.context == NULL) {
 			LOG_MSG("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
