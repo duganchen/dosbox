@@ -226,6 +226,29 @@ struct SDL_Block {
 		bool packed_pixel;
 		bool paletted_texture;
 		bool pixel_buffer_object;
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+		bool glsl_is_supported;
+		static char *const vertex_shader_default_src;
+		static char *const fragment_shader_default_src;
+		char *vertex_shader_src, *fragment_shader_src;
+		GLuint program_object;
+		struct {
+			GLint position;
+			//GLint tex_coord;
+			struct {
+				GLint texture;
+				GLint texture_size;
+				GLint input_size;
+				GLint output_size;
+				GLint frame_count;
+			} ruby;
+		} program_arguments;
+		GLint actual_frame_count;
+		GLfloat vertex_data[12];
+		//GLfloat vertex_data[20];
+		static const GLushort vertex_data_indices[6];
+#endif
 	} opengl;
 #endif	// C_OPENGL
 #if !SDL_VERSION_ATLEAST(2,0,0)
