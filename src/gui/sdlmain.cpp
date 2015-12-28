@@ -727,12 +727,6 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 			SDL_DestroyWindow(sdl.window);
 		}
 
-#if SDL_VERSION_ATLEAST(2,0,0)
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3); 
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2); 
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
-#endif
-
 		sdl.window = SDL_CreateWindow("",
 		                 SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
 		                 SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
@@ -1259,6 +1253,10 @@ dosurface:
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 #endif
 #if SDL_VERSION_ATLEAST(2,0,0)
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3); 
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2); 
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+
 		GFX_SetupWindowScaled(sdl.desktop.want_type);
 		/* We may simply use SDL_BYTESPERPIXEL
 		here rather than SDL_BITSPERPIXEL   */
