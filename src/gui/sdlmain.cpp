@@ -1272,9 +1272,9 @@ dosurface:
 			goto dosurface;
 		}
 		
-		LOG_MSG(glGetString(GL_RENDERER));
-		LOG_MSG(glGetString(GL_VERSION));
-		LOG_MSG(glGetString(GL_SHADING_LANGUAGE_VERSION));
+		LOG_MSG((const  char *)glGetString(GL_RENDERER));
+		LOG_MSG((const  char *)glGetString(GL_VERSION));
+		LOG_MSG((const  char *)glGetString(GL_SHADING_LANGUAGE_VERSION));
 
 		/* Sync to VBlank if desired */
 		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
