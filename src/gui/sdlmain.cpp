@@ -195,7 +195,7 @@ struct SDL_Block {
 	bool update_window;
 	int window_desired_width, window_desired_height;
 #endif
-	struct SDL_OpenGL_Block {
+	struct {
 		Bit32u width;
 		Bit32u height;
 #if 0
@@ -229,7 +229,7 @@ struct SDL_Block {
 		SCREEN_TYPES want_type;
 	} desktop;
 #if C_OPENGL
-	struct {
+	struct SDL_OpenGL_Block {
 #if SDL_VERSION_ATLEAST(2,0,0)
 		SDL_GLContext context;
 #endif
