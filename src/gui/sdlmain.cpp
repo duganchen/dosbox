@@ -1271,6 +1271,11 @@ dosurface:
 			LOG_MSG("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
 			goto dosurface;
 		}
+		
+		LOG_MSG(glGetString(GL_RENDERER));
+		LOG_MSG(glGetString(GL_VERSION));
+		LOG_MSG(glGetString(GL_SHADING_LANGUAGE_VERSION));
+
 		/* Sync to VBlank if desired */
 		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
 #else	// !SDL_VERSION_ATLEAST(2,0,0)
