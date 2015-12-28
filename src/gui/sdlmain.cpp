@@ -726,6 +726,13 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		if (sdl.window) {
 			SDL_DestroyWindow(sdl.window);
 		}
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3); 
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2); 
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+#endif
+
 		sdl.window = SDL_CreateWindow("",
 		                 SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
 		                 SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
@@ -1260,9 +1267,6 @@ dosurface:
 			goto dosurface;
 		}
 
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3); 
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2); 
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 		if (sdl.opengl.context == NULL) {
 			LOG_MSG(SDL_GetError());
