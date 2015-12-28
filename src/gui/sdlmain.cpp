@@ -1265,6 +1265,7 @@ dosurface:
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 		if (sdl.opengl.context == NULL) {
+			LOG_MSG(SDL_GetError());
 			LOG_MSG("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
 			goto dosurface;
 		}
