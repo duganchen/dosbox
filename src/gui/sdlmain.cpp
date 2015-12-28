@@ -1345,10 +1345,11 @@ dosurface:
 			glDeleteProgram ( sdl.opengl.program_object );
 			goto dosurface;
 		}
+#if 0
 		extern void RENDER_SetForceUpdate(bool f);
 		RENDER_SetForceUpdate((sdl.opengl.vertex_shader_src != sdl.opengl.vertex_shader_default_src)
 		                      || (sdl.opengl.fragment_shader_src != sdl.opengl.fragment_shader_default_src));
-
+#endif
 
 		glViewport(sdl.clip.x,windowHeight-(sdl.clip.y+sdl.clip.h),sdl.clip.w,sdl.clip.h);
 #else
