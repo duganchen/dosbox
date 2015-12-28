@@ -250,7 +250,6 @@ struct SDL_Block {
 		bool pixel_buffer_object;
 
 #if SDL_VERSION_ATLEAST(2,0,0)
-		bool glsl_is_supported;
 		static char *const vertex_shader_default_src;
 		static char *const fragment_shader_default_src;
 		char *vertex_shader_src, *fragment_shader_src;
@@ -2255,6 +2254,43 @@ static void GUI_StartUp(Section * sec) {
 		sdl.desktop.want_type=SCREEN_SURFACE;
 	} else {
 #endif	// End of SDL specific video mode check. Let's assume it has passed...
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+	sdl.opengl.program_object=0;
+	sdl.opengl.vertex_shader_src=sdl.opengl.vertex_shader_default_src;
+	sdl.opengl.fragment_shader_src=sdl.opengl.fragment_shader_default_src;
+	std::string glshader_filename=section->Get_string("glshader");
+	if (!glshader_filename.empty()) {
+		std::string config_path;
+		Cross::GetPlatformConfigDir(config_path);
+		size_t file_size;
+		FILE *fp = fopen((config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".glslv").c_str(), "rb");
+		if (fp) {
+			fseek(fp, 0, SEEK_END);
+			file_size = ftell(fp);
+			// DO NOT FORGET TO ADD ONE MORE FOR THE NULL CHAR!
+			sdl.opengl.vertex_shader_src = (char *)malloc(file_size+1);
+			fseek(fp, 0, SEEK_SET);
+			fread(sdl.opengl.vertex_shader_src, file_size, 1, fp);
+			fclose(fp);
+			// DO NOT FORGET THIS!
+			sdl.opengl.vertex_shader_src[file_size] = '\0';
+		}
+		fp = fopen((config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".glslf").c_str(), "rb");
+		if (fp) {
+			fseek(fp, 0, SEEK_END);
+			file_size = ftell(fp);
+			// DO NOT FORGET TO ADD ONE MORE FOR THE NULL CHAR!
+			sdl.opengl.fragment_shader_src = (char *)malloc(file_size+1);
+			fseek(fp, 0, SEEK_SET);
+			fread(sdl.opengl.fragment_shader_src, file_size, 1, fp);
+			fclose(fp);
+			// DO NOT FORGET THIS!
+			sdl.opengl.fragment_shader_src[file_size] = '\0';
+		}
+	}
+#endif
+
 	sdl.opengl.buffer=0;
 	sdl.opengl.framebuf=0;
 	sdl.opengl.texture=0;
@@ -2938,6 +2974,15 @@ void Config_Add_SDL() {
 #endif
 	Pstring->Set_help("What video system to use for output.");
 	Pstring->Set_values(outputs);
+
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+	Pstring = sdl_sec->Add_string("glshader",Property::Changeable::Always,"");
+	Pstring->Set_help("What set of GLSL shaders to use with an OpenGL output. Keep empty if this is not desired.\n"
+	                  "  Note that in case it is used, the respective shader files must be found in the \"glshaders\" subdirectory\n"
+	                  "  relatively to where the default DOSBox configuration fiel is stored. For shader file naming convention,\n"
+	                  "  suppose that you have a pair of shader files ready: mysample.glslv and mysample.glslf.\n"
+	                  "  Then glshader=mysample should be set.\n");
+#endif
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 	const char* renderers[] = {
