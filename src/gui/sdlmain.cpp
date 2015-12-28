@@ -104,6 +104,15 @@ PFNGLMAPBUFFERARBPROC glMapBufferARB = NULL;
 PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;
 #endif
 
+#if SDL_VERSION_ATLEAST(2,0,0)
+PFNGLDELETESHADERPROC glDeleteShader = NULL;
+PFNGLDELETEPROGRAMPROC glDeleteProgram = NULL;
+PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog = NULL;
+PFNGLGETPROGRAMIVPROC glGetProgramiv = NULL;
+PFNGLLINKPROGRAMPROC glLinkProgram = NULL;
+PFNGLDELETESHADERPROC glDeleteShader = NULL;
+#endif
+
 #endif //C_OPENGL
 
 #if !(ENVIRON_INCLUDED)
@@ -173,7 +182,7 @@ struct SDL_Block {
 	bool update_window;
 	int window_desired_width, window_desired_height;
 #endif
-	struct {
+	struct SDL_OpenGL_Block {
 		Bit32u width;
 		Bit32u height;
 #if 0
@@ -1380,6 +1389,48 @@ dosurface:
 		sdl.opengl.texCoords[4] = tex_width; sdl.opengl.texCoords[5] = 0; // upper right
 		sdl.opengl.texCoords[6] = 0; sdl.opengl.texCoords[7] = 0; // upper left
 #else
+#if SDL_VERSION_ATLEAST(2,0,0)
+		// Time to take advantage of the shader now
+		glUseProgram(sdl.opengl.program_object);
+
+		// Get the attribute locations
+		sdl.opengl.program_arguments.position = glGetAttribLocation ( sdl.opengl.program_object, "a_position" );
+		// Get uniform locations and set some of them
+		sdl.opengl.program_arguments.ruby.texture = glGetUniformLocation ( sdl.opengl.program_object, "rubyTexture" );
+		glUniform1i (sdl.opengl.program_arguments.ruby.texture, 0);
+		sdl.opengl.program_arguments.ruby.texture_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyTextureSize" );
+		glUniform2f (sdl.opengl.program_arguments.ruby.texture_size, texsize, texsize);
+		sdl.opengl.program_arguments.ruby.input_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyInputSize" );
+		glUniform2f (sdl.opengl.program_arguments.ruby.input_size, width, height);
+		sdl.opengl.program_arguments.ruby.output_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyOutputSize" );
+		glUniform2f (sdl.opengl.program_arguments.ruby.output_size, sdl.clip.w, sdl.clip.h);
+		// The following uniform is *not* set right now
+		sdl.opengl.actual_frame_count = 0;
+		sdl.opengl.program_arguments.ruby.frame_count = glGetUniformLocation ( sdl.opengl.program_object, "rubyFrameCount" );
+
+		// lower left
+		sdl.opengl.vertex_data[0] = -1.0f;
+		sdl.opengl.vertex_data[1] = -1.0f;
+		sdl.opengl.vertex_data[2] = 0.0f;
+		// lower right
+		sdl.opengl.vertex_data[3] = 1.0f;
+		sdl.opengl.vertex_data[4] = -1.0f;
+		sdl.opengl.vertex_data[5] = 0.0f;
+		// upper right
+		sdl.opengl.vertex_data[6] = 1.0f;
+		sdl.opengl.vertex_data[7] = 1.0f;
+		sdl.opengl.vertex_data[8] = 0.0f;
+		// upper left
+		sdl.opengl.vertex_data[9] = -1.0f;
+		sdl.opengl.vertex_data[10] = 1.0f;
+		sdl.opengl.vertex_data[11] = 0.0f;
+
+		// Load the vertex positions
+		glVertexAttribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT,
+		                      GL_FALSE, 3 * sizeof (GLfloat), sdl.opengl.vertex_data);
+		glEnableVertexAttribArray(sdl.opengl.program_arguments.position);
+
+#else
 		if (glIsList(sdl.opengl.displaylist)) glDeleteLists(sdl.opengl.displaylist, 1);
 		sdl.opengl.displaylist = glGenLists(1);
 		glNewList(sdl.opengl.displaylist, GL_COMPILE);
@@ -1396,6 +1447,7 @@ dosurface:
 		glTexCoord2f(0,0); glVertex2f(-1.0f, 1.0f);
 		glEnd();
 		glEndList();
+#endif
 #endif
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
@@ -1528,11 +1580,18 @@ bool GFX_LazyFullscreenRequested(void) {
 	return false;
 }
 
+#if SDL_VERSION_ATLEAST(2,0,0)
 void GFX_RestoreMode(void) {
 	GFX_SetSize(sdl.draw.width,sdl.draw.height,sdl.draw.flags,sdl.draw.scalex,sdl.draw.scaley,sdl.draw.callback);
 	GFX_UpdateSDLCaptureState();
 }
+#endif
 
+void GFX_DrawGLTexture(void) {
+	glUniform1i (sdl.opengl.program_arguments.ruby.frame_count, sdl.opengl.actual_frame_count);
+	sdl.opengl.actual_frame_count++;
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, sdl.opengl.vertex_data_indices);
+}
 
 bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 #if SDL_VERSION_ATLEAST(2,0,0)
