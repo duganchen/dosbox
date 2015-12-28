@@ -186,6 +186,12 @@ enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_HIGHEST
 };
 
+void check_gl_error() {
+	if (glGetError() != GL_NO_ERROR) {
+		LOG_MSG("OpenGL Error");
+	}
+}
+
 
 struct SDL_Block {
 	bool inited;
@@ -375,7 +381,9 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 			SDL_FillRect(sdl.surface,NULL,SDL_MapRGB(sdl.surface->format,0,0,0));
 		else {
 			glClearColor (0.0, 0.0, 0.0, 1.0);
+			check_gl_error();
 			glClear(GL_COLOR_BUFFER_BIT);
+			check_gl_error();
 			SDL_GL_SwapBuffers();
 		}
 #else //C_OPENGL
@@ -925,36 +933,43 @@ GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc )
 
 	// Create the shader object
 	shader = glCreateShader ( type );
+	check_gl_error();
 
 	if ( shader == 0 )
 		return 0;
 
 	// Load the shader source
 	glShaderSource ( shader, 1, &shaderSrc, NULL );
+	check_gl_error();
 
 	// Compile the shader
 	glCompileShader ( shader );
+	check_gl_error();
 
 	// Check the compile status
 	glGetShaderiv ( shader, GL_COMPILE_STATUS, &compiled );
+	check_gl_error();
 
 	if ( !compiled ) 
 	{
 		GLint infoLen = 0;
 
 		glGetShaderiv ( shader, GL_INFO_LOG_LENGTH, &infoLen );
+		check_gl_error();
 
 		if ( infoLen > 1 )
 		{
 			char* infoLog = (char *) malloc (sizeof(char) * infoLen );
 
 			glGetShaderInfoLog ( shader, infoLen, NULL, infoLog );
+			check_gl_error();
 			LOG_MSG ( "Error compiling shader: %s", infoLog );
 
 			free ( infoLog );
 		}
 
 		glDeleteShader ( shader );
+		check_gl_error();
 		return 0;
 	}
 	return shader;
@@ -1315,14 +1330,19 @@ dosurface:
 		GLuint fragmentShader = GFX_LoadGLShader ( GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src );
 		if (!fragmentShader) {
 			glDeleteShader(vertexShader);
+			check_gl_error();
+
 			// NOTE: GFX_LoadGLShader reports an error on its own.
 			//LOG_MSG("SDL:OPENGL:Can't load fragment shader");
 			goto dosurface;
 		}
 		if (sdl.opengl.program_object) {
 			glDeleteProgram(sdl.opengl.program_object);
+			check_gl_error();
 		}
 		sdl.opengl.program_object = glCreateProgram();
+		check_gl_error();
+
 		if (!sdl.opengl.program_object) {
 			glDeleteShader(vertexShader);
 			glDeleteShader(fragmentShader);
@@ -1330,21 +1350,29 @@ dosurface:
 			goto dosurface;
 		}
 		glAttachShader ( sdl.opengl.program_object, vertexShader );
+		check_gl_error();
 		glAttachShader ( sdl.opengl.program_object, fragmentShader );
+		check_gl_error();
 		// Link the program
 		glLinkProgram ( sdl.opengl.program_object );
+		check_gl_error();
 		// Even if we *are* successful, we may delete the shader objects
 		glDeleteShader(vertexShader);
+		check_gl_error();
 		glDeleteShader(fragmentShader);
+		check_gl_error();
 
 		// Check the link status
 		GLint isProgramLinked;
 		glGetProgramiv ( sdl.opengl.program_object, GL_LINK_STATUS, &isProgramLinked );
+		check_gl_error();
+
 		if ( !isProgramLinked )  {
 			GLint infoLen = 0;
 
 			glGetProgramiv ( sdl.opengl.program_object, GL_INFO_LOG_LENGTH, &infoLen );
-		
+			check_gl_error();
+
 			if ( infoLen > 1 )
 			{
 				char* infoLog = (char *) malloc (sizeof(char) * infoLen );
@@ -1364,29 +1392,55 @@ dosurface:
 #endif
 
 		glViewport(sdl.clip.x,windowHeight-(sdl.clip.y+sdl.clip.h),sdl.clip.w,sdl.clip.h);
+		check_gl_error();
 #else
 		glViewport(sdl.clip.x,sdl.surface->h-(sdl.clip.y+sdl.clip.h),sdl.clip.w,sdl.clip.h);
+		check_gl_error();
+
 #endif
 		glMatrixMode (GL_PROJECTION);
+		check_gl_error();
+
 		glDeleteTextures(1,&sdl.opengl.texture);
+		check_gl_error();
+
  		glGenTextures(1,&sdl.opengl.texture);
+		check_gl_error();
+
 		glBindTexture(GL_TEXTURE_2D,sdl.opengl.texture);
+		check_gl_error();
+
 		// No borders
 #ifdef __ANDROID__
 		/* Plain OpenGL ES (v1.1) has no mention
 		of GL_CLAMP, so use GL_CLAMP_TO_EDGE  */
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		check_gl_error();
+
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		check_gl_error();
+
 #else
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		check_gl_error();
+
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		check_gl_error();
+
 #endif
 		if (sdl.opengl.bilinear) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			check_gl_error();
+
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			check_gl_error();
+
 		} else {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			check_gl_error();
+
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			check_gl_error();
 		}
 
 #ifdef __ANDROID__	// OpenGL ES
@@ -1395,6 +1449,7 @@ dosurface:
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, 0);
 #endif
 
+#if !SDL_VERSION_ATLEAST(2,0,0)
 		glClearColor (0.0, 0.0, 0.0, 1.0);
 		glShadeModel (GL_FLAT);
 		glDisable (GL_DEPTH_TEST);
@@ -1403,7 +1458,7 @@ dosurface:
 		glEnable(GL_TEXTURE_2D);
 		glMatrixMode (GL_MODELVIEW);
 		glLoadIdentity ();
-
+#endif
 		GLfloat tex_width=((GLfloat)(width)/(GLfloat)texsize);
 		GLfloat tex_height=((GLfloat)(height)/(GLfloat)texsize);
 
