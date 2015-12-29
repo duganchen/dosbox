@@ -69,7 +69,7 @@
 #else
 #include "SDL_opengl.h"
 
-#include <glu.h>
+#include <gl/glu.h>
 
 #endif
 
