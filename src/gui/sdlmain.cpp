@@ -1887,7 +1887,12 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 					sdl.draw.width, sdl.draw.height, GL_BGRA_EXT,
 					GL_UNSIGNED_INT_8_8_8_8_REV, 0);
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
+#if SDL_VERSION_ATLEAST(2,0,0)
+			GFX_DrawGLTexture()
+#else
 			glCallList(sdl.opengl.displaylist);
+#endif
+
 #if SDL_VERSION_ATLEAST(2,0,0)
 			SDL_GL_SwapWindow(sdl.window);
 #else
@@ -1934,7 +1939,13 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			glDisableClientState(GL_VERTEX_ARRAY);
 			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #else	// !__ANDROID__
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+			GFX_DrawGLTexture();
+#else
 			glCallList(sdl.opengl.displaylist);
+#endif
+
 #endif	// !__ANDROID__
 #if SDL_VERSION_ATLEAST(2,0,0)
 			SDL_GL_SwapWindow(sdl.window);
