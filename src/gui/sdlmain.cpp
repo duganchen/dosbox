@@ -1330,7 +1330,7 @@ dosurface:
 		GLuint vertexShader = GFX_LoadGLShader ( GL_VERTEX_SHADER, sdl.opengl.vertex_shader_src );
 		if (!vertexShader) {
 			// NOTE: GFX_LoadGLShader reports an error on its own.
-			//LOG_MSG("SDL:OPENGL:Can't load vertex shader");
+			LOG_MSG("SDL:OPENGL:Can't load vertex shader");
 			goto dosurface;
 		}
 		GLuint fragmentShader = GFX_LoadGLShader ( GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src );
@@ -1339,7 +1339,7 @@ dosurface:
 			check_gl_error();
 
 			// NOTE: GFX_LoadGLShader reports an error on its own.
-			//LOG_MSG("SDL:OPENGL:Can't load fragment shader");
+			LOG_MSG("SDL:OPENGL:Can't load fragment shader");
 			goto dosurface;
 		}
 		if (sdl.opengl.program_object) {
