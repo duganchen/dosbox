@@ -189,7 +189,7 @@ enum PRIORITY_LEVELS {
 void check_gl_error() {
 	GLenum error = glGetError();
 	if (error != GL_NO_ERROR) {
-		LOG_MSG(gluErrorString(error));
+		LOG_MSG((const char *)gluErrorString(error));
 	}
 }
 
