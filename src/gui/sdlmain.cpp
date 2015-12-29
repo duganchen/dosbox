@@ -1888,7 +1888,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 					GL_UNSIGNED_INT_8_8_8_8_REV, 0);
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 #if SDL_VERSION_ATLEAST(2,0,0)
-			GFX_DrawGLTexture()
+			GFX_DrawGLTexture();
 #else
 			glCallList(sdl.opengl.displaylist);
 #endif
