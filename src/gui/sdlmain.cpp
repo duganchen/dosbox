@@ -68,9 +68,6 @@
 #include "SDL_opengles.h"
 #else
 #include "SDL_opengl.h"
-
-#include <gl/glu.h>
-
 #endif
 
 #ifndef APIENTRY
@@ -191,9 +188,7 @@ enum PRIORITY_LEVELS {
 
 void check_gl_error() {
 	GLenum error = glGetError();
-	if (error != GL_NO_ERROR) {
-		LOG_MSG((const char *)gluErrorString(error));
-	}
+	LOG_MSG("ERROR");
 }
 
 
@@ -937,6 +932,7 @@ GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc )
 
 	// Create the shader object
 	shader = glCreateShader ( type );
+	LOG_MSG("glCreateShader");
 	check_gl_error();
 
 	if ( shader == 0 )
@@ -944,10 +940,12 @@ GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc )
 
 	// Load the shader source
 	glShaderSource ( shader, 1, &shaderSrc, NULL );
+	LOG_MSG("glShaderSource");
 	check_gl_error();
 
 	// Compile the shader
 	glCompileShader ( shader );
+	LOG_MSG("glCompileShader");
 	check_gl_error();
 
 	// Check the compile status
@@ -1356,11 +1354,14 @@ dosurface:
 			goto dosurface;
 		}
 		glAttachShader ( sdl.opengl.program_object, vertexShader );
+		LOG_MSG("aTTAching vertex shader");
 		check_gl_error();
 		glAttachShader ( sdl.opengl.program_object, fragmentShader );
+		LOG_MSG("Attaching fragment shader");
 		check_gl_error();
 		// Link the program
 		glLinkProgram ( sdl.opengl.program_object );
+		LOG_MSG("Linking program");
 		check_gl_error();
 		// Even if we *are* successful, we may delete the shader objects
 		glDeleteShader(vertexShader);
@@ -1405,15 +1406,18 @@ dosurface:
 
 #endif
 		glMatrixMode (GL_PROJECTION);
+		LOG_MSG("Setting Matrix mode to projection?");
 		check_gl_error();
 
 		glDeleteTextures(1,&sdl.opengl.texture);
 		check_gl_error();
 
  		glGenTextures(1,&sdl.opengl.texture);
+		LOG_MSG("Generating textures");
 		check_gl_error();
 
 		glBindTexture(GL_TEXTURE_2D,sdl.opengl.texture);
+		LOG_MSG("Binding textures");
 		check_gl_error();
 
 		// No borders
@@ -1479,7 +1483,8 @@ dosurface:
 #if SDL_VERSION_ATLEAST(2,0,0)
 		// Time to take advantage of the shader now
 		glUseProgram(sdl.opengl.program_object);
-
+		LOG_MSG("using program");
+		
 		// Get the attribute locations
 		sdl.opengl.program_arguments.position = glGetAttribLocation ( sdl.opengl.program_object, "a_position" );
 		// Get uniform locations and set some of them
@@ -1516,6 +1521,7 @@ dosurface:
 		glVertexAttribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT,
 		                      GL_FALSE, 3 * sizeof (GLfloat), sdl.opengl.vertex_data);
 		glEnableVertexAttribArray(sdl.opengl.program_arguments.position);
+		LOG_MSG("vERTEx attribute attray enabled");
 
 #else
 		if (glIsList(sdl.opengl.displaylist)) glDeleteLists(sdl.opengl.displaylist, 1);
