@@ -187,8 +187,9 @@ enum PRIORITY_LEVELS {
 };
 
 void check_gl_error() {
-	if (glGetError() != GL_NO_ERROR) {
-		LOG_MSG("OpenGL Error");
+	GLenum error = glGetError();
+	if ((error != GL_NO_ERROR) {
+		LOG_MSG(gluErrorString(error));
 	}
 }
 
