@@ -952,6 +952,7 @@ GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc )
 
 	// Check the compile status
 	glGetShaderiv ( shader, GL_COMPILE_STATUS, &compiled );
+	LOG_MSG("Getting compile status");
 	check_gl_error();
 
 	if ( !compiled ) 
@@ -959,6 +960,7 @@ GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc )
 		GLint infoLen = 0;
 
 		glGetShaderiv ( shader, GL_INFO_LOG_LENGTH, &infoLen );
+		LOG_MSG("Getting info log length");
 		check_gl_error();
 
 		if ( infoLen > 1 )
@@ -966,6 +968,7 @@ GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc )
 			char* infoLog = (char *) malloc (sizeof(char) * infoLen );
 
 			glGetShaderInfoLog ( shader, infoLen, NULL, infoLog );
+			LOG_MSG("Getting info log");
 			check_gl_error();
 			LOG_MSG ( "Error compiling shader: %s", infoLog );
 
@@ -973,6 +976,7 @@ GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc )
 		}
 
 		glDeleteShader ( shader );
+		LOG_MSG("Deleteing Shader");
 		check_gl_error();
 		return 0;
 	}
@@ -1246,6 +1250,7 @@ dosurface:
 #ifndef __ANDROID__
 		if (sdl.opengl.pixel_buffer_object) {
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
+			LOG_MSG("glDeleteBuffersARB");
 			if (sdl.opengl.buffer) glDeleteBuffersARB(1, &sdl.opengl.buffer);
 		} else
 #endif
@@ -1336,6 +1341,7 @@ dosurface:
 		GLuint fragmentShader = GFX_LoadGLShader ( GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src );
 		if (!fragmentShader) {
 			glDeleteShader(vertexShader);
+			LOG_MSG("Vertex shader deleted");
 			check_gl_error();
 
 			// NOTE: GFX_LoadGLShader reports an error on its own.
@@ -1344,9 +1350,11 @@ dosurface:
 		}
 		if (sdl.opengl.program_object) {
 			glDeleteProgram(sdl.opengl.program_object);
+			LOG_MSG("Program object deleted");
 			check_gl_error();
 		}
 		sdl.opengl.program_object = glCreateProgram();
+		LOG_MSG("glCreateProgram");
 		check_gl_error();
 
 		if (!sdl.opengl.program_object) {
@@ -1367,13 +1375,16 @@ dosurface:
 		check_gl_error();
 		// Even if we *are* successful, we may delete the shader objects
 		glDeleteShader(vertexShader);
+		LOG_MSG("Deleting vertex shader");
 		check_gl_error();
 		glDeleteShader(fragmentShader);
+		LOG_MSG("Deleting fragment shader");
 		check_gl_error();
 
 		// Check the link status
 		GLint isProgramLinked;
 		glGetProgramiv ( sdl.opengl.program_object, GL_LINK_STATUS, &isProgramLinked );
+		LOG_MSG("Checking program link status");
 		check_gl_error();
 
 		if ( !isProgramLinked )  {
