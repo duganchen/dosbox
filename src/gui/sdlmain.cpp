@@ -68,6 +68,9 @@
 #include "SDL_opengles.h"
 #else
 #include "SDL_opengl.h"
+
+#include <glu.h>
+
 #endif
 
 #ifndef APIENTRY
