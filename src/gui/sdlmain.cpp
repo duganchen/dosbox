@@ -2480,9 +2480,10 @@ static void GUI_StartUp(Section * sec) {
 		    glGenBuffers && glBindBuffer && glDeleteBuffers && glBufferData &&
 		    glMapBuffer && glUnmapBuffer;
 		printf("Pixel buffer object: %d\n", sdl.opengl.pixel_buffer_object);
-	*/
-	sdl.opengl.pixel_buffer_object = 0;
    	}
+	*/
+
+	sdl.opengl.pixel_buffer_object = 0;
 #endif	// ifndef __ANDROID__
 	}
 	} /* OPENGL is requested end */
