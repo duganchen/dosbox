@@ -1327,14 +1327,12 @@ dosurface:
 			LOG_MSG("glGenBuffers(1, &sdl.opengl.buffer);");
 			glGenBuffers(1, &sdl.opengl.buffer);
 			check_gl_error();
-			LOG_MSG("glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);");
-			check_gl_error();
-			LOG_MSG("glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);");
+			LOG_MSG("glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);");
 			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);
 			check_gl_error();
-			LOG_MSG("glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, width*height*4, NULL, GL_STREAM_DRAW_ARB);");
-			glBufferData(GL_PIXEL_UNPACK_BUFFER, width*height*4, NULL, GL_STREAM_DRAW_ARB);
-			LOG_MSG("glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);");
+			LOG_MSG("glBufferData(GL_PIXEL_UNPACK_BUFFER_EXT, width*height*4, NULL, GL_STREAM_DRAW);");
+			glBufferData(GL_PIXEL_UNPACK_BUFFER, width*height*4, NULL, GL_STREAM_DRAW);
+			LOG_MSG("glBindBuffer(GL_PIXEL_UNPACK_BUFFER_EXT, 0);");
 			check_gl_error();
 			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 		} else
