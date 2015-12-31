@@ -2462,6 +2462,7 @@ static void GUI_StartUp(Section * sec) {
 
 	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
 	if(gl_ext && *gl_ext){
+		LOG_MSG(gl_ext);
 		sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") > 0);
 		sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") > 0);
 		sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") >0 ) &&
