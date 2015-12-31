@@ -1330,11 +1330,11 @@ dosurface:
 			LOG_MSG("glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);");
 			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);
 			check_gl_error();
-			LOG_MSG("glBufferData(GL_PIXEL_UNPACK_BUFFER_EXT, width*height*4, NULL, GL_STREAM_DRAW);");
+			LOG_MSG("glBufferData(GL_PIXEL_UNPACK_BUFFER, width*height*4, NULL, GL_STREAM_DRAW);");
 			glBufferData(GL_PIXEL_UNPACK_BUFFER, width*height*4, NULL, GL_STREAM_DRAW);
-			LOG_MSG("glBindBuffer(GL_PIXEL_UNPACK_BUFFER_EXT, 0);");
-			check_gl_error();
+			LOG_MSG("glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);");
 			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+			check_gl_error();
 		} else
 #endif
 		{
@@ -1492,8 +1492,8 @@ dosurface:
 #ifdef __ANDROID__	// OpenGL ES
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texsize, texsize, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 #else
-		LOG_MSG("glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, 0);");
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, 0);
+		LOG_MSG("glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);");
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
 #endif
 
 #if !SDL_VERSION_ATLEAST(2,0,0)
@@ -1788,7 +1788,7 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 	case SCREEN_OPENGL:
 #ifndef __ANDROID__
 		if(sdl.opengl.pixel_buffer_object) {
-		    glBindBuffer(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
+		    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);
 		    pixels=(Bit8u *)glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
 			LOG_MSG("glMapBuffer");
 			check_gl_error();
@@ -1916,7 +1916,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			check_gl_error();
 			LOG_MSG("glTexSubImage2D");
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-					sdl.draw.width, sdl.draw.height, GL_BGRA_EXT,
+					sdl.draw.width, sdl.draw.height, GL_BGRA,
 					GL_UNSIGNED_INT_8_8_8_8_REV, 0);
 			check_gl_error();
 			LOG_MSG("glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);");
@@ -1951,7 +1951,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 						GL_UNSIGNED_BYTE, pixels );
 #else
 					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
-						sdl.draw.width, height, GL_BGRA_EXT,
+						sdl.draw.width, height, GL_BGRA,
 						GL_UNSIGNED_INT_8_8_8_8_REV, pixels );
 #endif
 					y += height;
