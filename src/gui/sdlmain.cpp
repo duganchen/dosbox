@@ -88,21 +88,21 @@
 
 #ifndef GL_ARB_vertex_buffer_object
 #define GL_ARB_vertex_buffer_object 1
-typedef void (APIENTRYP PFNGLGENBUFFERSARBPROC) (GLsizei n, GLuint *buffers);
-typedef void (APIENTRYP PFNGLBINDBUFFERARBPROC) (GLenum target, GLuint buffer);
-typedef void (APIENTRYP PFNGLDELETEBUFFERSARBPROC) (GLsizei n, const GLuint *buffers);
-typedef void (APIENTRYP PFNGLBUFFERDATAARBPROC) (GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
-typedef GLvoid* (APIENTRYP PFNGLMAPBUFFERARBPROC) (GLenum target, GLenum access);
-typedef GLboolean (APIENTRYP PFNGLUNMAPBUFFERARBPROC) (GLenum target);
+typedef void (APIENTRYP PFNGLGENBUFFERSPROC) (GLsizei n, GLuint *buffers);
+typedef void (APIENTRYP PFNGLBINDBUFFERPROC) (GLenum target, GLuint buffer);
+typedef void (APIENTRYP PFNGLDELETEBUFFERSPROC) (GLsizei n, const GLuint *buffers);
+typedef void (APIENTRYP PFNGLBUFFERDATAPROC) (GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
+typedef GLvoid* (APIENTRYP PFNGLMAPBUFFERPROC) (GLenum target, GLenum access);
+typedef GLboolean (APIENTRYP PFNGLUNMAPBUFFERPROC) (GLenum target);
 #endif
 
 #ifndef __ANDROID__
-PFNGLGENBUFFERSARBPROC glGenBuffersARB = NULL;
-PFNGLBINDBUFFERARBPROC glBindBufferARB = NULL;
-PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = NULL;
-PFNGLBUFFERDATAARBPROC glBufferDataARB = NULL;
-PFNGLMAPBUFFERARBPROC glMapBufferARB = NULL;
-PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;
+PFNGLGENBUFFERSPROC glGenBuffers = NULL;
+PFNGLBINDBUFFERPROC glBindBuffer = NULL;
+PFNGLDELETEBUFFERSPROC glDeleteBuffers = NULL;
+PFNGLBUFFERDATAPROC glBufferData = NULL;
+PFNGLMAPBUFFERPROC glMapBuffer = NULL;
+PFNGLUNMAPBUFFERPROC glUnmapBuffer = NULL;
 #endif
 
 #if SDL_VERSION_ATLEAST(2,0,0)
@@ -1250,12 +1250,12 @@ dosurface:
 	{
 #ifndef __ANDROID__
 		if (sdl.opengl.pixel_buffer_object) {
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-			LOG_MSG("glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);");
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+			LOG_MSG("glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);");
 			check_gl_error();
 			if (sdl.opengl.buffer) {
-				LOG_MSG("glDeleteBuffersARB");
-				glDeleteBuffersARB(1, &sdl.opengl.buffer);
+				LOG_MSG("glDeleteBuffers");
+				glDeleteBuffers(1, &sdl.opengl.buffer);
 				check_gl_error();
 			}
 		} else
@@ -1324,19 +1324,19 @@ dosurface:
 		/* Create the texture and display list */
 #ifndef __ANDROID__
 		if (sdl.opengl.pixel_buffer_object) {
-			LOG_MSG("glGenBuffersARB(1, &sdl.opengl.buffer);");
-			glGenBuffersARB(1, &sdl.opengl.buffer);
+			LOG_MSG("glGenBuffers(1, &sdl.opengl.buffer);");
+			glGenBuffers(1, &sdl.opengl.buffer);
 			check_gl_error();
 			LOG_MSG("glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);");
 			check_gl_error();
 			LOG_MSG("glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);");
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);
 			check_gl_error();
 			LOG_MSG("glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, width*height*4, NULL, GL_STREAM_DRAW_ARB);");
-			glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, width*height*4, NULL, GL_STREAM_DRAW_ARB);
+			glBufferData(GL_PIXEL_UNPACK_BUFFER, width*height*4, NULL, GL_STREAM_DRAW_ARB);
 			LOG_MSG("glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);");
 			check_gl_error();
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 		} else
 #endif
 		{
@@ -1790,8 +1790,8 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 	case SCREEN_OPENGL:
 #ifndef __ANDROID__
 		if(sdl.opengl.pixel_buffer_object) {
-		    glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
-		    pixels=(Bit8u *)glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY);
+		    glBindBuffer(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
+		    pixels=(Bit8u *)glMapBuffer(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY);
 		} else
 #endif
 		{
@@ -1908,12 +1908,20 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 	case SCREEN_OPENGL:
 #ifndef __ANDROID__
 		if (sdl.opengl.pixel_buffer_object) {
-			glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
+			LOG_MSG("glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);");
+			glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+			check_gl_error();
+			LOG_MSG("glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);");
 			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
+			check_gl_error();
+			LOG_MSG("glTexSubImage2D");
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
 					sdl.draw.width, sdl.draw.height, GL_BGRA_EXT,
 					GL_UNSIGNED_INT_8_8_8_8_REV, 0);
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
+			check_gl_error();
+			LOG_MSG("glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);");
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+			check_gl_error();
 #if SDL_VERSION_ATLEAST(2,0,0)
 			GFX_DrawGLTexture();
 #else
@@ -2431,12 +2439,12 @@ static void GUI_StartUp(Section * sec) {
 
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
 #ifndef __ANDROID__
-	glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress("glGenBuffersARB");
-	glBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
-	glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)SDL_GL_GetProcAddress("glDeleteBuffersARB");
-	glBufferDataARB = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress("glBufferDataARB");
-	glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
-	glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
+	glGenBuffers = (PFNGLGENBUFFERSPROC)SDL_GL_GetProcAddress("glGenBuffers");
+	glBindBuffer = (PFNGLBINDBUFFERPROC)SDL_GL_GetProcAddress("glBindBuffer");
+	glDeleteBuffers = (PFNGLDELETEBUFFERSPROC)SDL_GL_GetProcAddress("glDeleteBuffers");
+	glBufferData = (PFNGLBUFFERDATAPROC)SDL_GL_GetProcAddress("glBufferData");
+	glMapBuffer = (PFNGLMAPBUFFERPROC)SDL_GL_GetProcAddress("glMapBuffer");
+	glUnmapBuffer = (PFNGLUNMAPBUFFERPROC)SDL_GL_GetProcAddress("glUnmapBuffer");
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 	glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress("glAttachShader");
@@ -2467,8 +2475,8 @@ static void GUI_StartUp(Section * sec) {
 		sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") > 0);
 		printf("Paletted textures: %d\n", sdl.opengl.paletted_texture);
 		sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") >0 ) &&
-		    glGenBuffersARB && glBindBufferARB && glDeleteBuffersARB && glBufferDataARB &&
-		    glMapBufferARB && glUnmapBufferARB;
+		    glGenBuffers && glBindBuffer && glDeleteBuffers && glBufferData &&
+		    glMapBuffer && glUnmapBuffer;
 		printf("Pixel buffer object: %d\n", sdl.opengl.pixel_buffer_object);
     	} else {
 		sdl.opengl.packed_pixel=sdl.opengl.paletted_texture=false;
