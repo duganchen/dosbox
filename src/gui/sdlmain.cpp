@@ -1439,12 +1439,19 @@ dosurface:
 		check_gl_error();
 
 #else
+#if SDL_VERSION_ATLEAST(2,0,0)
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		check_gl_error();
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		check_gl_error();
+#else
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		check_gl_error();
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 		check_gl_error();
-
+#endif
 #endif
 		if (sdl.opengl.bilinear) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
