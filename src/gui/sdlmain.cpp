@@ -261,7 +261,7 @@ struct SDL_Block {
 		static char *const vertex_shader_default_src;
 		static char *const fragment_shader_default_src;
 		char *vertex_shader_src, *fragment_shader_src;
-		GLuint program_object;
+		GLuint program_object = 0;
 		struct {
 			GLint position;
 			//GLint tex_coord;
