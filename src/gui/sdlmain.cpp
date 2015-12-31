@@ -1366,10 +1366,12 @@ dosurface:
 		if (sdl.opengl.program_object) {
 			glDeleteProgram(sdl.opengl.program_object);
 			LOG_MSG("Program object deleted");
+			printf("%d\n", sdl.opengl.program_object);  
 			check_gl_error();
 		}
 		sdl.opengl.program_object = glCreateProgram();
 		LOG_MSG("glCreateProgram");
+		printf("%d\n", sdl.opengl.program_object);
 		check_gl_error();
 
 		if (!sdl.opengl.program_object) {
