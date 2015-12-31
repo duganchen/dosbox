@@ -496,7 +496,7 @@ case "$host" in
     *)
        if test x$have_gl_h = xyes -a x$have_gl_lib = xyes ; then 
          AC_MSG_RESULT(yes)
-         LIBS="$LIBS -lGL"
+         LIBS="$LIBS -lGL -lGLU"
          AC_DEFINE(C_OPENGL,1)
        elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes ; then 
          AC_MSG_RESULT(yes)
