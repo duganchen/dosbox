@@ -1250,8 +1250,13 @@ dosurface:
 #ifndef __ANDROID__
 		if (sdl.opengl.pixel_buffer_object) {
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-			LOG_MSG("glDeleteBuffersARB");
-			if (sdl.opengl.buffer) glDeleteBuffersARB(1, &sdl.opengl.buffer);
+			LOG_MSG("glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);");
+			check_gl_error();
+			if (sdl.opengl.buffer) {
+				LOG_MSG("glDeleteBuffersARB");
+				glDeleteBuffersARB(1, &sdl.opengl.buffer);
+				check_gl_error();
+			}
 		} else
 #endif
 		if (sdl.opengl.framebuf) {
@@ -1318,9 +1323,18 @@ dosurface:
 		/* Create the texture and display list */
 #ifndef __ANDROID__
 		if (sdl.opengl.pixel_buffer_object) {
+			LOG_MSG("glGenBuffersARB(1, &sdl.opengl.buffer);");
 			glGenBuffersARB(1, &sdl.opengl.buffer);
+			check_gl_error();
+			LOG_MSG("glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);");
+			check_gl_error();
+			LOG_MSG("glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);");
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
+			check_gl_error();
+			LOG_MSG("glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, width*height*4, NULL, GL_STREAM_DRAW_ARB);");
 			glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, width*height*4, NULL, GL_STREAM_DRAW_ARB);
+			LOG_MSG("glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);");
+			check_gl_error();
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 		} else
 #endif
@@ -1402,7 +1416,9 @@ dosurface:
 				free ( infoLog );
 			}
 
+			LOG_MSG("glDeleteProgram ( sdl.opengl.program_object );");
 			glDeleteProgram ( sdl.opengl.program_object );
+			check_gl_error();
 			goto dosurface;
 		}
 #if 0
@@ -1418,7 +1434,9 @@ dosurface:
 		check_gl_error();
 
 		glMatrixMode (GL_PROJECTION);
+		LOG_MSG("Setting glMatrixMode");
 #endif
+		LOG_MSG("glDeleteTextures(1,&sdl.opengl.texture);");
 		glDeleteTextures(1,&sdl.opengl.texture);
 		check_gl_error();
 
@@ -1473,6 +1491,7 @@ dosurface:
 #ifdef __ANDROID__	// OpenGL ES
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texsize, texsize, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 #else
+		LOG_MSG("glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, 0);");
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, 0);
 #endif
 
@@ -1541,6 +1560,7 @@ dosurface:
 		LOG_MSG("vERTEx attribute attray enabled");
 
 #else
+		LOG_MSG("Display list. This shouldn't be executing.");
 		if (glIsList(sdl.opengl.displaylist)) glDeleteLists(sdl.opengl.displaylist, 1);
 		sdl.opengl.displaylist = glGenLists(1);
 		glNewList(sdl.opengl.displaylist, GL_COMPILE);
