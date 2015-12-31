@@ -2465,7 +2465,7 @@ static void GUI_StartUp(Section * sec) {
 		sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") > 0);
 		printf("Packed pixel: %d\n", sdl.opengl.packed_pixel);
 		sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") > 0);
-		printf("Paletted textures: %d\n", sdl.opengl.paletted_texture)
+		printf("Paletted textures: %d\n", sdl.opengl.paletted_texture);
 		sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") >0 ) &&
 		    glGenBuffersARB && glBindBufferARB && glDeleteBuffersARB && glBufferDataARB &&
 		    glMapBufferARB && glUnmapBufferARB;
