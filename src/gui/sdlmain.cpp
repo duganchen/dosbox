@@ -21,6 +21,7 @@
 #define _GNU_SOURCE
 #endif
 
+#include <glu.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
