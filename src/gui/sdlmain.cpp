@@ -1417,11 +1417,8 @@ dosurface:
 		glViewport(sdl.clip.x,sdl.surface->h-(sdl.clip.y+sdl.clip.h),sdl.clip.w,sdl.clip.h);
 		check_gl_error();
 
-#endif
 		glMatrixMode (GL_PROJECTION);
-		LOG_MSG("Setting Matrix mode to projection?");
-		check_gl_error();
-
+#endif
 		glDeleteTextures(1,&sdl.opengl.texture);
 		check_gl_error();
 
