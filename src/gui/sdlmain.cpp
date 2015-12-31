@@ -336,7 +336,7 @@ struct SDL_Block {
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 char *const SDL_Block::SDL_OpenGL_Block::vertex_shader_default_src =
-      "#version 330 core\n;"
+      "#version 330 core\n"
       "in vec4 a_position;\n"
       "out vec2 v_texCoord;\n"
       "uniform vec2 rubyTextureSize;\n"
