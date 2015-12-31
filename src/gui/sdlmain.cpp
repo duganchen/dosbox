@@ -255,7 +255,6 @@ struct SDL_Block {
 		GLint max_texsize;
 		bool bilinear;
 		bool packed_pixel;
-		bool paletted_texture;
 		bool pixel_buffer_object;
 
 #if SDL_VERSION_ATLEAST(2,0,0)
@@ -2468,15 +2467,11 @@ static void GUI_StartUp(Section * sec) {
 	if(gl_ext && *gl_ext){
 		sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") > 0);
 		printf("Packed pixel: %d\n", sdl.opengl.packed_pixel);
-		sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") > 0);
-		printf("Paletted textures: %d\n", sdl.opengl.paletted_texture);
 		sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") >0 ) &&
 		    glGenBuffers && glBindBuffer && glDeleteBuffers && glBufferData &&
 		    glMapBuffer && glUnmapBuffer;
 		printf("Pixel buffer object: %d\n", sdl.opengl.pixel_buffer_object);
-    	} else {
-		sdl.opengl.packed_pixel=sdl.opengl.paletted_texture=false;
-
+    	}
 	}
 #endif	// ifndef __ANDROID__
 	}
