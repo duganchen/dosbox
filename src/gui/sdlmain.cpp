@@ -1790,7 +1790,9 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 #ifndef __ANDROID__
 		if(sdl.opengl.pixel_buffer_object) {
 		    glBindBuffer(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
-		    pixels=(Bit8u *)glMapBuffer(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY);
+		    pixels=(Bit8u *)glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
+			LOG_MSG("glMapBuffer");
+			check_gl_error();
 		} else
 #endif
 		{
