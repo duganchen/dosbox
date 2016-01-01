@@ -2482,7 +2482,6 @@ static void GUI_StartUp(Section * sec) {
 #endif
 
 	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
 
 	/*
 	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
