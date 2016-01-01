@@ -1560,6 +1560,26 @@ dosurface:
 		sdl.opengl.vertex_data[10] = 1.0f;
 		sdl.opengl.vertex_data[11] = 0.0f;
 
+		if (!sdl.opengl.vao) {
+			LOG_MSG("glGenVertexArrays");
+			glGenVertexArrays(1, &sdl.opengl.vao);
+			check_gl_error();
+			printf("%d\n", sdl.opengl.vao);
+		}
+
+		printf("glBindVertexArray(%d)\n,", sdl.opengl.vao);
+		glBindVertexArray(sdl.opengl.vao);
+		check_gl_error();
+		LOG_MSG("glBindVertexArray(0)\n");
+		glBindVertexArray(0);
+
+		if (!sdl.opengl.vbo) {
+			LOG_MSG("glGenBuffers vbo");
+			glGenBuffers(1, &sdl.opengl.vbo);
+			check_gl_error();
+			printf("%d\n", sdl.opengl.vbo);
+		}
+
 		printf("glBindVertexArray %d\n", sdl.opengl.vao);
 		glBindVertexArray(sdl.opengl.vao);
 		check_gl_error();
@@ -2505,22 +2525,6 @@ static void GUI_StartUp(Section * sec) {
 	glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)SDL_GL_GetProcAddress("glBindVertexArray");
 #endif
 
-	printf("vao is %d\n", sdl.opengl.vao);
-	LOG_MSG("glGenVertexArrays");
-	glGenVertexArrays(1, &sdl.opengl.vao);
-	check_gl_error();
-	printf("%d\n", sdl.opengl.vao);
-
-	printf("glBindVertexArray(%d)\n,", sdl.opengl.vao);
-	glBindVertexArray(sdl.opengl.vao);
-	check_gl_error();
-	LOG_MSG("glBindVertexArray(0)\n");
-	glBindVertexArray(0);
-
-	LOG_MSG("glGenBuffers vbo");
-	glGenBuffers(1, &sdl.opengl.vbo);
-	check_gl_error();
-	printf("%d\n", sdl.opengl.vbo);
 
 	/*
 	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
