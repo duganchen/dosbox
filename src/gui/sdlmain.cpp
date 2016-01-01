@@ -353,13 +353,12 @@ char *const SDL_Block::SDL_OpenGL_Block::vertex_shader_default_src =
       "}\n";
 char *const SDL_Block::SDL_OpenGL_Block::fragment_shader_default_src =
       "#version 130\n"
-      "attribute vec2 v_texCoord;\n"
+      "varying vec2 v_texCoord;\n"
       "uniform sampler2D rubyTexture;\n"
-	  "varying vec4 color;\n"
       "\n"
       "void main()\n"
       "{\n"
-      "  color = texture2d(rubyTexture, v_texCoord);\n"
+      "  gl_FragColor = texture2D(rubyTexture, v_texCoord);\n"
       "}\n";
 const GLushort SDL_Block::SDL_OpenGL_Block::vertex_data_indices[6] = { 0, 1, 2, 0, 2, 3 };
 #endif
@@ -384,7 +383,8 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 		if ((flags & SDL_OPENGL)==0) 
 			SDL_FillRect(sdl.surface,NULL,SDL_MapRGB(sdl.surface->format,0,0,0));
 		else {
-			glClearColor (0.0, 0.0, 0.0, 1.0);
+			LOG_MSG("glClearColor");
+			glClearColor (0.0, 1.0, 0.0, 1.0);
 			check_gl_error();
 			glClear(GL_COLOR_BUFFER_BIT);
 			check_gl_error();
