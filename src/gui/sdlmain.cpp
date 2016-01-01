@@ -363,7 +363,7 @@ char *const SDL_Block::SDL_OpenGL_Block::fragment_shader_default_src =
       "}\n";
 const GLushort SDL_Block::SDL_OpenGL_Block::vertex_data_indices[6] = { 0, 1, 2, 0, 2, 3 };
 
-Gluint vao = 0;
+GLuint vao = 0;
 #endif
 
 static SDL_Block sdl;
