@@ -1584,7 +1584,10 @@ dosurface:
 		glEnableVertexAttribArray(sdl.opengl.program_arguments.position);
 		LOG_MSG("vERTEx attribute attray enabled");
 		check_gl_error();
+
+		LOG_MSG("glBindVertexArray(0);");
 		glBindVertexArray(0);
+		check_gl_error();
 #else
 		LOG_MSG("Display list. This shouldn't be executing.");
 		if (glIsList(sdl.opengl.displaylist)) glDeleteLists(sdl.opengl.displaylist, 1);
@@ -2502,10 +2505,18 @@ static void GUI_StartUp(Section * sec) {
 	glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)SDL_GL_GetProcAddress("glBindVertexArray");
 #endif
 
+	printf("vao is %d\n", sdl.opengl.vao);
 	LOG_MSG("glGenVertexArrays");
 	glGenVertexArrays(1, &sdl.opengl.vao);
 	check_gl_error();
 	printf("%d\n", sdl.opengl.vao);
+
+	printf("glBindVertexArray(%d)\n,", sdl.opengl.vao);
+	glBindVertexArray(sdl.opengl.vao);
+	check_gl_error();
+	LOG_MSG("glBindVertexArray(0)\n");
+	glBindVertexArray(0);
+
 	LOG_MSG("glGenBuffers vbo");
 	glGenBuffers(1, &sdl.opengl.vbo);
 	check_gl_error();
