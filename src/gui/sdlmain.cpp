@@ -359,7 +359,7 @@ char *const SDL_Block::SDL_OpenGL_Block::fragment_shader_default_src =
       "\n"
       "void main()\n"
       "{\n"
-      "  color = texture(rubyTexture, v_texCoord);\n"
+      "  color = texture2d(rubyTexture, v_texCoord);\n"
       "}\n";
 const GLushort SDL_Block::SDL_OpenGL_Block::vertex_data_indices[6] = { 0, 1, 2, 0, 2, 3 };
 #endif
