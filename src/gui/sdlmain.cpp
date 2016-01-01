@@ -127,6 +127,7 @@ PFNGLUSEPROGRAMPROC glUseProgram = NULL;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = NULL;
 PFNGLBINDVERTEXARRAYPROC glBindVertexArray = NULL;
+PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = NULL;
 #endif
 
 #endif //C_OPENGL
@@ -714,7 +715,18 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 #if C_OPENGL
 	if (sdl.opengl.context) {
 		SDL_GL_DeleteContext(sdl.opengl.context);
+		LOG_MSG("Deleting context");
 		sdl.opengl.context=0;
+	}
+
+	if (sdl.opengl.vao) {
+		glDeleteVertexArrays(1, &sdl.opengl.vao);
+		sdl.opengl.vao = 0;
+	}
+
+	if (sdl.opengl.vbo) {
+		glDeleteBuffers(1, &sdl.opengl.vbo);
+		sdl.opengl.vbo = 0;
 	}
 #endif
 	sdl.window_desired_width = width;
@@ -1303,6 +1315,7 @@ dosurface:
 		}
 
 		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
+		LOG_MSG("Creating context");
 		if (sdl.opengl.context == NULL) {
 			LOG_MSG(SDL_GetError());
 			LOG_MSG("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
@@ -2523,6 +2536,7 @@ static void GUI_StartUp(Section * sec) {
 	glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)SDL_GL_GetProcAddress("glVertexAttribPointer");
 	glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glGenVertexArrays");
 	glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)SDL_GL_GetProcAddress("glBindVertexArray");
+	glDeleteVertexArray = (PFNGLDELETEVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glDeleteVertexArray");
 #endif
 
 
