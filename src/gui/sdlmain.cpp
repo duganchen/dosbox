@@ -1563,11 +1563,11 @@ dosurface:
 		check_gl_error();
 
 		LOG_MSG("glBindBuffer vbo");
-		glBindBuffer(sdl.opengl.vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.vbo);
 		check_gl_error();
 
 		LOG_MSG("glBufferData vertex_data");
-		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.vertex_data), sdl.opengl.vertex.data, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.vertex_data), sdl.opengl.vertex_data, GL_STATIC_DRAW);
 		check_gl_error();
 
 		// Load the vertex positions
@@ -2500,8 +2500,8 @@ static void GUI_StartUp(Section * sec) {
 	glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)SDL_GL_GetProcAddress("glBindVertexArray");
 #endif
 
-	glGenVertexArrays(1, &(sdl.opengl.vao);
-	glGenBuffers(1, &(sdl.opengl.vbo);
+	glGenVertexArrays(1, &(sdl.opengl.vao));
+	glGenBuffers(1, &(sdl.opengl.vbo));
 
 	/*
 	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
