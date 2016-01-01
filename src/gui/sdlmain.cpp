@@ -125,7 +125,8 @@ PFNGLUNIFORM2FPROC glUniform2f = NULL;
 PFNGLUNIFORM1IPROC glUniform1i = NULL;
 PFNGLUSEPROGRAMPROC glUseProgram = NULL;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
-
+PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = NULL;
+P
 #endif
 
 #endif //C_OPENGL
@@ -361,6 +362,8 @@ char *const SDL_Block::SDL_OpenGL_Block::fragment_shader_default_src =
       "  gl_FragColor = texture2D(rubyTexture, v_texCoord);\n"
       "}\n";
 const GLushort SDL_Block::SDL_OpenGL_Block::vertex_data_indices[6] = { 0, 1, 2, 0, 2, 3 };
+
+Gluint vao = 0;
 #endif
 
 static SDL_Block sdl;
@@ -1562,6 +1565,8 @@ dosurface:
 		glEnableVertexAttribArray(sdl.opengl.program_arguments.position);
 		LOG_MSG("vERTEx attribute attray enabled");
 
+		glGenVertexArrays(1, &vao);
+
 #else
 		LOG_MSG("Display list. This shouldn't be executing.");
 		if (glIsList(sdl.opengl.displaylist)) glDeleteLists(sdl.opengl.displaylist, 1);
@@ -2471,6 +2476,7 @@ static void GUI_StartUp(Section * sec) {
 	glUniform1i = (PFNGLUNIFORM1IPROC)SDL_GL_GetProcAddress("glUniform1i");
 	glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress("glUseProgram");
 	glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)SDL_GL_GetProcAddress("glVertexAttribPointer");
+	glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glGenVertexArrays");
 #endif
 
 	/*
