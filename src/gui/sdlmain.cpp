@@ -1571,7 +1571,7 @@ dosurface:
 		check_gl_error();
 
 		// Load the vertex positions
-		glVertexAtribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
+		glVertexAttribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
 #if 0
 		glVertexAttribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT,
 		                      GL_FALSE, 3 * sizeof (GLfloat), sdl.opengl.vertex_data);
