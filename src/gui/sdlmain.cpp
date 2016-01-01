@@ -126,6 +126,7 @@ PFNGLUNIFORM1IPROC glUniform1i = NULL;
 PFNGLUSEPROGRAMPROC glUseProgram = NULL;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = NULL;
+PFNGLBINDVERTEXARRAYPROC glBindVertexArray = NULL;
 #endif
 
 #endif //C_OPENGL
@@ -1558,13 +1559,14 @@ dosurface:
 		sdl.opengl.vertex_data[10] = 1.0f;
 		sdl.opengl.vertex_data[11] = 0.0f;
 
+		glBindVertexArray(vao);
+
 		// Load the vertex positions
 		glVertexAttribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT,
 		                      GL_FALSE, 3 * sizeof (GLfloat), sdl.opengl.vertex_data);
 		glEnableVertexAttribArray(sdl.opengl.program_arguments.position);
 		LOG_MSG("vERTEx attribute attray enabled");
 
-		glGenVertexArrays(1, &vao);
 
 #else
 		LOG_MSG("Display list. This shouldn't be executing.");
@@ -2476,7 +2478,11 @@ static void GUI_StartUp(Section * sec) {
 	glUseProgram = (PFNGLUSEPROGRAMPROC)SDL_GL_GetProcAddress("glUseProgram");
 	glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC)SDL_GL_GetProcAddress("glVertexAttribPointer");
 	glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glGenVertexArrays");
+	glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)SDL_GL_GetProcAddress("glBindVertexArray");
 #endif
+
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
 
 	/*
 	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
