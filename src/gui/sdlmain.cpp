@@ -266,6 +266,8 @@ struct SDL_Block {
 		static char *const fragment_shader_default_src;
 		char *vertex_shader_src, *fragment_shader_src;
 		GLuint program_object = 0;
+		GLuint vao = 0;
+		GLuint vbo = 0;
 		struct {
 			GLint position;
 			//GLint tex_coord;
@@ -363,7 +365,6 @@ char *const SDL_Block::SDL_OpenGL_Block::fragment_shader_default_src =
       "}\n";
 const GLushort SDL_Block::SDL_OpenGL_Block::vertex_data_indices[6] = { 0, 1, 2, 0, 2, 3 };
 
-GLuint vao = 0;
 #endif
 
 static SDL_Block sdl;
@@ -1557,15 +1558,31 @@ dosurface:
 		sdl.opengl.vertex_data[10] = 1.0f;
 		sdl.opengl.vertex_data[11] = 0.0f;
 
-		glBindVertexArray(vao);
+		LOG_MSG("glBindVertexArray");
+		glBindVertexArray(sdl.opengl.vao);
+		check_gl_error();
+
+		LOG_MSG("glBindBuffer vbo");
+		glBindBuffer(sdl.opengl.vbo);
+		check_gl_error();
+
+		LOG_MSG("glBufferData vertex_data");
+		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.vertex_data), sdl.opengl.vertex.data, GL_STATIC_DRAW);
+		check_gl_error();
 
 		// Load the vertex positions
+		glVertexAtribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
+#if 0
 		glVertexAttribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT,
 		                      GL_FALSE, 3 * sizeof (GLfloat), sdl.opengl.vertex_data);
+#endif
+		LOG_MSG("glVertexAttribPointer");
+		check_gl_error();
+
 		glEnableVertexAttribArray(sdl.opengl.program_arguments.position);
 		LOG_MSG("vERTEx attribute attray enabled");
-
-
+		check_gl_error();
+		glBindVertexArray(0);
 #else
 		LOG_MSG("Display list. This shouldn't be executing.");
 		if (glIsList(sdl.opengl.displaylist)) glDeleteLists(sdl.opengl.displaylist, 1);
@@ -1929,7 +1946,9 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 			check_gl_error();
 #if SDL_VERSION_ATLEAST(2,0,0)
+			glBindVertexArray(sdl.opengl.vao);
 			GFX_DrawGLTexture();
+			glBindVertexArray(0);
 #else
 			glCallList(sdl.opengl.displaylist);
 #endif
@@ -1982,7 +2001,9 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 #else	// !__ANDROID__
 
 #if SDL_VERSION_ATLEAST(2,0,0)
+			glBindVertexArray(sdl.opengl.vao);
 			GFX_DrawGLTexture();
+			glBindVertexArray(0);
 #else
 			glCallList(sdl.opengl.displaylist);
 #endif
@@ -2479,7 +2500,8 @@ static void GUI_StartUp(Section * sec) {
 	glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)SDL_GL_GetProcAddress("glBindVertexArray");
 #endif
 
-	glGenVertexArrays(1, &vao);
+	glGenVertexArrays(1, &(sdl.opengl.vao);
+	glGenBuffers(1, &(sdl.opengl.vbo);
 
 	/*
 	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
