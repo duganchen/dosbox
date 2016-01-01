@@ -2500,7 +2500,7 @@ static void GUI_StartUp(Section * sec) {
 	glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)SDL_GL_GetProcAddress("glBindVertexArray");
 #endif
 
-	glGenVertexArrays(1, &(sdl.opengl.vao));
+	glGenVertexArrays(1, sdl.opengl.&vao);
 	glGenBuffers(1, &(sdl.opengl.vbo));
 
 	/*
