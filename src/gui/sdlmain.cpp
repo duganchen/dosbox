@@ -1573,12 +1573,10 @@ dosurface:
 		sdl.opengl.vertex_data[10] = 1.0f;
 		sdl.opengl.vertex_data[11] = 0.0f;
 
-		if (!sdl.opengl.vao) {
-			LOG_MSG("glGenVertexArrays");
-			glGenVertexArrays(1, &sdl.opengl.vao);
-			check_gl_error();
-			printf("%d\n", sdl.opengl.vao);
-		}
+		LOG_MSG("glGenVertexArrays");
+		glGenVertexArrays(1, &sdl.opengl.vao);
+		check_gl_error();
+		printf("%d\n", sdl.opengl.vao);
 
 		printf("glBindVertexArray(%d)\n,", sdl.opengl.vao);
 		glBindVertexArray(sdl.opengl.vao);
@@ -1586,12 +1584,10 @@ dosurface:
 		LOG_MSG("glBindVertexArray(0)\n");
 		glBindVertexArray(0);
 
-		if (!sdl.opengl.vbo) {
-			LOG_MSG("glGenBuffers vbo");
-			glGenBuffers(1, &sdl.opengl.vbo);
-			check_gl_error();
-			printf("%d\n", sdl.opengl.vbo);
-		}
+		LOG_MSG("glGenBuffers vbo");
+		glGenBuffers(1, &sdl.opengl.vbo);
+		check_gl_error();
+		printf("%d\n", sdl.opengl.vbo);
 
 		printf("glBindVertexArray %d\n", sdl.opengl.vao);
 		glBindVertexArray(sdl.opengl.vao);
@@ -1607,10 +1603,7 @@ dosurface:
 
 		// Load the vertex positions
 		glVertexAttribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
-#if 0
-		glVertexAttribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT,
-		                      GL_FALSE, 3 * sizeof (GLfloat), sdl.opengl.vertex_data);
-#endif
+
 		LOG_MSG("glVertexAttribPointer");
 		check_gl_error();
 
