@@ -338,7 +338,7 @@ struct SDL_Block {
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 char *const SDL_Block::SDL_OpenGL_Block::vertex_shader_default_src =
-      "#version 130 core\n"
+      "#version 130\n"
       "attribute vec4 a_position;\n"
       "varying vec2 v_texCoord;\n"
       "uniform vec2 rubyTextureSize;\n"
@@ -352,7 +352,7 @@ char *const SDL_Block::SDL_OpenGL_Block::vertex_shader_default_src =
       "  v_texCoord = vec2((a_position.x+1.0)/2.0*rubyInputSize.x/rubyTextureSize.x,(1.0-a_position.y)/2.0*rubyInputSize.y/rubyTextureSize.y);\n"
       "}\n";
 char *const SDL_Block::SDL_OpenGL_Block::fragment_shader_default_src =
-      "#version 130 core\n"
+      "#version 130\n"
       "attribute vec2 v_texCoord;\n"
       "uniform sampler2D rubyTexture;\n"
 	  "varying vec4 color;\n"
