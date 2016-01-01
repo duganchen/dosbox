@@ -1498,6 +1498,7 @@ dosurface:
 #else
 		LOG_MSG("glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);");
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+		check_gl_error();
 #endif
 
 #if !SDL_VERSION_ATLEAST(2,0,0)
@@ -1524,6 +1525,7 @@ dosurface:
 #if SDL_VERSION_ATLEAST(2,0,0)
 		// Time to take advantage of the shader now
 		glUseProgram(sdl.opengl.program_object);
+		check_gl_error();
 		LOG_MSG("using program");
 		
 		// Get the attribute locations
