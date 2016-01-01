@@ -78,14 +78,6 @@
 #define APIENTRYP APIENTRY *
 #endif
 
-#ifndef GL_ARB_pixel_buffer_object
-#define GL_ARB_pixel_buffer_object 1
-#define GL_PIXEL_PACK_BUFFER_ARB           0x88EB
-#define GL_PIXEL_UNPACK_BUFFER_ARB         0x88EC
-#define GL_PIXEL_PACK_BUFFER_BINDING_ARB   0x88ED
-#define GL_PIXEL_UNPACK_BUFFER_BINDING_ARB 0x88EF
-#endif
-
 #ifndef GL_ARB_vertex_buffer_object
 #define GL_ARB_vertex_buffer_object 1
 typedef void (APIENTRYP PFNGLGENBUFFERSPROC) (GLsizei n, GLuint *buffers);
@@ -259,8 +251,6 @@ struct SDL_Block {
 #endif
 		GLint max_texsize;
 		bool bilinear;
-		bool paletted_texture;
-		bool pixel_buffer_object;
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 		static char *const vertex_shader_default_src;
@@ -1266,18 +1256,6 @@ dosurface:
 #if C_OPENGL
 	case SCREEN_OPENGL:
 	{
-#ifndef __ANDROID__
-		if (sdl.opengl.pixel_buffer_object) {
-			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-			LOG_MSG("glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);");
-			check_gl_error();
-			if (sdl.opengl.buffer) {
-				LOG_MSG("glDeleteBuffers");
-				glDeleteBuffers(1, &sdl.opengl.buffer);
-				check_gl_error();
-			}
-		} else
-#endif
 		if (sdl.opengl.framebuf) {
 			free(sdl.opengl.framebuf);
 		}
@@ -1339,24 +1317,7 @@ dosurface:
 		}
 #endif	// !SDL_VERSION_ATLEAST(2,0,0)
 		/* Create the texture and display list */
-#ifndef __ANDROID__
-		if (sdl.opengl.pixel_buffer_object) {
-			LOG_MSG("glGenBuffers(1, &sdl.opengl.buffer);");
-			glGenBuffers(1, &sdl.opengl.buffer);
-			check_gl_error();
-			LOG_MSG("glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);");
-			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);
-			check_gl_error();
-			LOG_MSG("glBufferData(GL_PIXEL_UNPACK_BUFFER, width*height*4, NULL, GL_STREAM_DRAW);");
-			glBufferData(GL_PIXEL_UNPACK_BUFFER, width*height*4, NULL, GL_STREAM_DRAW);
-			LOG_MSG("glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);");
-			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-			check_gl_error();
-		} else
-#endif
-		{
-			sdl.opengl.framebuf=malloc(width*height*4);		//32 bit color
-		}
+		sdl.opengl.framebuf=malloc(width*height*4);		//32 bit color
 		sdl.opengl.pitch=width*4;
 #if SDL_VERSION_ATLEAST(2,0,0)
 		int windowHeight;
@@ -1636,10 +1597,6 @@ dosurface:
 #endif
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
-#ifndef __ANDROID__
-		if (sdl.opengl.pixel_buffer_object)
-			retFlags |= GFX_HARDWARE;
-#endif
 	break;
 		}//OPENGL
 #endif	//C_OPENGL
@@ -1840,17 +1797,7 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 #endif	// !SDL_VERSION_ATLEAST(2,0,0)
 #if C_OPENGL
 	case SCREEN_OPENGL:
-#ifndef __ANDROID__
-		if(sdl.opengl.pixel_buffer_object) {
-		    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);
-		    pixels=(Bit8u *)glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
-			LOG_MSG("glMapBuffer");
-			check_gl_error();
-		} else
-#endif
-		{
-		    pixels=(Bit8u *)sdl.opengl.framebuf;
-		}
+		pixels=(Bit8u *)sdl.opengl.framebuf;
 		pitch=sdl.opengl.pitch;
 		sdl.updating=true;
 		return true;
@@ -1960,37 +1907,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 #endif	// !SDL_VERSION_ATLEAST(2,0,0)
 #if C_OPENGL
 	case SCREEN_OPENGL:
-#ifndef __ANDROID__
-		if (sdl.opengl.pixel_buffer_object) {
-			LOG_MSG("glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);");
-			glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
-			check_gl_error();
-			LOG_MSG("glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);");
-			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-			check_gl_error();
-			LOG_MSG("glTexSubImage2D");
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-					sdl.draw.width, sdl.draw.height, GL_BGRA,
-					GL_UNSIGNED_INT_8_8_8_8_REV, 0);
-			check_gl_error();
-			LOG_MSG("glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);");
-			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-			check_gl_error();
-#if SDL_VERSION_ATLEAST(2,0,0)
-			glBindVertexArray(sdl.opengl.vao);
-			GFX_DrawGLTexture();
-			glBindVertexArray(0);
-#else
-			glCallList(sdl.opengl.displaylist);
-#endif
-
-#if SDL_VERSION_ATLEAST(2,0,0)
-			SDL_GL_SwapWindow(sdl.window);
-#else
- 			SDL_GL_SwapBuffers();
-#endif
-		} else
-#endif	// ifndef __ANDROID__
 		if (changedLines) {
 			Bitu y = 0, index = 0;
 			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
@@ -2532,20 +2448,6 @@ static void GUI_StartUp(Section * sec) {
 	glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glDeleteVertexArrays");
 #endif
 
-
-	/*
-	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
-	if(gl_ext && *gl_ext){
-		sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") > 0);
-		printf("Paletted textures: %d\n", sdl.opengl.paletted_texture);
-		sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") >0 ) &&
-		    glGenBuffers && glBindBuffer && glDeleteBuffers && glBufferData &&
-		    glMapBuffer && glUnmapBuffer;
-		printf("Pixel buffer object: %d\n", sdl.opengl.pixel_buffer_object);
-   	}
-	*/
-
-	sdl.opengl.pixel_buffer_object = 1;
 #endif	// ifndef __ANDROID__
 	}
 	} /* OPENGL is requested end */
