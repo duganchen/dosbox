@@ -1558,7 +1558,7 @@ dosurface:
 		sdl.opengl.vertex_data[10] = 1.0f;
 		sdl.opengl.vertex_data[11] = 0.0f;
 
-		LOG_MSG("glBindVertexArray");
+		printf("glBindVertexArray %d\n", sdl.opengl.vao);
 		glBindVertexArray(sdl.opengl.vao);
 		check_gl_error();
 
@@ -2500,8 +2500,14 @@ static void GUI_StartUp(Section * sec) {
 	glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)SDL_GL_GetProcAddress("glBindVertexArray");
 #endif
 
+	LOG_MSG("glGenVertexArrays");
 	glGenVertexArrays(1, &sdl.opengl.vao);
+	check_gl_error();
+	printf("%d\n", sdl.opengl.vao);
+	LOG_MSG("glGenBuffers vbo");
 	glGenBuffers(1, &sdl.opengl.vbo);
+	check_gl_error();
+	printf("%d\n", sdl.opengl.vbo);
 
 	/*
 	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
