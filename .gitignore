@@ -1,2 +1,4 @@
 .ycm_extra.conf
 config.h
+*.orig
+*.rej
