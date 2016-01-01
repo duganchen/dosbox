@@ -2545,7 +2545,7 @@ static void GUI_StartUp(Section * sec) {
    	}
 	*/
 
-	sdl.opengl.pixel_buffer_object = 0;
+	sdl.opengl.pixel_buffer_object = 1;
 #endif	// ifndef __ANDROID__
 	}
 	} /* OPENGL is requested end */
