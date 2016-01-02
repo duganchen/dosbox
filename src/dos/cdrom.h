@@ -32,9 +32,7 @@
 #include "mem.h"
 #include "mixer.h"
 #include "SDL.h"
-#if SDL_VERSION_ATLEAST(2,0,0)
 #include "../sdl_cdrom/compat_SDL_cdrom.h"
-#endif
 #include "SDL_thread.h"
 
 #if defined(C_SDL_SOUND)
