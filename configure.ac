@@ -43,12 +43,12 @@ void blah(){
 }
 ])],AC_MSG_RESULT([yes]),[
  AC_MSG_RESULT([no]) 
- AC_MSG_ERROR([Only libSDL 1.2.x or 2.0.x supported])])
+ AC_MSG_ERROR([Only libSDL 2.0.x supported])])
 
-dnl Check for SDL_cdrom compatibility layer platform (used with SDL 2.0 only)
+dnl Check for SDL_cdrom compatibility layer platform (used with SDL 2.0)
 AC_MSG_CHECKING(for SDL_cdrom compatibility layer platform)
 COMPAT_SDL_CDROM_GET_PLATFORM(:)
-AH_TEMPLATE(C_COMPAT_SDL_CDROM_PLATFORM,[Platform for SDL_cdrom compatibility layer (SDL 2.0 only)])
+AH_TEMPLATE(C_COMPAT_SDL_CDROM_PLATFORM,[Platform for SDL_cdrom compatibility layer (SDL 2.0)])
 
 physical_cdrom_mount=1
 
@@ -102,9 +102,6 @@ case $compat_sdl_cdrom_arch in
         AC_MSG_RESULT([disabled])
 esac
 
-if test x"$sdl_ver" = xsdl12 ; then
-    physical_cdrom_mount=1
-fi
 
 AC_MSG_CHECKING(for physical cdrom mounting support)
 AH_TEMPLATE(C_PHYSICAL_CDROM_MOUNT,[Physical CD-ROM mounting support])
@@ -443,11 +440,7 @@ AH_TEMPLATE(C_MODEM,[Define to 1 to enable internal modem support, requires SDL_
 AH_TEMPLATE(C_IPX,[Define to 1 to enable IPX over Internet networking, requires SDL_net])
 AC_CHECK_HEADER(SDL_net.h,have_sdl_net_h=yes,)
 
-if test x"$sdl_ver" = xsdl2 ; then 
-  LIBSDL_HEADER="SDL2"
-else
-  LIBSDL_HEADER="SDL"
-fi
+LIBSDL_HEADER="SDL2"
 
 if test x$host = xi386-pc-os2-emx ; then
   AC_MSG_CHECKING(for SDLNet_Init in ${LIBSDL_HEADER}_net);
@@ -496,7 +489,7 @@ case "$host" in
     *)
        if test x$have_gl_h = xyes -a x$have_gl_lib = xyes ; then 
          AC_MSG_RESULT(yes)
-         LIBS="$LIBS -lGL"
+         LIBS="$LIBS -lGL -lGLU"
          AC_DEFINE(C_OPENGL,1)
        elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes ; then 
          AC_MSG_RESULT(yes)
@@ -515,7 +508,7 @@ AC_CHECK_LIB(SDL_sound, Sound_Init, have_SDL_sound_init=yes,,)
 AC_CHECK_LIB(SDL_sound, Sound_Seek, have_SDL_sound_seek=yes,,)
 if test x$have_SDL_sound_h = xyes -a x$have_SDL_sound_init = xyes ; then
   if test x$have_SDL_sound_seek = xyes ; then
-    LIBS="-lSDL_sound $LIBS"
+    LIBS="-l${LIBSDL_HEADER}_sound $LIBS"
     AC_DEFINE(C_SDL_SOUND,1)
    else 
      AC_MSG_WARN([Can't find SoundSeek in libSDL_Sound, libSDL_sound support disabled])
