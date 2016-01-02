@@ -1,4 +1,5 @@
-.ycm_extra.conf
+.ycm_extra.conf.py
 config.h
 *.orig
 *.rej
+*.py
