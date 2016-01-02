@@ -466,7 +466,6 @@ void GFX_ResetScreen(void) {
 
 void GFX_ForceFullscreenExit(void) {
 	if (sdl.desktop.lazy_fullscreen) {
-//		sdl.desktop.lazy_fullscreen_req=true;
 		LOG_MSG("GFX LF: invalid screen change");
 	} else {
 		sdl.desktop.fullscreen=false;
@@ -516,7 +515,6 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 	sdl.window_desired_height = height;
 	int currWidth, currHeight;
 	if (sdl.window) {
-		//SDL_GetWindowSize(sdl.window, &currWidth, &currHeight);
 		if (!sdl.update_window) {
 			SDL_GetWindowSize(sdl.window, &currWidth, &currHeight);
 			sdl.update_display_contents = ((width == currWidth) && (height == currHeight));
@@ -526,14 +524,7 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 	/* If we change screen type, recreate the window. Furthermore, if
 	 * it is our very first time then we simply create a new window.
 	 */
-	if (!sdl.window
-	    || (lastType != screenType)
-//	    || (currWidth != width) || (currHeight != height)
-//	    || (glwindow != (0 != (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_OPENGL)))
-//	    || (fullscreen && (0 == (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_FULLSCREEN)))
-//	    || (fullscreen != (SDL_WINDOW_FULLSCREEN == (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_FULLSCREEN)))
-//	    || (fullscreen && ((width != currWidth) || (height != currHeight)))
-	) {
+	if (!sdl.window || (lastType != screenType)) {
 		lastType = screenType;
 		if (sdl.window) {
 			SDL_DestroyWindow(sdl.window);
@@ -1169,7 +1160,6 @@ static void SwitchFullScreen(bool pressed) {
 		return;
 
 	if (sdl.desktop.lazy_fullscreen) {
-//		sdl.desktop.lazy_fullscreen_req=true;
 		LOG_MSG("GFX LF: fullscreen switching not supported");
 	} else {
 		GFX_SwitchFullScreen();
@@ -2177,10 +2167,6 @@ static void launcheditor() {
 		exit(1);
 	}
 	if(f) fclose(f);
-/*	if(edit.empty()) {
-		printf("no editor specified.\n");
-		exit(1);
-	}*/
 	std::string edit;
 	while(control->cmdline->FindString("-editconf",edit,true)) //Loop until one succeeds
 		execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) 0);
@@ -2230,10 +2216,6 @@ static void launchcaptures(std::string const& edit) {
 		printf("%s doesn't exists or isn't a directory.\n",path.c_str());
 		exit(1);
 	}
-/*	if(edit.empty()) {
-		printf("no editor specified.\n");
-		exit(1);
-	}*/
 
 	execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) 0);
 	//if you get here the launching failed!
@@ -2293,7 +2275,6 @@ static void erasemapperfile() {
 }
 
 
-//extern void UI_Init(void);
 int main(int argc, char* argv[]) {
 	try {
 		CommandLine com_line(argc,argv);
@@ -2448,8 +2429,6 @@ int main(int argc, char* argv[]) {
 #if (ENVIRON_LINKED)
 		control->ParseEnv(environ);
 #endif
-//		UI_Init();
-//		if (control->cmdline->FindExist("-startui")) UI_Run(false);
 		/* Init all the sections */
 		control->Init();
 		/* Some extra SDL Functions */
