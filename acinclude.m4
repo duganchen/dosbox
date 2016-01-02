@@ -272,64 +272,59 @@ dnl MUST be called after SDL version check (defined only for SDL 2.0).
 dnl Taken off configure.in from SDL 1.2 and then modified
 AC_DEFUN([COMPAT_SDL_CDROM_GET_PLATFORM],[
 
-if test x"$sdl_ver" = xsdl2 ; then
-    case "$host" in
-        arm-*-elf*) # FIXME: Can we get more specific for iPodLinux?
-            compat_sdl_cdrom_arch=linux
-            ;;
-        *-*-linux*|*-*-uclinux*|*-*-gnu*|*-*-k*bsd*-gnu|*-*-bsdi*|*-*-freebsd*|*-*-dragonfly*|*-*-netbsd*|*-*-openbsd*|*-*-sysv5*|*-*-solaris*|*-*-hpux*|*-*-irix*|*-*-aix*|*-*-osf*)
-            case "$host" in
-                *-*-linux*)         compat_sdl_cdrom_arch=linux ;;
-                *-*-uclinux*)       compat_sdl_cdrom_arch=linux ;;
-                *-*-kfreebsd*-gnu)  compat_sdl_cdrom_arch=COMPAT_SDL_CDROM_PLATFORM_KFREEBSD_GNU ;;
-                *-*-knetbsd*-gnu)   compat_sdl_cdrom_arch=knetbsd-gnu ;;
-                *-*-kopenbsd*-gnu)  compat_sdl_cdrom_arch=kopenbsd-gnu ;;
-                *-*-gnu*)           compat_sdl_cdrom_arch=gnu ;; # must be last of the gnu variants
-                *-*-bsdi*)          compat_sdl_cdrom_arch=bsdi ;;
-                *-*-freebsd*)       compat_sdl_cdrom_arch=freebsd ;;
-                *-*-dragonfly*)     compat_sdl_cdrom_arch=freebsd ;;
-                *-*-netbsd*)        compat_sdl_cdrom_arch=netbsd ;;
-                *-*-openbsd*)       compat_sdl_cdrom_arch=openbsd ;;
-                *-*-sysv5*)         compat_sdl_cdrom_arch=sysv5 ;;
-                *-*-solaris*)       compat_sdl_cdrom_arch=solaris ;;
-                *-*-hpux*)          compat_sdl_cdrom_arch=hpux ;;
-                *-*-irix*)          compat_sdl_cdrom_arch=irix ;;
-                *-*-aix*)           compat_sdl_cdrom_arch=aix ;;
-                *-*-osf*)           compat_sdl_cdrom_arch=osf ;;
-            esac
-            ;;
-        *-*-qnx*)
-            compat_sdl_cdrom_arch=qnx
-            ;;
-        *-*-cygwin* | *-*-mingw32*)
-            compat_sdl_cdrom_arch=win32
-            ;;
-        *-wince*)
-            compat_sdl_cdrom_arch=win32
-            ;;
-        *-*-beos* | *-*-haiku*)
-            compat_sdl_cdrom_arch=beos
-            ;;
-        *-*-darwin* )
-            # This could be either full "Mac OS X", or plain "Darwin" which is
-            # just the OS X kernel sans upper layers like Carbon and Cocoa.
-            # Next line is broken
-            compat_sdl_cdrom_arch=macosx
-            ;;
-        *-*-mint*)
-            compat_sdl_cdrom_arch=mint
-            ;;
-        *-riscos)
-            compat_sdl_cdrom_arch=riscos
-            ;;
-        *)
-            compat_sdl_cdrom_arch=undefined
-            ;;
-    esac
-else
-    AC_MSG_ERROR([Compatible SDL version not found])
-fi
-
+  case "$host" in
+      arm-*-elf*) # FIXME: Can we get more specific for iPodLinux?
+          compat_sdl_cdrom_arch=linux
+          ;;
+      *-*-linux*|*-*-uclinux*|*-*-gnu*|*-*-k*bsd*-gnu|*-*-bsdi*|*-*-freebsd*|*-*-dragonfly*|*-*-netbsd*|*-*-openbsd*|*-*-sysv5*|*-*-solaris*|*-*-hpux*|*-*-irix*|*-*-aix*|*-*-osf*)
+          case "$host" in
+              *-*-linux*)         compat_sdl_cdrom_arch=linux ;;
+              *-*-uclinux*)       compat_sdl_cdrom_arch=linux ;;
+              *-*-kfreebsd*-gnu)  compat_sdl_cdrom_arch=COMPAT_SDL_CDROM_PLATFORM_KFREEBSD_GNU ;;
+              *-*-knetbsd*-gnu)   compat_sdl_cdrom_arch=knetbsd-gnu ;;
+              *-*-kopenbsd*-gnu)  compat_sdl_cdrom_arch=kopenbsd-gnu ;;
+              *-*-gnu*)           compat_sdl_cdrom_arch=gnu ;; # must be last of the gnu variants
+              *-*-bsdi*)          compat_sdl_cdrom_arch=bsdi ;;
+              *-*-freebsd*)       compat_sdl_cdrom_arch=freebsd ;;
+              *-*-dragonfly*)     compat_sdl_cdrom_arch=freebsd ;;
+              *-*-netbsd*)        compat_sdl_cdrom_arch=netbsd ;;
+              *-*-openbsd*)       compat_sdl_cdrom_arch=openbsd ;;
+              *-*-sysv5*)         compat_sdl_cdrom_arch=sysv5 ;;
+              *-*-solaris*)       compat_sdl_cdrom_arch=solaris ;;
+              *-*-hpux*)          compat_sdl_cdrom_arch=hpux ;;
+              *-*-irix*)          compat_sdl_cdrom_arch=irix ;;
+              *-*-aix*)           compat_sdl_cdrom_arch=aix ;;
+              *-*-osf*)           compat_sdl_cdrom_arch=osf ;;
+          esac
+          ;;
+      *-*-qnx*)
+          compat_sdl_cdrom_arch=qnx
+          ;;
+      *-*-cygwin* | *-*-mingw32*)
+          compat_sdl_cdrom_arch=win32
+          ;;
+      *-wince*)
+          compat_sdl_cdrom_arch=win32
+          ;;
+      *-*-beos* | *-*-haiku*)
+          compat_sdl_cdrom_arch=beos
+          ;;
+      *-*-darwin* )
+          # This could be either full "Mac OS X", or plain "Darwin" which is
+          # just the OS X kernel sans upper layers like Carbon and Cocoa.
+          # Next line is broken
+          compat_sdl_cdrom_arch=macosx
+          ;;
+      *-*-mint*)
+          compat_sdl_cdrom_arch=mint
+          ;;
+      *-riscos)
+          compat_sdl_cdrom_arch=riscos
+          ;;
+      *)
+          compat_sdl_cdrom_arch=undefined
+          ;;
+  esac
 ]);
 
 AH_TOP([
