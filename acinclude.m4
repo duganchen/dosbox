@@ -13,7 +13,6 @@ AC_DEFUN([EXULT_CHECK_SDL],[
 
   AC_ARG_WITH(sdl-prefix,[  --with-sdl-prefix=PFX   Prefix where SDL is installed (optional)], sdl_prefix="$withval", sdl_prefix="")
   AC_ARG_WITH(sdl-exec-prefix,[  --with-sdl-exec-prefix=PFX Exec prefix where SDL is installed (optional)], sdl_exec_prefix="$withval", sdl_exec_prefix="")
-  AC_ARG_WITH(sdl,       [  --with-sdl=sdl12,sdl2   Select a specific version of SDL to use (optional)], sdl_ver="$withval", sdl_ver="")
 
   dnl First: find sdl-config or sdl2-config
   exult_extra_path=$prefix/bin:$prefix/usr/bin
@@ -26,43 +25,18 @@ AC_DEFUN([EXULT_CHECK_SDL],[
      sdl_args="$sdl_args --prefix=$sdl_prefix"
      exult_extra_path=$sdl_prefix/bin
   fi
-  if test x"$sdl_ver" = xsdl12 ; then
-    exult_sdl_progs=sdl-config
-  elif test x"$sdl_ver" = xsdl2 ; then
-    exult_sdl_progs=sdl2-config
-  else
-    dnl NB: This line implies we prefer SDL 1.2 to SDL 2.0
-    exult_sdl_progs="sdl-config sdl2-config"
-  fi
+  exult_sdl_progs=sdl2-config
   AC_PATH_PROGS(SDL_CONFIG, $exult_sdl_progs, no, [$exult_extra_path:$PATH])
   if test "$SDL_CONFIG" = "no" ; then
     exult_sdlok=no
   else
     SDL_CFLAGS=`$SDL_CONFIG $sdl_args --cflags`
     SDL_LIBS=`$SDL_CONFIG $sdl_args --libs`
-
-    sdl_major_version=`$SDL_CONFIG $sdl_args --version | \
-           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
-    sdl_minor_version=`$SDL_CONFIG $sdl_args --version | \
-           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
-    sdl_patchlevel=`$SDL_CONFIG $sdl_args --version | \
-           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
-    if test $sdl_major_version -eq 1 ; then
-      sdl_ver=sdl12
-    else
-      sdl_ver=sdl2
-    fi
   fi
 
-  if test x"$sdl_ver" = xsdl2 ; then
-    REQ_MAJOR=2
-    REQ_MINOR=0
-    REQ_PATCHLEVEL=0
-  else
-    REQ_MAJOR=1
-    REQ_MINOR=2
-    REQ_PATCHLEVEL=0
-  fi
+  REQ_MAJOR=2
+  REQ_MINOR=0
+  REQ_PATCHLEVEL=0
   REQ_VERSION=$REQ_MAJOR.$REQ_MINOR.$REQ_PATCHLEVEL
 
   AC_MSG_CHECKING([for SDL - version >= $REQ_VERSION])
@@ -291,9 +265,7 @@ dnl MUST be called after SDL version check (defined only for SDL 2.0).
 dnl Taken off configure.in from SDL 1.2 and then modified
 AC_DEFUN([COMPAT_SDL_CDROM_GET_PLATFORM],[
 
-if test x"$sdl_ver" = xsdl12 ; then
-    compat_sdl_cdrom_arch=undefined
-elif test x"$sdl_ver" = xsdl2 ; then
+if test x"$sdl_ver" = xsdl2 ; then
     case "$host" in
         arm-*-elf*) # FIXME: Can we get more specific for iPodLinux?
             compat_sdl_cdrom_arch=linux
