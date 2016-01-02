@@ -1308,11 +1308,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 	}
 }
 
-
-void GFX_SetPalette(Bitu start,Bitu count,GFX_PalEntry * entries) {
-	// Paletted window surfaces are unsupported with SDL 2.0
-}
-
 Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue) {
 	switch (sdl.desktop.type) {
 	case SCREEN_SURFACE:
