@@ -32,6 +32,13 @@ AC_DEFUN([EXULT_CHECK_SDL],[
   else
     SDL_CFLAGS=`$SDL_CONFIG $sdl_args --cflags`
     SDL_LIBS=`$SDL_CONFIG $sdl_args --libs`
+
+    sdl_major_version=`$SDL_CONFIG $sdl_args --version | \
+           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\1/'`
+    sdl_minor_version=`$SDL_CONFIG $sdl_args --version | \
+           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\2/'`
+    sdl_patchlevel=`$SDL_CONFIG $sdl_args --version | \
+           sed 's/\([[0-9]]*\).\([[0-9]]*\).\([[0-9]]*\)/\3/'`
   fi
 
   REQ_MAJOR=2
