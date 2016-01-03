@@ -158,14 +158,6 @@ enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_HIGHEST
 };
 
-void check_gl_error() {
-	GLenum error = glGetError();
-	if (error != GL_NO_ERROR) {
-		LOG_MSG((const char *)gluErrorString(error));
-	}
-}
-
-
 struct SDL_Block {
 	bool inited;
 	bool active;							//If this isn't set don't draw
@@ -479,7 +471,6 @@ static int int_log2 (int val) {
 }
 
 static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fullscreen, SCREEN_TYPES screenType) {
-	LOG_MSG("Calling GFX_SetSDLWindowMode");
 	static SCREEN_TYPES lastType = SCREEN_SURFACE;
 	if (sdl.renderer) {
 		SDL_DestroyRenderer(sdl.renderer);
@@ -496,7 +487,6 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 #if C_OPENGL
 	if (sdl.opengl.context) {
 		SDL_GL_DeleteContext(sdl.opengl.context);
-		LOG_MSG("Deleting context");
 		sdl.opengl.context=0;
 	}
 
@@ -512,9 +502,6 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 
 	if (sdl.opengl.program_object) {
 		glDeleteProgram(sdl.opengl.program_object);
-		LOG_MSG("Program object deleted");
-		printf("%d\n", sdl.opengl.program_object);
-		check_gl_error();
 		sdl.opengl.program_object = 0;
 	}
 
@@ -649,56 +636,38 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType) {
 
 /* Create a GLSL shader object, load the shader source, and compile the shader.
  */
-GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc ) {
+GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
 	GLuint shader;
 	GLint compiled;
 
 	// Create the shader object
-	shader = glCreateShader ( type );
-	LOG_MSG("glCreateShader");
-	check_gl_error();
+	shader = glCreateShader(type);
 
-	if ( shader == 0 )
+	if (shader == 0)
 		return 0;
 
 	// Load the shader source
-	glShaderSource ( shader, 1, &shaderSrc, NULL );
-	LOG_MSG("glShaderSource");
-	check_gl_error();
+	glShaderSource(shader, 1, &shaderSrc, NULL);
 
 	// Compile the shader
-	glCompileShader ( shader );
-	LOG_MSG("glCompileShader");
-	check_gl_error();
+	glCompileShader(shader);
 
 	// Check the compile status
-	glGetShaderiv ( shader, GL_COMPILE_STATUS, &compiled );
-	LOG_MSG("Getting compile status");
-	check_gl_error();
+	glGetShaderiv (shader, GL_COMPILE_STATUS, &compiled);
 
-	if ( !compiled )
-	{
+	if (!compiled) {
 		GLint infoLen = 0;
 
-		glGetShaderiv ( shader, GL_INFO_LOG_LENGTH, &infoLen );
-		LOG_MSG("Getting info log length");
-		check_gl_error();
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
 
-		if ( infoLen > 1 )
-		{
-			char* infoLog = (char *) malloc (sizeof(char) * infoLen );
+		if (infoLen > 1) {
+			char* infoLog = (char *) malloc (sizeof(char) * infoLen);
 
-			glGetShaderInfoLog ( shader, infoLen, NULL, infoLog );
-			LOG_MSG("Getting info log");
-			check_gl_error();
-			LOG_MSG ( "Error compiling shader: %s", infoLog );
-
-			free ( infoLog );
+			glGetShaderInfoLog( shader, infoLen, NULL, infoLog);
+			free(infoLog);
 		}
 
-		glDeleteShader ( shader );
-		LOG_MSG("Deleteing Shader");
-		check_gl_error();
+		glDeleteShader(shader);
 		return 0;
 	}
 	return shader;
