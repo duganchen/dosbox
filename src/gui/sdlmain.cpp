@@ -694,7 +694,7 @@ GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc ) {
 	return shader;
 }
 
-Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley, GFX_CallBack_t callback) {
+Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags, double scalex, double scaley, GFX_CallBack_t callback) {
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
@@ -1425,7 +1425,6 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 
 #include "dosbox_splash.h"
 
-//extern void UI_Run(bool);
 void Restart(bool pressed);
 
 static void GUI_StartUp(Section * sec) {
