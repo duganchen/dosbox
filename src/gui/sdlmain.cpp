@@ -491,6 +491,7 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 	}
 
 	if (sdl.opengl.vao) {
+		glBindVertexArray(0);
 		glDeleteVertexArrays(1, &sdl.opengl.vao);
 		sdl.opengl.vao = 0;
 	}
@@ -501,6 +502,7 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 	}
 
 	if (sdl.opengl.program_object) {
+		glUseProgram(0);
 		glDeleteProgram(sdl.opengl.program_object);
 		sdl.opengl.program_object = 0;
 	}
@@ -883,7 +885,7 @@ dosurface:
 				free ( infoLog );
 			}
 
-			glDeleteProgram ( sdl.opengl.program_object );
+			glDeleteProgram( sdl.opengl.program_object);
 			goto dosurface;
 		}
 
@@ -946,11 +948,8 @@ dosurface:
 
 		glGenVertexArrays(1, &sdl.opengl.vao);
 		glBindVertexArray(sdl.opengl.vao);
-		glBindVertexArray(0);
 
 		glGenBuffers(1, &sdl.opengl.vbo);
-
-		glBindVertexArray(sdl.opengl.vao);
 
 		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.vbo);
 
@@ -960,8 +959,6 @@ dosurface:
 		glVertexAttribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
 
 		glEnableVertexAttribArray(sdl.opengl.program_arguments.position);
-
-		glBindVertexArray(0);
 
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
@@ -1178,10 +1175,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				}
 				index++;
 			}
-			glBindVertexArray(sdl.opengl.vao);
 			GFX_DrawGLTexture();
-			glBindVertexArray(0);
-
 			SDL_GL_SwapWindow(sdl.window);
 		}
 		break;
