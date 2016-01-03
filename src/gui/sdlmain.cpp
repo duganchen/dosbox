@@ -509,6 +509,15 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		glDeleteBuffers(1, &sdl.opengl.vbo);
 		sdl.opengl.vbo = 0;
 	}
+
+	if (sdl.opengl.program_object) {
+		glDeleteProgram(sdl.opengl.program_object);
+		LOG_MSG("Program object deleted");
+		printf("%d\n", sdl.opengl.program_object);
+		check_gl_error();
+		sdl.opengl.program_object = 0;
+	}
+
 #endif // C_OPENGL
 	sdl.window_desired_width = width;
 	sdl.window_desired_height = height;
@@ -882,12 +891,6 @@ dosurface:
 			// NOTE: GFX_LoadGLShader reports an error on its own.
 			LOG_MSG("SDL:OPENGL:Can't load fragment shader");
 			goto dosurface;
-		}
-		if (sdl.opengl.program_object) {
-			glDeleteProgram(sdl.opengl.program_object);
-			LOG_MSG("Program object deleted");
-			printf("%d\n", sdl.opengl.program_object);
-			check_gl_error();
 		}
 		sdl.opengl.program_object = glCreateProgram();
 		LOG_MSG("glCreateProgram");
