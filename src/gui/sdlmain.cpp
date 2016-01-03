@@ -479,6 +479,7 @@ static int int_log2 (int val) {
 }
 
 static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fullscreen, SCREEN_TYPES screenType) {
+	LOG_MSG("Calling GFX_SetSDLWindowMode");
 	static SCREEN_TYPES lastType = SCREEN_SURFACE;
 	if (sdl.renderer) {
 		SDL_DestroyRenderer(sdl.renderer);
@@ -695,6 +696,7 @@ GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc ) {
 }
 
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags, double scalex, double scaley, GFX_CallBack_t callback) {
+	LOG_MSG("Calling GFX_SetSize");
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
