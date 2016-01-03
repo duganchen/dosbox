@@ -321,7 +321,7 @@ extern bool CPU_CycleAutoAdjust;
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
 
-void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused){
+void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused) {
 	char title[200]={0};
 	static Bit32s internal_cycles=0;
 	static Bit32s internal_frameskip=0;
@@ -588,8 +588,6 @@ static SDL_Window * GFX_SetSDLOpenGLWindow(Bit16u width, Bit16u height) {
 	return GFX_SetSDLWindowMode(width, height, false, SCREEN_OPENGL);
 }
 
-// Different functions, similar function bodies (SDL 1.2 vs 2.0)
-
 static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType) {
 	Bit16u fixedWidth;
 	Bit16u fixedHeight;
@@ -696,7 +694,7 @@ GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc ) {
 	return shader;
 }
 
-Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t callback) {
+Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley, GFX_CallBack_t callback) {
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
