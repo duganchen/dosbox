@@ -592,8 +592,7 @@ static SDL_Window * GFX_SetSDLOpenGLWindow(Bit16u width, Bit16u height) {
 
 // Different functions, similar function bodies (SDL 1.2 vs 2.0)
 
-static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType)
-{
+static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType) {
 	Bit16u fixedWidth;
 	Bit16u fixedHeight;
 
