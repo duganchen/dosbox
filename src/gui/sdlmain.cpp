@@ -674,7 +674,6 @@ GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
 }
 
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags, double scalex, double scaley, GFX_CallBack_t callback) {
-	LOG_MSG("Calling GFX_SetSize");
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
@@ -825,16 +824,11 @@ dosurface:
 		}
 
 		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
-		LOG_MSG("Creating context");
 		if (sdl.opengl.context == NULL) {
 			LOG_MSG(SDL_GetError());
 			LOG_MSG("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
 			goto dosurface;
 		}
-
-		LOG_MSG((const  char *)glGetString(GL_RENDERER));
-		LOG_MSG((const  char *)glGetString(GL_VERSION));
-		LOG_MSG((const  char *)glGetString(GL_SHADING_LANGUAGE_VERSION));
 
 		/* Sync to VBlank if desired */
 		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
@@ -848,121 +842,75 @@ dosurface:
 		GLuint vertexShader = GFX_LoadGLShader ( GL_VERTEX_SHADER, sdl.opengl.vertex_shader_src );
 		if (!vertexShader) {
 			// NOTE: GFX_LoadGLShader reports an error on its own.
-			LOG_MSG("SDL:OPENGL:Can't load vertex shader");
 			goto dosurface;
 		}
 		GLuint fragmentShader = GFX_LoadGLShader ( GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src );
 		if (!fragmentShader) {
 			glDeleteShader(vertexShader);
-			LOG_MSG("Vertex shader deleted");
-			check_gl_error();
 
 			// NOTE: GFX_LoadGLShader reports an error on its own.
-			LOG_MSG("SDL:OPENGL:Can't load fragment shader");
 			goto dosurface;
 		}
 		sdl.opengl.program_object = glCreateProgram();
-		LOG_MSG("glCreateProgram");
-		printf("%d\n", sdl.opengl.program_object);
-		check_gl_error();
 
 		if (!sdl.opengl.program_object) {
 			glDeleteShader(vertexShader);
 			glDeleteShader(fragmentShader);
-			LOG_MSG("SDL:OPENGL:Can't create program object, falling back to surface");
 			goto dosurface;
 		}
-		glAttachShader ( sdl.opengl.program_object, vertexShader );
-		LOG_MSG("aTTAching vertex shader");
-		check_gl_error();
-		glAttachShader ( sdl.opengl.program_object, fragmentShader );
-		LOG_MSG("Attaching fragment shader");
-		check_gl_error();
+		glAttachShader (sdl.opengl.program_object, vertexShader);
+		glAttachShader (sdl.opengl.program_object, fragmentShader);
 		// Link the program
-		glLinkProgram ( sdl.opengl.program_object );
-		LOG_MSG("Linking program");
-		check_gl_error();
+		glLinkProgram (sdl.opengl.program_object);
 		// Even if we *are* successful, we may delete the shader objects
 		glDeleteShader(vertexShader);
-		LOG_MSG("Deleting vertex shader");
-		check_gl_error();
 		glDeleteShader(fragmentShader);
-		LOG_MSG("Deleting fragment shader");
-		check_gl_error();
 
 		// Check the link status
 		GLint isProgramLinked;
-		glGetProgramiv ( sdl.opengl.program_object, GL_LINK_STATUS, &isProgramLinked );
-		LOG_MSG("Checking program link status");
-		check_gl_error();
+		glGetProgramiv (sdl.opengl.program_object, GL_LINK_STATUS, &isProgramLinked);
 
-		if ( !isProgramLinked )  {
+		if (!isProgramLinked)  {
 			GLint infoLen = 0;
 
-			glGetProgramiv ( sdl.opengl.program_object, GL_INFO_LOG_LENGTH, &infoLen );
-			check_gl_error();
+			glGetProgramiv(sdl.opengl.program_object, GL_INFO_LOG_LENGTH, &infoLen);
 
-			if ( infoLen > 1 )
-			{
-				char* infoLog = (char *) malloc (sizeof(char) * infoLen );
+			if (infoLen > 1) {
+				char* infoLog = (char *) malloc (sizeof(char) * infoLen);
 
-				glGetProgramInfoLog ( sdl.opengl.program_object, infoLen, NULL, infoLog );
+				glGetProgramInfoLog (sdl.opengl.program_object, infoLen, NULL, infoLog);
 				LOG_MSG("SDL:OPENGL:Error linking program:\n %s", infoLog);
 				free ( infoLog );
 			}
 
-			LOG_MSG("glDeleteProgram ( sdl.opengl.program_object );");
 			glDeleteProgram ( sdl.opengl.program_object );
-			check_gl_error();
 			goto dosurface;
 		}
 
-		glViewport(sdl.clip.x,windowHeight-(sdl.clip.y+sdl.clip.h),sdl.clip.w,sdl.clip.h);
-		check_gl_error();
-		LOG_MSG("glDeleteTextures(1,&sdl.opengl.texture);");
+		glViewport(sdl.clip.x, windowHeight - (sdl.clip.y + sdl.clip.h), sdl.clip.w, sdl.clip.h);
 		glDeleteTextures(1,&sdl.opengl.texture);
-		check_gl_error();
-
  		glGenTextures(1,&sdl.opengl.texture);
-		LOG_MSG("Generating textures");
-		check_gl_error();
-
 		glBindTexture(GL_TEXTURE_2D,sdl.opengl.texture);
-		LOG_MSG("Binding textures");
-		check_gl_error();
 
 		// No borders
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		check_gl_error();
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		check_gl_error();
 		if (sdl.opengl.bilinear) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			check_gl_error();
-
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			check_gl_error();
-
 		} else {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			check_gl_error();
-
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			check_gl_error();
 		}
 
-		LOG_MSG("glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);");
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
-		check_gl_error();
 
 		GLfloat tex_width=((GLfloat)(width)/(GLfloat)texsize);
 		GLfloat tex_height=((GLfloat)(height)/(GLfloat)texsize);
 
 		// Time to take advantage of the shader now
 		glUseProgram(sdl.opengl.program_object);
-		check_gl_error();
-		LOG_MSG("using program");
 
 		// Get the attribute locations
 		sdl.opengl.program_arguments.position = glGetAttribLocation ( sdl.opengl.program_object, "a_position" );
@@ -996,47 +944,24 @@ dosurface:
 		sdl.opengl.vertex_data[10] = 1.0f;
 		sdl.opengl.vertex_data[11] = 0.0f;
 
-		LOG_MSG("glGenVertexArrays");
 		glGenVertexArrays(1, &sdl.opengl.vao);
-		check_gl_error();
-		printf("%d\n", sdl.opengl.vao);
-
-		printf("glBindVertexArray(%d)\n,", sdl.opengl.vao);
 		glBindVertexArray(sdl.opengl.vao);
-		check_gl_error();
-		LOG_MSG("glBindVertexArray(0)\n");
 		glBindVertexArray(0);
 
-		LOG_MSG("glGenBuffers vbo");
 		glGenBuffers(1, &sdl.opengl.vbo);
-		check_gl_error();
-		printf("%d\n", sdl.opengl.vbo);
 
-		printf("glBindVertexArray %d\n", sdl.opengl.vao);
 		glBindVertexArray(sdl.opengl.vao);
-		check_gl_error();
 
-		LOG_MSG("glBindBuffer vbo");
 		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.vbo);
-		check_gl_error();
 
-		LOG_MSG("glBufferData vertex_data");
 		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.vertex_data), sdl.opengl.vertex_data, GL_STATIC_DRAW);
-		check_gl_error();
 
 		// Load the vertex positions
 		glVertexAttribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
 
-		LOG_MSG("glVertexAttribPointer");
-		check_gl_error();
-
 		glEnableVertexAttribArray(sdl.opengl.program_arguments.position);
-		LOG_MSG("vERTEx attribute attray enabled");
-		check_gl_error();
 
-		LOG_MSG("glBindVertexArray(0);");
 		glBindVertexArray(0);
-		check_gl_error();
 
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
