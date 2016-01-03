@@ -143,7 +143,7 @@ struct private_hwdata {
 #include <os2.h>
 #endif
 
-enum SCREEN_TYPES	{
+enum SCREEN_TYPES {
 	SCREEN_SURFACE,
 	SCREEN_TEXTURE,
 	SCREEN_OPENGL
@@ -297,8 +297,7 @@ const GLushort SDL_Block::SDL_OpenGL_Block::vertex_data_indices[6] = { 0, 1, 2, 
 
 static SDL_Block sdl;
 
-static int SDL_Init_Wrapper(void)
-{
+static int SDL_Init_Wrapper(void) {
 	int result = ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER
 		|SDL_INIT_NOPARACHUTE
 	));
@@ -309,8 +308,7 @@ static int SDL_Init_Wrapper(void)
 #endif
 }
 
-static void SDL_Quit_Wrapper(void)
-{
+static void SDL_Quit_Wrapper(void) {
 #if C_PHYSICAL_CDROM_MOUNT
 	Compat_SDL_CDROMQuit();
 #endif
@@ -403,7 +401,7 @@ static void PauseDOSBox(bool pressed) {
 				/* On macs, all aps exit when pressing cmd-q */
 				KillSwitch(true);
 				break;
-			} 
+			}
 #endif
 		}
 	}
@@ -443,7 +441,7 @@ check_surface:
 #if C_OPENGL
 	case SCREEN_OPENGL:
 		// BGRA. We're not on Android
-		if (flags & GFX_RGBONLY || !(flags&GFX_CAN_32)) goto check_surface; 
+		if (flags & GFX_RGBONLY || !(flags&GFX_CAN_32)) goto check_surface;
 		flags|=GFX_SCALING;
 		flags&=~(GFX_CAN_8|GFX_CAN_15|GFX_CAN_16);
 		break;
@@ -481,7 +479,7 @@ static int int_log2 (int val) {
 }
 
 static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fullscreen, SCREEN_TYPES screenType) {
-	static SCREEN_TYPES lastType = SCREEN_SURFACE; 
+	static SCREEN_TYPES lastType = SCREEN_SURFACE;
 	if (sdl.renderer) {
 		SDL_DestroyRenderer(sdl.renderer);
 		sdl.renderer=0;
@@ -609,13 +607,13 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType) {
 		if ( ratio_w < ratio_h) {
 			sdl.clip.w=fixedWidth;
 			sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley*ratio_w + 0.1); //possible rounding issues
-		} else { 
-			/* 
+		} else {
+			/*
 			 * The 0.4 is there to correct for rounding issues.
-			 * (partly caused by the rounding issues fix in RENDER_SetSize) 
-			 */ 
+			 * (partly caused by the rounding issues fix in RENDER_SetSize)
+			 */
 			sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex*ratio_h + 0.4);
-			sdl.clip.h=(Bit16u)fixedHeight;			
+			sdl.clip.h=(Bit16u)fixedHeight;
 		}
 		if (sdl.desktop.fullscreen) {
 			sdl.window = GFX_SetSDLWindowMode(fixedWidth, fixedHeight, sdl.desktop.fullscreen, screenType);
@@ -670,7 +668,7 @@ GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc ) {
 	LOG_MSG("Getting compile status");
 	check_gl_error();
 
-	if ( !compiled ) 
+	if ( !compiled )
 	{
 		GLint infoLen = 0;
 
@@ -768,7 +766,7 @@ dosurface:
 			goto dosurface;
 		}
 		if (strcmp(sdl.rendererDriver, "auto"))
-			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.rendererDriver); 
+			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.rendererDriver);
 		sdl.renderer = SDL_CreateRenderer(sdl.window, -1,
 		                                  SDL_RENDERER_ACCELERATED |
 		                                  (sdl.desktop.vsync ? SDL_RENDERER_PRESENTVSYNC : 0));
@@ -836,8 +834,8 @@ dosurface:
 			goto dosurface;
 		}
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3); 
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3); 
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 		GFX_SetupWindowScaled(sdl.desktop.want_type);
@@ -855,7 +853,7 @@ dosurface:
 			LOG_MSG("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
 			goto dosurface;
 		}
-		
+
 		LOG_MSG((const  char *)glGetString(GL_RENDERER));
 		LOG_MSG((const  char *)glGetString(GL_VERSION));
 		LOG_MSG((const  char *)glGetString(GL_SHADING_LANGUAGE_VERSION));
@@ -888,7 +886,7 @@ dosurface:
 		if (sdl.opengl.program_object) {
 			glDeleteProgram(sdl.opengl.program_object);
 			LOG_MSG("Program object deleted");
-			printf("%d\n", sdl.opengl.program_object);  
+			printf("%d\n", sdl.opengl.program_object);
 			check_gl_error();
 		}
 		sdl.opengl.program_object = glCreateProgram();
@@ -993,7 +991,7 @@ dosurface:
 		glUseProgram(sdl.opengl.program_object);
 		check_gl_error();
 		LOG_MSG("using program");
-		
+
 		// Get the attribute locations
 		sdl.opengl.program_arguments.position = glGetAttribLocation ( sdl.opengl.program_object, "a_position" );
 		// Get uniform locations and set some of them
@@ -1122,7 +1120,7 @@ void sticky_keys(bool restore){
 	if (!inited){
 		inited = true;
 		SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(STICKYKEYS), &stick_keys, 0);
-	} 
+	}
 	if (restore) {
 		SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(STICKYKEYS), &stick_keys, 0);
 		return;
@@ -1146,7 +1144,7 @@ void GFX_SwitchFullScreen(void) {
 #endif
 	} else {
 		if (sdl.mouse.locked) GFX_CaptureMouse();
-#if defined (WIN32)		
+#if defined (WIN32)
 		sticky_keys(true); //restore sticky keys to default state in windowed mode.
 #endif
 	}
@@ -1598,7 +1596,7 @@ static void GUI_StartUp(Section * sec) {
 					// DO NOT FORGET THIS!
 					sdl.opengl.vertex_shader_src[file_size] = '\0';
 				}
-				
+
 				fp = fopen((config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".glslf").c_str(), "rb");
 				if (fp) {
 					fseek(fp, 0, SEEK_END);
@@ -1974,7 +1972,7 @@ void GFX_Events() {
 			// ignore tab events that arrive just after regaining focus. (likely the result of alt-tab)
 			if ((event.key.keysym.sym == SDLK_TAB) && (GetTicks() - sdl.focus_ticks < 2)) break;
 #endif
-#if defined (MACOSX)			
+#if defined (MACOSX)
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
 			/* On macs CMD-Q is the default key to close an application */
@@ -1984,7 +1982,7 @@ void GFX_Events() {
 			    ) {
 				KillSwitch(true);
 				break;
-			} 
+			}
 #endif
 		default:
 			void MAPPER_CheckEvent(SDL_Event * event);
@@ -2034,7 +2032,7 @@ void Config_Add_SDL() {
 
 	Pbool = sdl_sec->Add_bool("fullscreen",Property::Changeable::Always,false);
 	Pbool->Set_help("Start dosbox directly in fullscreen. (Press ALT-Enter to go back)");
-     
+
 	Pbool = sdl_sec->Add_bool("vsync",Property::Changeable::Always,false);
 	Pbool->Set_help("Sync to Vblank IF supported by the output device and renderer (if relevant).\n"
 	                "It can reduce screen flickering, but it can also result in a slow DOSBox.");
@@ -2129,7 +2127,7 @@ static void show_warning(char const * const message) {
 	Bit32u bmask = 0x0000ff00;
 #else
 	Bit32u rmask = 0x000000ff;
-	Bit32u gmask = 0x0000ff00;                    
+	Bit32u gmask = 0x0000ff00;
 	Bit32u bmask = 0x00ff0000;
 #endif
 	SDL_Surface* splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32, rmask, gmask, bmask, 0);
@@ -2138,22 +2136,22 @@ static void show_warning(char const * const message) {
 	int x = 120,y = 20;
 	std::string m(message),m2;
 	std::string::size_type a,b,c,d;
-   
+
 	while(m.size()) { //Max 50 characters. break on space before or on a newline
 		c = m.find('\n');
 		d = m.rfind(' ',50);
 		if(c>d) a=b=d; else a=b=c;
-		if( a != std::string::npos) b++; 
+		if( a != std::string::npos) b++;
 		m2 = m.substr(0,a); m.erase(0,b);
 		OutputString(x,y,m2.c_str(),0xffffffff,0,splash_surf);
 		y += 20;
 	}
-   
+
 	SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
 	SDL_UpdateWindowSurface(sdl.window);
 	SDL_Delay(12000);
 }
-   
+
 static void launcheditor() {
 	std::string path,file;
 	Cross::CreatePlatformConfigDir(path);
@@ -2226,7 +2224,7 @@ static void printconfiglocation() {
 	Cross::CreatePlatformConfigDir(path);
 	Cross::GetPlatformConfigName(file);
 	path += file;
-     
+
 	FILE* f = fopen(path.c_str(),"r");
 	if(!f && !control->PrintConfig(path.c_str())) {
 		printf("tried creating %s. but failed",path.c_str());
@@ -2289,7 +2287,7 @@ int main(int argc, char* argv[]) {
 		if(control->cmdline->FindExist("-resetconf")) eraseconfigfile();
 		if(control->cmdline->FindExist("-erasemapper")) erasemapperfile();
 		if(control->cmdline->FindExist("-resetmapper")) erasemapperfile();
-		
+
 		/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
 		if (control->cmdline->FindExist("-noconsole")) {
@@ -2369,7 +2367,7 @@ int main(int argc, char* argv[]) {
 	/* Parse configuration files */
 	std::string config_file,config_path;
 	Cross::GetPlatformConfigDir(config_path);
-	
+
 	//First parse -userconf
 	if(control->cmdline->FindExist("-userconf",true)){
 		config_file.clear();
@@ -2470,7 +2468,7 @@ int main(int argc, char* argv[]) {
 	}
 #if defined (WIN32)
 	sticky_keys(true); //Might not be needed if the shutdown function switches to windowed mode, but it doesn't hurt
-#endif 
+#endif
 	//Force visible mouse to end user. Somehow this sometimes doesn't happen
 	SDL_SetRelativeMouseMode(SDL_FALSE);
 	SDL_ShowCursor(SDL_ENABLE);
