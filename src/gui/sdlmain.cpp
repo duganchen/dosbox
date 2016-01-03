@@ -644,8 +644,7 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType)
 
 /* Create a GLSL shader object, load the shader source, and compile the shader.
  */
-GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc )
-{
+GLuint GFX_LoadGLShader ( GLenum type, const char *shaderSrc ) {
 	GLuint shader;
 	GLint compiled;
 
