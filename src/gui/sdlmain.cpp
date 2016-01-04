@@ -7,7 +7,7 @@
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  but WITHOUT ANY WARRANTY; without even th: implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
@@ -207,9 +207,9 @@ struct SDL_Block {
 		static char *const vertex_shader_default_src;
 		static char *const fragment_shader_default_src;
 		char *vertex_shader_src, *fragment_shader_src;
-		GLuint program_object = 0;
-		GLuint vao = 0;
-		GLuint vbo = 0;
+		GLuint program_object;
+		GLuint vao;
+		GLuint vbo;
 		struct {
 			GLint position;
 			//GLint tex_coord;
@@ -908,9 +908,6 @@ dosurface:
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
 
-		GLfloat tex_width=((GLfloat)(width)/(GLfloat)texsize);
-		GLfloat tex_height=((GLfloat)(height)/(GLfloat)texsize);
-
 		// Time to take advantage of the shader now
 		glUseProgram(sdl.opengl.program_object);
 
@@ -1466,8 +1463,10 @@ static void GUI_StartUp(Section * sec) {
 
 		if (sdl.desktop.want_type==SCREEN_OPENGL) {
 			sdl.opengl.program_object=0;
-			sdl.opengl.vertex_shader_src=sdl.opengl.vertex_shader_default_src;
-			sdl.opengl.fragment_shader_src=sdl.opengl.fragment_shader_default_src;
+			sdl.opengl.vao = 0;
+			sdl.opengl.vbo = 0;
+			sdl.opengl.vertex_shader_src = sdl.opengl.vertex_shader_default_src;
+			sdl.opengl.fragment_shader_src = sdl.opengl.fragment_shader_default_src;
 			std::string glshader_filename=section->Get_string("glshader");
 			if (!glshader_filename.empty()) {
 				std::string config_path;
@@ -1913,7 +1912,7 @@ void GFX_ShowMsg(char const* format,...) {
 
 
 void Config_Add_SDL() {
-	Section_prop * sdl_sec=control->AddSection_prop("sdl",&GUI_StartUp);
+	Section_prop * sdl_sec=control->AddSection_prop("sdl", &GUI_StartUp);
 	sdl_sec->AddInitFunction(&MAPPER_StartUp);
 	Prop_bool* Pbool;
 	Prop_string* Pstring;
