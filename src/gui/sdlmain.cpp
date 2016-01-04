@@ -818,12 +818,12 @@ dosurface:
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 		int major_version = 0;
-		if (SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major_version)) != 0) {
+		if (SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major_version) != 0) {
 			LOG_MSG("%s\n", SDL_GetError());
 		}
-		LOG_MSG("Major version: %d\n", minor_version);
+		LOG_MSG("Major version: %d\n", major_version);
 		int minor_version = 0;
-		if (SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor_version)) != 0) {
+		if (SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor_version) != 0) {
 			LOG_MSG("%s\n", SDL_GetError());
 		}
 		LOG_MSG("Minor version: %d\n", minor_version);
