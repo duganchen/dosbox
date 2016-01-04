@@ -1482,7 +1482,7 @@ static void GUI_StartUp(Section * sec) {
 				std::string config_path;
 				Cross::GetPlatformConfigDir(config_path);
 				size_t file_size;
-				FILE *fp = fopen((config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".glslv").c_str(), "rb");
+				FILE *fp = fopen((config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".vsh").c_str(), "rb");
 
 				if (fp) {
 					fseek(fp, 0, SEEK_END);
@@ -1496,7 +1496,7 @@ static void GUI_StartUp(Section * sec) {
 					sdl.opengl.vertex_shader_src[file_size] = '\0';
 				}
 
-				fp = fopen((config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".glslf").c_str(), "rb");
+				fp = fopen((config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".fsh").c_str(), "rb");
 				if (fp) {
 					fseek(fp, 0, SEEK_END);
 					file_size = ftell(fp);
@@ -1961,7 +1961,7 @@ void Config_Add_SDL() {
 	Pstring->Set_help("What set of GLSL shaders to use with an OpenGL output. Keep empty if this is not desired.\n"
 	                  "  Note that in case it is used, the respective shader files must be found in the \"glshaders\" subdirectory\n"
 	                  "  relatively to where the default DOSBox configuration fiel is stored. For shader file naming convention,\n"
-	                  "  suppose that you have a pair of shader files ready: mysample.glslv and mysample.glslf.\n"
+	                  "  suppose that you have a pair of shader files ready: mysample.vsh and mysample.fsh.\n"
 	                  "  Then glshader=mysample should be set.\n");
 
 	const char* renderers[] = {
