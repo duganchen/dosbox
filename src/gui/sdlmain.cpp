@@ -168,9 +168,6 @@ struct SDL_Block {
 	struct {
 		Bit32u width;
 		Bit32u height;
-#if 0
-		Bit32u bpp; // Is that ever used?
-#endif
 		Bitu flags;
 		double scalex,scaley;
 		GFX_CallBack_t callback;
