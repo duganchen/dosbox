@@ -263,9 +263,9 @@ struct SDL_Block {
 };
 
 char *const SDL_Block::SDL_OpenGL_Block::vertex_shader_default_src =
-      "#version 130\n"
-      "attribute vec4 a_position;\n"
-      "varying vec2 v_texCoord;\n"
+      "#version 330 core\n"
+      "in vec4 a_position;\n"
+      "out vec2 v_texCoord;\n"
       "uniform vec2 rubyTextureSize;\n"
       "uniform vec2 rubyInputSize;\n"
       "uniform vec2 rubyOutputSize;\n"
@@ -277,13 +277,14 @@ char *const SDL_Block::SDL_OpenGL_Block::vertex_shader_default_src =
       "  v_texCoord = vec2((a_position.x+1.0)/2.0*rubyInputSize.x/rubyTextureSize.x,(1.0-a_position.y)/2.0*rubyInputSize.y/rubyTextureSize.y);\n"
       "}\n";
 char *const SDL_Block::SDL_OpenGL_Block::fragment_shader_default_src =
-      "#version 130\n"
-      "varying vec2 v_texCoord;\n"
+      "#version 330 core\n"
+      "in vec2 v_texCoord;\n"
+	  "out color;\n"
       "uniform sampler2D rubyTexture;\n"
       "\n"
       "void main()\n"
       "{\n"
-      "  gl_FragColor = texture2D(rubyTexture, v_texCoord);\n"
+      "  color = texture2D(rubyTexture, v_texCoord);\n"
       "}\n";
 const GLushort SDL_Block::SDL_OpenGL_Block::vertex_data_indices[6] = { 0, 1, 2, 0, 2, 3 };
 
@@ -813,20 +814,9 @@ dosurface:
 			goto dosurface;
 		}
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-		int major_version = 0;
-		if (SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major_version) != 0) {
-			LOG_MSG("%s\n", SDL_GetError());
-		}
-		LOG_MSG("Major version: %d\n", major_version);
-		int minor_version = 0;
-		if (SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor_version) != 0) {
-			LOG_MSG("%s\n", SDL_GetError());
-		}
-		LOG_MSG("Minor version: %d\n", minor_version);
 
 		GFX_SetupWindowScaled(sdl.desktop.want_type);
 		/* We may simply use SDL_BYTESPERPIXEL
@@ -840,6 +830,19 @@ dosurface:
 		if (sdl.opengl.context == NULL) {
 			LOG_MSG("%s\n", SDL_GetError());
 			LOG_MSG("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
+			goto dosurface;
+		}
+
+		int major_version = 0;
+		if (SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major_version) != 0) {
+			LOG_MSG("%s\n", SDL_GetError());
+		}
+		int minor_version = 0;
+		if (SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor_version) != 0) {
+			LOG_MSG("%s\n", SDL_GetError());
+		}
+		if (major_version < 3 || minor_version < 3) {
+			LOG_MSG("SDL:OPENGL:Can't create OpenGL 3.3 context, falling back to surface.");
 			goto dosurface;
 		}
 
