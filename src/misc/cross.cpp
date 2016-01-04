@@ -87,6 +87,7 @@ void Cross::CreatePlatformConfigDir(std::string& in) {
 #elif defined(MACOSX)
 	in = "~/Library/Preferences/";
 	ResolveHomedir(in);
+#else
 	//Don't create it. Assume it exists
 	in = "~/.dosbox";
 	ResolveHomedir(in);
