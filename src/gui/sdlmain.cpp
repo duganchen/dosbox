@@ -852,12 +852,12 @@ dosurface:
 		int windowHeight;
 		SDL_GetWindowSize(sdl.window, NULL, &windowHeight);
 
-		GLuint vertexShader = GFX_LoadGLShader ( GL_VERTEX_SHADER, sdl.opengl.vertex_shader_src );
+		GLuint vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, sdl.opengl.vertex_shader_src);
 		if (!vertexShader) {
 			// NOTE: GFX_LoadGLShader reports an error on its own.
 			goto dosurface;
 		}
-		GLuint fragmentShader = GFX_LoadGLShader ( GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src );
+		GLuint fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src);
 		if (!fragmentShader) {
 			glDeleteShader(vertexShader);
 
