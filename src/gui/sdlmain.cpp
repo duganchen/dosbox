@@ -637,14 +637,13 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType) {
 /* Create a GLSL shader object, load the shader source, and compile the shader.
  */
 GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
-	GLuint shader;
-	GLint compiled;
 
 	// Create the shader object
-	shader = glCreateShader(type);
-
-	if (shader == 0)
+	GLuint shader = 0;
+	if (!(shader = glCreateShader(type))) {
+		LOG_MSG("%s\n", SDL_GetError());
 		return 0;
+	}
 
 	// Load the shader source
 	glShaderSource(shader, 1, &shaderSrc, NULL);
@@ -653,18 +652,18 @@ GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
 	glCompileShader(shader);
 
 	// Check the compile status
-	glGetShaderiv (shader, GL_COMPILE_STATUS, &compiled);
-
+	GLint compiled = 0;
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
 	if (!compiled) {
 		GLint infoLen = 0;
 
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
 
 		if (infoLen > 1) {
-			char* infoLog = (char *) malloc (sizeof(char) * infoLen);
-
-			glGetShaderInfoLog( shader, infoLen, NULL, infoLog);
-			free(infoLog);
+			GLchar *infoLog = new GLchar[infoLen];
+			glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
+			LOG_MSG("%s\n", infoLog);
+			delete[] infoLog;
 		}
 
 		glDeleteShader(shader);
