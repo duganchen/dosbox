@@ -212,10 +212,10 @@ struct SDL_Block {
 		GLuint color_vbo;
 
 		struct {
-			GLint position;
+			// GLint position;
 			//GLint tex_coord;
 			struct {
-				GLint texture;
+				// GLint texture;
 				GLint texture_size;
 				GLint input_size;
 				GLint output_size;
@@ -930,16 +930,16 @@ dosurface:
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		}
 
-		// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
 
 		// Time to take advantage of the shader now
 		glUseProgram(sdl.opengl.program_object);
 
 		// Get the attribute locations
-		sdl.opengl.program_arguments.position = glGetAttribLocation ( sdl.opengl.program_object, "a_position" );
+		// sdl.opengl.program_arguments.position = glGetAttribLocation ( sdl.opengl.program_object, "a_position" );
 		// Get uniform locations and set some of them
-		sdl.opengl.program_arguments.ruby.texture = glGetUniformLocation ( sdl.opengl.program_object, "rubyTexture" );
-		glUniform1i (sdl.opengl.program_arguments.ruby.texture, 0);
+		// sdl.opengl.program_arguments.ruby.texture = glGetUniformLocation ( sdl.opengl.program_object, "rubyTexture" );
+		// glUniform1i (sdl.opengl.program_arguments.ruby.texture, 0);
 		sdl.opengl.program_arguments.ruby.texture_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyTextureSize" );
 		glUniform2f (sdl.opengl.program_arguments.ruby.texture_size, texsize, texsize);
 		sdl.opengl.program_arguments.ruby.input_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyInputSize" );
