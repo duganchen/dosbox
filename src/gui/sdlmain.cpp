@@ -656,7 +656,7 @@ GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
 	// Create the shader object
 	GLuint shader = 0;
 	if (!(shader = glCreateShader(type))) {
-		LOG_MSG("%s\n", SDL_GetError());
+		LOG_MSG("%s", SDL_GetError());
 		return 0;
 	}
 
@@ -762,7 +762,7 @@ dosurface:
 		                                  SDL_RENDERER_ACCELERATED |
 		                                  (sdl.desktop.vsync ? SDL_RENDERER_PRESENTVSYNC : 0));
 		if (!sdl.renderer) {
-			LOG_MSG("%s\n", SDL_GetError());
+			LOG_MSG("%s", SDL_GetError());
 			LOG_MSG("SDL:Can't create renderer, falling back to surface");
 			goto dosurface;
 		}
@@ -840,18 +840,18 @@ dosurface:
 
 		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 		if (sdl.opengl.context == NULL) {
-			LOG_MSG("%s\n", SDL_GetError());
+			LOG_MSG("%s", SDL_GetError());
 			LOG_MSG("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
 			goto dosurface;
 		}
 
 		int major_version = 0;
 		if (SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major_version) != 0) {
-			LOG_MSG("%s\n", SDL_GetError());
+			LOG_MSG("%s", SDL_GetError());
 		}
 		int minor_version = 0;
 		if (SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor_version) != 0) {
-			LOG_MSG("%s\n", SDL_GetError());
+			LOG_MSG("%s", SDL_GetError());
 		}
 		if (major_version < 3 || minor_version < 3) {
 			LOG_MSG("SDL:OPENGL:Can't create OpenGL 3.3 context, falling back to surface.");
@@ -906,7 +906,7 @@ dosurface:
 				char* infoLog = (char *) malloc (sizeof(char) * infoLen);
 
 				glGetProgramInfoLog (sdl.opengl.program_object, infoLen, NULL, infoLog);
-				LOG_MSG("SDL:OPENGL:Error linking program:\n %s", infoLog);
+				LOG_MSG("SDL:OPENGL:Error linking program: %s", infoLog);
 				free ( infoLog );
 			}
 
