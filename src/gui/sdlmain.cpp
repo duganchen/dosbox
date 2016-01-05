@@ -969,7 +969,9 @@ dosurface:
 		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.vertex_data), sdl.opengl.vertex_data, GL_STATIC_DRAW);
 
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
-		glEnableVertexAttribArray(0)
+		glEnableVertexAttribArray(0);
+
+		// Textures now.
 
 		// lower left
 		sdl.opengl.texture_data[0] = 0.0f;
