@@ -1025,8 +1025,8 @@ dosurface:
 		glGenBuffers(1, &sdl.opengl.color_vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.color_vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.color_data), sdl.opengl.color_data, GL_STATIC_DRAW);
-		glVertexAttribPointer(3, 3, GL_FLOAT, GL_TRUE, 3 * sizeof (GLfloat), (GLvoid *)0);
-		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, 3 * sizeof (GLfloat), (GLvoid *)0);
+		glEnableVertexAttribArray(2);
 
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
