@@ -208,6 +208,9 @@ struct SDL_Block {
 		GLuint vao;
 		GLuint vertex_vbo;
 		GLuint texture_vbo;
+
+		GLuint color_vbo;
+
 		struct {
 			GLint position;
 			//GLint tex_coord;
@@ -222,6 +225,7 @@ struct SDL_Block {
 		GLint actual_frame_count;
 		GLfloat vertex_data[12];
 		GLfloat texture_data[8];
+		GLfloat color_data[12];
 		static const GLushort vertex_data_indices[6];
 	} opengl;
 #endif	// C_OPENGL
@@ -503,6 +507,11 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 	if (sdl.opengl.texture_vbo) {
 		glDeleteBuffers(1, &sdl.opengl.texture_vbo);
 		sdl.opengl.texture_vbo = 0;
+	}
+
+	if (sdl.opengl.color_vbo) {
+		glDeleteBuffers(1, &sdl.opengl.color_vbo);
+		sdl.opengl.color_vbo = 0;
 	}
 
 	if (sdl.opengl.program_object) {
@@ -911,12 +920,8 @@ dosurface:
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 
 		// No borders
-		/*
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		*/
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		if (sdl.opengl.bilinear) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -992,9 +997,36 @@ dosurface:
 		glGenBuffers(1, &sdl.opengl.texture_vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.texture_vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.texture_data), sdl.opengl.texture_data, GL_STATIC_DRAW);
-
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, 2 * sizeof (GLfloat), (GLvoid *)0);
 		glEnableVertexAttribArray(1);
+
+		// Colors
+
+		// lower left
+		sdl.opengl.color_data[0] = 1.0f;
+		sdl.opengl.color_data[1] = 0.0f;
+		sdl.opengl.color_data[2] = 0.0f;
+
+		// lower right
+		sdl.opengl.color_data[3] = 0.0f;
+		sdl.opengl.color_data[4] = 1.0f;
+		sdl.opengl.color_data[5] = 0.0f;
+
+		// upper right
+		sdl.opengl.color_data[6] = 0.0f;
+		sdl.opengl.color_data[7] = 0.0f;
+		sdl.opengl.color_data[8] = 1.0f;
+
+		// upper left
+		sdl.opengl.color_data[9] = 1.0f;
+		sdl.opengl.color_data[10] = 1.0f;
+		sdl.opengl.color_data[11] = 0.0f;
+
+		glGenBuffers(1, &sdl.opengl.color_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.color_vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.color_data), sdl.opengl.color_data, GL_STATIC_DRAW);
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_TRUE, 3 * sizeof (GLfloat), (GLvoid *)0);
+		glEnableVertexAttribArray(3);
 
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
