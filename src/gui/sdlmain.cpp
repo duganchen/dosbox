@@ -977,8 +977,8 @@ dosurface:
 		sdl.opengl.texture_data[0] = 0.0f;
 		sdl.opengl.texture_data[1] = 0.0f;
 		// lower right
-		sdl.opengl.texture_data[2] = 0.0f;
-		sdl.opengl.texture_data[3] = 1.0f;
+		sdl.opengl.texture_data[2] = 1.0f;
+		sdl.opengl.texture_data[3] = 0.0f;
 		// upper right
 		sdl.opengl.texture_data[4] = 1.0f;
 		sdl.opengl.texture_data[5] = 1.0f;
