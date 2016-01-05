@@ -662,7 +662,7 @@ GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
 		if (infoLen > 1) {
 			GLchar *infoLog = new GLchar[infoLen];
 			glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
-			LOG_MSG("%s\n", infoLog);
+			LOG_MSG("%s", infoLog);
 			delete[] infoLog;
 		}
 
@@ -854,14 +854,13 @@ dosurface:
 
 		GLuint vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, sdl.opengl.vertex_shader_src);
 		if (!vertexShader) {
-			// NOTE: GFX_LoadGLShader reports an error on its own.
+			LOG_MSG("SDL:OPENGL:Can't compile vertex shader, falling back to surface.");
 			goto dosurface;
 		}
 		GLuint fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src);
 		if (!fragmentShader) {
 			glDeleteShader(vertexShader);
-
-			// NOTE: GFX_LoadGLShader reports an error on its own.
+			LOG_MSG("SDL:OPENGL:Can't compile fragment shader, falling back to surface.");
 			goto dosurface;
 		}
 		sdl.opengl.program_object = glCreateProgram();
