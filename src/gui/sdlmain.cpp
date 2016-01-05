@@ -206,7 +206,8 @@ struct SDL_Block {
 		char *vertex_shader_src, *fragment_shader_src;
 		GLuint program_object;
 		GLuint vao;
-		GLuint vbo;
+		GLuint vertex_vbo;
+		GLuint texture_vbo;
 		struct {
 			GLint position;
 			//GLint tex_coord;
@@ -220,7 +221,7 @@ struct SDL_Block {
 		} program_arguments;
 		GLint actual_frame_count;
 		GLfloat vertex_data[12];
-		//GLfloat vertex_data[20];
+		GLfloat texture_data[8];
 		static const GLushort vertex_data_indices[6];
 	} opengl;
 #endif	// C_OPENGL
@@ -494,9 +495,14 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		sdl.opengl.vao = 0;
 	}
 
-	if (sdl.opengl.vbo) {
-		glDeleteBuffers(1, &sdl.opengl.vbo);
-		sdl.opengl.vbo = 0;
+	if (sdl.opengl.vertex_vbo) {
+		glDeleteBuffers(1, &sdl.opengl.vertex_vbo);
+		sdl.opengl.vertex_vbo = 0;
+	}
+
+	if (sdl.opengl.texture_vbo) {
+		glDeleteBuffers(1, &sdl.opengl.texture_vbo);
+		sdl.opengl.texture_vbo = 0;
 	}
 
 	if (sdl.opengl.program_object) {
@@ -936,6 +942,11 @@ dosurface:
 		sdl.opengl.actual_frame_count = 0;
 		sdl.opengl.program_arguments.ruby.frame_count = glGetUniformLocation ( sdl.opengl.program_object, "rubyFrameCount" );
 
+		glGenVertexArrays(1, &sdl.opengl.vao);
+		glBindVertexArray(sdl.opengl.vao);
+
+		// Vertex coordinates
+
 		// lower left
 		sdl.opengl.vertex_data[0] = -1.0f;
 		sdl.opengl.vertex_data[1] = -1.0f;
@@ -953,22 +964,25 @@ dosurface:
 		sdl.opengl.vertex_data[10] = 1.0f;
 		sdl.opengl.vertex_data[11] = 0.0f;
 
-		glGenVertexArrays(1, &sdl.opengl.vao);
-		glBindVertexArray(sdl.opengl.vao);
-
-		glGenBuffers(1, &sdl.opengl.vbo);
-
-		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.vbo);
-
+		glGenBuffers(1, &sdl.opengl.vertex_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.vertex_vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.vertex_data), sdl.opengl.vertex_data, GL_STATIC_DRAW);
 
-		// Load the vertex positions
-		/*
-		glVertexAttribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
-		glEnableVertexAttribArray(sdl.opengl.program_arguments.position);
-		*/
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
-		glEnableVertexAttribArray(0);
+		glEnableVertexAttribArray(0)
+
+		// lower left
+		sdl.opengl.texture_data[0] = 0.0f;
+		sdl.opengl.texture_data[1] = 0.0f;
+		// lower right
+		sdl.opengl.texture_data[2] = 0.0f;
+		sdl.opengl.texture_data[3] = 1.0f;
+		// upper right
+		sdl.opengl.texture_data[4] = 1.0f;
+		sdl.opengl.texture_data[5] = 1.0f;
+		// upper left
+		sdl.opengl.texture_data[6] = 0.0f;
+		sdl.opengl.texture_data[7] = 1.0f;
 
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
@@ -1477,7 +1491,7 @@ static void GUI_StartUp(Section * sec) {
 		if (sdl.desktop.want_type==SCREEN_OPENGL) {
 			sdl.opengl.program_object=0;
 			sdl.opengl.vao = 0;
-			sdl.opengl.vbo = 0;
+			sdl.opengl.vertex_vbo = 0;
 			sdl.opengl.vertex_shader_src = sdl.opengl.vertex_shader_default_src;
 			sdl.opengl.fragment_shader_src = sdl.opengl.fragment_shader_default_src;
 			std::string glshader_filename=section->Get_string("glshader");
