@@ -964,9 +964,12 @@ dosurface:
 		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.vertex_data), sdl.opengl.vertex_data, GL_STATIC_DRAW);
 
 		// Load the vertex positions
+		/*
 		glVertexAttribPointer(sdl.opengl.program_arguments.position, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
-
 		glEnableVertexAttribArray(sdl.opengl.program_arguments.position);
+		*/
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
+		glEnableVertexAttribArray(0);
 
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
