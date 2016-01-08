@@ -938,7 +938,7 @@ dosurface:
 		LOG_MSG("sdl.clip.w: %d", sdl.clip.w);
 		LOG_MSG("sdl.clip.h: %d", sdl.clip.h);
 
-		glViewport(0, 0, sdl.clip.w, sdl.clip.h);
+		glViewport(0, 0, sdl.desktop.full.width, sdl.desktop.full.height);
 		// glViewport(sdl.clip.x, windowHeight - (sdl.clip.y + sdl.clip.h), sdl.clip.w, sdl.clip.h);
 		glDeleteTextures(1, &sdl.opengl.texture);
  		glGenTextures(1, &sdl.opengl.texture);
