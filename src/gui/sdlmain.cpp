@@ -919,13 +919,7 @@ dosurface:
 			goto dosurface;
 		}
 
-		LOG_MSG("sdl.clip.x: %d", sdl.clip.x);
-		LOG_MSG("sdl.clip.y: %d", sdl.clip.y);
-		LOG_MSG("windowHeight: %d", windowHeight);
-		LOG_MSG("sdl.clip.w: %d", sdl.clip.w);
-		LOG_MSG("sdl.clip.h: %d", sdl.clip.h);
-
-		glViewport(sdl.clip.x, windowHeight - (sdl.clip.y + sdl.clip.h), sdl.clip.w, sdl.clip.h);
+		// glViewport(sdl.clip.x, windowHeight - (sdl.clip.y + sdl.clip.h), sdl.clip.w, sdl.clip.h);
 		glDeleteTextures(1, &sdl.opengl.texture);
  		glGenTextures(1, &sdl.opengl.texture);
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
@@ -1242,7 +1236,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-						sdl.draw.width * 2, sdl.draw.height * 2, GL_BGRA,
+						sdl.draw.width, sdl.draw.height, GL_BGRA,
 						GL_UNSIGNED_INT_8_8_8_8_REV, (Bit8u *)sdl.opengl.framebuf);
 		GFX_DrawGLTexture();
 		SDL_GL_SwapWindow(sdl.window);
