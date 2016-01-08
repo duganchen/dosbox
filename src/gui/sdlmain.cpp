@@ -1239,13 +1239,12 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
-#if 0
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, sdl.clip.x, sdl.clip.y,
 						sdl.clip.w, sdl.clip.h, GL_BGRA,
 						GL_UNSIGNED_INT_8_8_8_8_REV, (Bit8u *)sdl.opengl.framebuf);
 
-#endif
+#if 0
 		if (changedLines) {
 			Bitu y = 0, index = 0;
 			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
@@ -1262,6 +1261,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				}
 				index++;
 			}
+#endif
 			GFX_DrawGLTexture();
 			SDL_GL_SwapWindow(sdl.window);
 		}
