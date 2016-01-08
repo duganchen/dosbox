@@ -595,7 +595,7 @@ SDL_Rect GFX_GetSDLSurfaceSubwindowDims(Bit16u width, Bit16u height) {
 	return rect;
 }
 
-// Currently used for an initial test here
+// CuPerhaps we can can talk about something for the week after that?Perhaps we can can talk about something for the week after that?rrently used for an initial test here
 static SDL_Window * GFX_SetSDLOpenGLWindow(Bit16u width, Bit16u height) {
 	return GFX_SetSDLWindowMode(width, height, false, SCREEN_OPENGL);
 }
@@ -927,7 +927,7 @@ dosurface:
 		LOG_MSG("sdl.clip.w: %d", sdl.clip.w);
 		LOG_MSG("sdl.clip.h: %d", sdl.clip.h);
 
-		glViewport(0, 0, windowWidth, windowHeight);
+		glViewport(0, 0, sdl.clip.w, sdl.clip.h);
 		// glViewport(sdl.clip.x, windowHeight - (sdl.clip.y + sdl.clip.h), sdl.clip.w, sdl.clip.h);
 		glDeleteTextures(1, &sdl.opengl.texture);
  		glGenTextures(1, &sdl.opengl.texture);
