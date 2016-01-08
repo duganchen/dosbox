@@ -946,7 +946,7 @@ dosurface:
 		// sdl.opengl.program_arguments.ruby.texture = glGetUniformLocation ( sdl.opengl.program_object, "rubyTexture" );
 		// glUniform1i (sdl.opengl.program_arguments.ruby.texture, 0);
 		sdl.opengl.program_arguments.ruby.texture_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyTextureSize" );
-		glUniform2f (sdl.opengl.program_arguments.ruby.texture_size, width, height);
+		glUniform2f (sdl.opengl.program_arguments.ruby.texture_size, 320, 240);
 		sdl.opengl.program_arguments.ruby.input_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyInputSize" );
 		glUniform2f (sdl.opengl.program_arguments.ruby.input_size, width, height);
 		sdl.opengl.program_arguments.ruby.output_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyOutputSize" );
