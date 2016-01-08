@@ -688,6 +688,11 @@ GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
 }
 
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags, double scalex, double scaley, GFX_CallBack_t callback) {
+	LOG_MSG("width: %lu", width);
+	LOG_MSG("height: %lu", height);
+	LOG_MSG("scalex: %f", scalex);
+	LOG_MSG("scaley: %f", scaley);
+
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
@@ -913,6 +918,12 @@ dosurface:
 			glDeleteProgram( sdl.opengl.program_object);
 			goto dosurface;
 		}
+
+		LOG_MSG("sdl.clip.x: %d", sdl.clip.x);
+		LOG_MSG("sdl.clip.y: %d", sdl.clip.y);
+		LOG_MSG("windowHeight: %d", windowHeight);
+		LOG_MSG("sdl.clip.w: %d", sdl.clip.w);
+		LOG_MSG("sdl.clip.h: %d", sdl.clip.h);
 
 		glViewport(sdl.clip.x, windowHeight - (sdl.clip.y + sdl.clip.h), sdl.clip.w, sdl.clip.h);
 		glDeleteTextures(1, &sdl.opengl.texture);
