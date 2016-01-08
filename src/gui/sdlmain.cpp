@@ -689,6 +689,7 @@ GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
 }
 
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags, double scalex, double scaley, GFX_CallBack_t callback) {
+	LOG_MSG("GFX_SetSize");
 	LOG_MSG("width: %lu", width);
 	LOG_MSG("height: %lu", height);
 	LOG_MSG("scalex: %f", scalex);
