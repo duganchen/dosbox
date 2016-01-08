@@ -920,6 +920,12 @@ dosurface:
 			goto dosurface;
 		}
 
+		LOG_MSG("sdl.clip.x: %d", sdl.clip.x);
+		LOG_MSG("sdl.clip.y: %d", sdl.clip.y);
+		LOG_MSG("windowHeight: %d", windowHeight);
+		LOG_MSG("sdl.clip.w: %d", sdl.clip.w);
+		LOG_MSG("sdl.clip.h: %d", sdl.clip.h);
+
 		// glViewport(sdl.clip.x, windowHeight - (sdl.clip.y + sdl.clip.h), sdl.clip.w, sdl.clip.h);
 		glDeleteTextures(1, &sdl.opengl.texture);
  		glGenTextures(1, &sdl.opengl.texture);
@@ -936,7 +942,7 @@ dosurface:
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		}
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
 
 		// Time to take advantage of the shader now
 		glUseProgram(sdl.opengl.program_object);
@@ -947,7 +953,7 @@ dosurface:
 		// sdl.opengl.program_arguments.ruby.texture = glGetUniformLocation ( sdl.opengl.program_object, "rubyTexture" );
 		// glUniform1i (sdl.opengl.program_arguments.ruby.texture, 0);
 		sdl.opengl.program_arguments.ruby.texture_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyTextureSize" );
-		glUniform2f (sdl.opengl.program_arguments.ruby.texture_size, 320, 240);
+		glUniform2f (sdl.opengl.program_arguments.ruby.texture_size, texsize, texsize);
 		sdl.opengl.program_arguments.ruby.input_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyInputSize" );
 		glUniform2f (sdl.opengl.program_arguments.ruby.input_size, width, height);
 		sdl.opengl.program_arguments.ruby.output_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyOutputSize" );
@@ -1234,15 +1240,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
-		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-						sdl.draw.width, sdl.draw.height, GL_BGRA,
-						GL_UNSIGNED_INT_8_8_8_8_REV, (Bit8u *)sdl.opengl.framebuf);
-		GFX_DrawGLTexture();
-		SDL_GL_SwapWindow(sdl.window);
-
-#if 0
 		if (changedLines) {
 			Bitu y = 0, index = 0;
 			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
@@ -1252,7 +1249,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				} else {
 					Bit8u *pixels = (Bit8u *)sdl.opengl.framebuf + y * sdl.opengl.pitch;
 					Bitu height = changedLines[index];
-
 					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
 						sdl.draw.width, height, GL_BGRA,
 						GL_UNSIGNED_INT_8_8_8_8_REV, pixels );
@@ -1263,7 +1259,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			GFX_DrawGLTexture();
 			SDL_GL_SwapWindow(sdl.window);
 		}
-#endif
 		break;
 #endif
 	default:
