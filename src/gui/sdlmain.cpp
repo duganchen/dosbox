@@ -1243,6 +1243,8 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		glTexSubImage2D(GL_TEXTURE_2D, 0, sdl.clip.x, sdl.clip.y,
 						sdl.clip.w, sdl.clip.h, GL_BGRA,
 						GL_UNSIGNED_INT_8_8_8_8_REV, (Bit8u *)sdl.opengl.framebuf);
+		GFX_DrawGLTexture();
+		SDL_GL_SwapWindow(sdl.window);
 
 #if 0
 		if (changedLines) {
@@ -1254,6 +1256,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				} else {
 					Bit8u *pixels = (Bit8u *)sdl.opengl.framebuf + y * sdl.opengl.pitch;
 					Bitu height = changedLines[index];
+
 					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
 						sdl.draw.width, height, GL_BGRA,
 						GL_UNSIGNED_INT_8_8_8_8_REV, pixels );
@@ -1261,10 +1264,10 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				}
 				index++;
 			}
-#endif
 			GFX_DrawGLTexture();
 			SDL_GL_SwapWindow(sdl.window);
 		}
+#endif
 		break;
 #endif
 	default:
