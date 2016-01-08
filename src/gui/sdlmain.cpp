@@ -1240,8 +1240,8 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 #if C_OPENGL
 	case SCREEN_OPENGL:
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, sdl.clip.x, sdl.clip.y,
-						sdl.clip.w, sdl.clip.h, GL_BGRA,
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+						640, 400, GL_BGRA,
 						GL_UNSIGNED_INT_8_8_8_8_REV, (Bit8u *)sdl.opengl.framebuf);
 		GFX_DrawGLTexture();
 		SDL_GL_SwapWindow(sdl.window);
