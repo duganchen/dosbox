@@ -1242,7 +1242,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-						sdl.draw.width, sdl.draw.height, GL_BGRA,
+						sdl.draw.width / 2, sdl.draw.height / 2, GL_BGRA,
 						GL_UNSIGNED_INT_8_8_8_8_REV, (Bit8u *)sdl.opengl.framebuf);
 		GFX_DrawGLTexture();
 		SDL_GL_SwapWindow(sdl.window);
