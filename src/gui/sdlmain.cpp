@@ -1273,7 +1273,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				}
 				index++;
 			}
-			GFX_DrawGLTexture();
+			// GFX_DrawGLTexture();
 			SDL_GL_SwapWindow(sdl.window);
 		}
 		break;
