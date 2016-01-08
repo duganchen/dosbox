@@ -605,6 +605,14 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType) {
 	Bit16u fixedWidth;
 	Bit16u fixedHeight;
 
+	LOG_MSG("sdl.desktop.full.width: %d", sdl.desktop.full.width);
+	LOG_MSG("sdl.desktop.full.height: %d", sdl.desktop.full.height);
+	LOG_MSG("sdl.desktop.window.width: %d", sdl.desktop.window.width);
+	LOG_MSG("sdl.desktop.window.height: %d", sdl.desktop.window.height);
+	LOG_MSG("sdl.draw.width: %d", sdl.draw.width);
+	LOG_MSG("sdl.draw.height: %d", sdl.draw.height);
+	LOG_MSG("sdl.draw.scalex: %d", sdl.draw.scaley);
+
 	if (sdl.desktop.fullscreen) {
 		fixedWidth = sdl.desktop.full.fixed ? sdl.desktop.full.width : 0;
 		fixedHeight = sdl.desktop.full.fixed ? sdl.desktop.full.height : 0;
@@ -637,11 +645,13 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType) {
 			sdl.clip.x=(Sint16)((windowWidth-sdl.clip.w)/2);
 			sdl.clip.y=(Sint16)((fixedHeight-sdl.clip.h)/2);
 		} else {
+			LOG_MSG("Setting clip.x and clip.y to 0");
 			sdl.clip.x = 0;
 			sdl.clip.y = 0;
 		}
 		return sdl.window;
 	} else {
+		LOG_MSG("Not fixed width or fixed height");
 		sdl.clip.x=0;sdl.clip.y=0;
 		sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex);
 		sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley);
