@@ -990,20 +990,21 @@ dosurface:
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
 		glEnableVertexAttribArray(0);
 
-		// Textures now.
+		// Textures now. With DosBox's framebuffer, the origin is at the top left, and the t
+		// axis is reversed.
 
 		// lower left
 		sdl.opengl.texture_data[0] = 0.0f;
-		sdl.opengl.texture_data[1] = 0.0f;
+		sdl.opengl.texture_data[1] = 1.0f;
 		// lower right
 		sdl.opengl.texture_data[2] = 1.0f;
-		sdl.opengl.texture_data[3] = 0.0f;
+		sdl.opengl.texture_data[3] = 1.0f;
 		// upper right
 		sdl.opengl.texture_data[4] = 1.0f;
-		sdl.opengl.texture_data[5] = 1.0f;
+		sdl.opengl.texture_data[5] = 0.0f;
 		// upper left
 		sdl.opengl.texture_data[6] = 0.0f;
-		sdl.opengl.texture_data[7] = 1.0f;
+		sdl.opengl.texture_data[7] = 0.0f;
 
 		glGenBuffers(1, &sdl.opengl.texture_vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.texture_vbo);
