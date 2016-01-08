@@ -601,6 +601,7 @@ static SDL_Window * GFX_SetSDLOpenGLWindow(Bit16u width, Bit16u height) {
 }
 
 static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType) {
+	LOG_MSG("Calling GFX_SetupWindowScaled");
 	Bit16u fixedWidth;
 	Bit16u fixedHeight;
 
