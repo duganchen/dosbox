@@ -103,7 +103,6 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = NULL;
 PFNGLBINDVERTEXARRAYPROC glBindVertexArray = NULL;
 PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = NULL;
-PFNGLCLEARBUFFERFVPROC glClearBufferfv = NULL;
 
 #endif //C_OPENGL
 
@@ -596,23 +595,14 @@ SDL_Rect GFX_GetSDLSurfaceSubwindowDims(Bit16u width, Bit16u height) {
 	return rect;
 }
 
-// CuPerhaps we can can talk about something for the week after that?Perhaps we can can talk about something for the week after that?rrently used for an initial test here
+// Currently used for an initial test here
 static SDL_Window * GFX_SetSDLOpenGLWindow(Bit16u width, Bit16u height) {
 	return GFX_SetSDLWindowMode(width, height, false, SCREEN_OPENGL);
 }
 
 static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType) {
-	LOG_MSG("Calling GFX_SetupWindowScaled");
 	Bit16u fixedWidth;
 	Bit16u fixedHeight;
-
-	LOG_MSG("sdl.desktop.full.width: %d", sdl.desktop.full.width);
-	LOG_MSG("sdl.desktop.full.height: %d", sdl.desktop.full.height);
-	LOG_MSG("sdl.desktop.window.width: %d", sdl.desktop.window.width);
-	LOG_MSG("sdl.desktop.window.height: %d", sdl.desktop.window.height);
-	LOG_MSG("sdl.draw.width: %d", sdl.draw.width);
-	LOG_MSG("sdl.draw.height: %d", sdl.draw.height);
-	LOG_MSG("sdl.draw.scalex: %d", sdl.draw.scaley);
 
 	if (sdl.desktop.fullscreen) {
 		fixedWidth = sdl.desktop.full.fixed ? sdl.desktop.full.width : 0;
@@ -646,13 +636,11 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType) {
 			sdl.clip.x=(Sint16)((windowWidth-sdl.clip.w)/2);
 			sdl.clip.y=(Sint16)((fixedHeight-sdl.clip.h)/2);
 		} else {
-			LOG_MSG("Setting clip.x and clip.y to 0");
 			sdl.clip.x = 0;
 			sdl.clip.y = 0;
 		}
 		return sdl.window;
 	} else {
-		LOG_MSG("Not fixed width or fixed height");
 		sdl.clip.x=0;sdl.clip.y=0;
 		sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex);
 		sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley);
@@ -700,7 +688,6 @@ GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
 }
 
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags, double scalex, double scaley, GFX_CallBack_t callback) {
-	LOG_MSG("GFX_SetSize");
 	LOG_MSG("width: %lu", width);
 	LOG_MSG("height: %lu", height);
 	LOG_MSG("scalex: %f", scalex);
@@ -882,9 +869,8 @@ dosurface:
 		sdl.opengl.framebuf=malloc(width*height*4);		//32 bit color
 		sdl.opengl.pitch=width*4;
 
-		int windowWidth = 0;
-		int windowHeight = 0;
-		SDL_GetWindowSize(sdl.window, &windowWidth, &windowHeight);
+		int windowHeight;
+		SDL_GetWindowSize(sdl.window, NULL, &windowHeight);
 
 		GLuint vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, sdl.opengl.vertex_shader_src);
 		if (!vertexShader) {
@@ -933,16 +919,6 @@ dosurface:
 			goto dosurface;
 		}
 
-		LOG_MSG("sdl.clip.x: %d", sdl.clip.x);
-		LOG_MSG("sdl.clip.y: %d", sdl.clip.y);
-		LOG_MSG("windowHeight: %d", windowHeight);
-		LOG_MSG("sdl.clip.w: %d", sdl.clip.w);
-		LOG_MSG("sdl.clip.h: %d", sdl.clip.h);
-
-		LOG_MSG("Setting to full width/height");
-		const float red[4] = {1.0f, 0.0f, 0.0f, 1.0f};
-		glClearBufferfv(GL_COLOR, 0, red);
-		glViewport(0, 0, sdl.desktop.full.width, sdl.desktop.full.height);
 		// glViewport(sdl.clip.x, windowHeight - (sdl.clip.y + sdl.clip.h), sdl.clip.w, sdl.clip.h);
 		glDeleteTextures(1, &sdl.opengl.texture);
  		glGenTextures(1, &sdl.opengl.texture);
@@ -959,7 +935,7 @@ dosurface:
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		}
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
 
 		// Time to take advantage of the shader now
 		glUseProgram(sdl.opengl.program_object);
@@ -970,7 +946,7 @@ dosurface:
 		// sdl.opengl.program_arguments.ruby.texture = glGetUniformLocation ( sdl.opengl.program_object, "rubyTexture" );
 		// glUniform1i (sdl.opengl.program_arguments.ruby.texture, 0);
 		sdl.opengl.program_arguments.ruby.texture_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyTextureSize" );
-		glUniform2f (sdl.opengl.program_arguments.ruby.texture_size, texsize, texsize);
+		glUniform2f (sdl.opengl.program_arguments.ruby.texture_size, 320, 240);
 		sdl.opengl.program_arguments.ruby.input_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyInputSize" );
 		glUniform2f (sdl.opengl.program_arguments.ruby.input_size, width, height);
 		sdl.opengl.program_arguments.ruby.output_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyOutputSize" );
@@ -1257,6 +1233,15 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
+		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
+
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+						sdl.draw.width, sdl.draw.height, GL_BGRA,
+						GL_UNSIGNED_INT_8_8_8_8_REV, (Bit8u *)sdl.opengl.framebuf);
+		GFX_DrawGLTexture();
+		SDL_GL_SwapWindow(sdl.window);
+
+#if 0
 		if (changedLines) {
 			Bitu y = 0, index = 0;
 			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
@@ -1266,6 +1251,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				} else {
 					Bit8u *pixels = (Bit8u *)sdl.opengl.framebuf + y * sdl.opengl.pitch;
 					Bitu height = changedLines[index];
+
 					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
 						sdl.draw.width, height, GL_BGRA,
 						GL_UNSIGNED_INT_8_8_8_8_REV, pixels );
@@ -1276,6 +1262,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			GFX_DrawGLTexture();
 			SDL_GL_SwapWindow(sdl.window);
 		}
+#endif
 		break;
 #endif
 	default:
@@ -1635,9 +1622,6 @@ static void GUI_StartUp(Section * sec) {
 			glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glGenVertexArrays");
 			glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)SDL_GL_GetProcAddress("glBindVertexArray");
 			glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glDeleteVertexArrays");
-
-			glClearBufferfv = (PFNGLCLEARBUFFERFVPROC)SDL_GL_GetProcAddress("glClearBufferfv");
-
 		}
 	} /* OPENGL is requested end */
 
