@@ -1239,25 +1239,10 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
-		if (changedLines) {
-			Bitu y = 0, index = 0;
-			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-			while (y < sdl.draw.height) {
-				if (!(index & 1)) {
-					y += changedLines[index];
-				} else {
-					Bit8u *pixels = (Bit8u *)sdl.opengl.framebuf + y * sdl.opengl.pitch;
-					Bitu height = changedLines[index];
-					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
-						sdl.draw.width, height, GL_BGRA,
-						GL_UNSIGNED_INT_8_8_8_8_REV, pixels );
-					y += height;
-				}
-				index++;
-			}
-			GFX_DrawGLTexture();
-			SDL_GL_SwapWindow(sdl.window);
-		}
+		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, sdl.clip.x, sdl.clip.y,
+						sdl.clip.w, sdl.clip.h, GL_BGRA,
+						GL_UNSIGNED_INT_8_8_8_8_REV, (Bit8u *)sdl.opengl.framebuf);
 		break;
 #endif
 	default:
