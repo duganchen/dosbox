@@ -870,8 +870,9 @@ dosurface:
 		sdl.opengl.framebuf=malloc(width*height*4);		//32 bit color
 		sdl.opengl.pitch=width*4;
 
-		int windowHeight;
-		SDL_GetWindowSize(sdl.window, NULL, &windowHeight);
+		int windowWidth = 0;
+		int windowHeight = 0;
+		SDL_GetWindowSize(sdl.window, &windowWidth, &windowHeight);
 
 		GLuint vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, sdl.opengl.vertex_shader_src);
 		if (!vertexShader) {
@@ -926,6 +927,7 @@ dosurface:
 		LOG_MSG("sdl.clip.w: %d", sdl.clip.w);
 		LOG_MSG("sdl.clip.h: %d", sdl.clip.h);
 
+		glViewport(0, 0, windowWidth, windowHeight);
 		// glViewport(sdl.clip.x, windowHeight - (sdl.clip.y + sdl.clip.h), sdl.clip.w, sdl.clip.h);
 		glDeleteTextures(1, &sdl.opengl.texture);
  		glGenTextures(1, &sdl.opengl.texture);
