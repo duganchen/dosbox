@@ -103,6 +103,7 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = NULL;
 PFNGLBINDVERTEXARRAYPROC glBindVertexArray = NULL;
 PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = NULL;
+PFNGLCLEARBUFFERFVPROC glClearBufferfv = NULL;
 
 #endif //C_OPENGL
 
@@ -939,6 +940,8 @@ dosurface:
 		LOG_MSG("sdl.clip.h: %d", sdl.clip.h);
 
 		LOG_MSG("Setting to full width/height");
+		const float red[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+		glClearBufferfv(GL_COLOR, 0, red);
 		glViewport(0, 0, sdl.desktop.full.width, sdl.desktop.full.height);
 		// glViewport(sdl.clip.x, windowHeight - (sdl.clip.y + sdl.clip.h), sdl.clip.w, sdl.clip.h);
 		glDeleteTextures(1, &sdl.opengl.texture);
@@ -1632,6 +1635,9 @@ static void GUI_StartUp(Section * sec) {
 			glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glGenVertexArrays");
 			glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)SDL_GL_GetProcAddress("glBindVertexArray");
 			glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glDeleteVertexArrays");
+
+			glClearBufferfv = (PFNGLCLEARBUFFERFVPROC)SDL_GL_GetProcAddress("glClearBufferfv");
+
 		}
 	} /* OPENGL is requested end */
 
