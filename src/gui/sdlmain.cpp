@@ -964,6 +964,10 @@ dosurface:
 		sdl.opengl.actual_frame_count = 0;
 		sdl.opengl.program_arguments.ruby.frame_count = glGetUniformLocation ( sdl.opengl.program_object, "rubyFrameCount" );
 
+		LOG_MSG("rubyTextureSize: [%d, %d]", texsize, texsize);
+		LOG_MSG("rubyInputSize: [%d, %d]", width, height);
+		LOG_MSG("rubyOutputSize: [%d, %d]", sdl.clip.w, sdl.clip.h);
+
 		glGenVertexArrays(1, &sdl.opengl.vao);
 		glBindVertexArray(sdl.opengl.vao);
 
