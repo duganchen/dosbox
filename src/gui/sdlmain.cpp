@@ -986,7 +986,7 @@ dosurface:
 		memcpy(p, &sdl.opengl.uniforms, sizeof(sdl.opengl.uniforms));
 		glUnmapBuffer(GL_UNIFORM_BUFFER);
 		GLuint block_index = glGetUniformBlockIndex(sdl.opengl.program_object, "shader_input");
-		glUniformBlockBinding(sdl.opengl.program_object, block_index, 0);
+		glUniformBlockBinding(sdl.opengl.program_object, block_index, 3);
 
 		// Get the attribute locations
 		// sdl.opengl.program_arguments.position = glGetAttribLocation ( sdl.opengl.program_object, "a_position" );
