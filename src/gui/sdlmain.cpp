@@ -1006,16 +1006,16 @@ dosurface:
 		sdl.opengl.texture_data[1] = get_texture_y(-1.0f, height, texsize);
 
 		// lower right
-		sdl.opengl.texture_data[1] = get_texture_x(1.0f, width, texsize);
-		sdl.opengl.texture_data[2] = get_texture_y(-1.0f, height, texsize);
+		sdl.opengl.texture_data[2] = get_texture_x(1.0f, width, texsize);
+		sdl.opengl.texture_data[3] = get_texture_y(-1.0f, height, texsize);
 
 		// upper right
-		sdl.opengl.texture_data[1] = get_texture_x(1.0f, width, texsize);
-		sdl.opengl.texture_data[2] = get_texture_y(1.0f, height, texsize);
+		sdl.opengl.texture_data[4] = get_texture_x(1.0f, width, texsize);
+		sdl.opengl.texture_data[5] = get_texture_y(1.0f, height, texsize);
 
 		// upper left
-		sdl.opengl.texture_data[1] = get_texture_x(-1.0f, width, texsize);
-		sdl.opengl.texture_data[2] = get_texture_y(1.0f, height, texsize);
+		sdl.opengl.texture_data[6] = get_texture_x(-1.0f, width, texsize);
+		sdl.opengl.texture_data[7] = get_texture_y(1.0f, height, texsize);
 
 		glGenBuffers(1, &sdl.opengl.texture_vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.texture_vbo);
