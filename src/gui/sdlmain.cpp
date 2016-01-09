@@ -830,7 +830,7 @@ dosurface:
 		if (sdl.opengl.framebuf) {
 			free(sdl.opengl.framebuf);
 		}
-		sdl.opengl.framebuf=0;
+		sdl.opengl.framebuf = 0;
 		if (!(flags & GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface; // BGRA except on Android.
 		int texsize = 2 << int_log2(width > height ? width : height);
 		if (texsize > sdl.opengl.max_texsize) {
