@@ -985,7 +985,7 @@ dosurface:
 		GLvoid *p = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
 		memcpy(p, &sdl.opengl.uniforms, sizeof(sdl.opengl.uniforms));
 		glUnmapBuffer(GL_UNIFORM_BUFFER);
-		GLuint block_index = glGetUniformBlockIndex(sdl.opengl.program_object, "input");
+		GLuint block_index = glGetUniformBlockIndex(sdl.opengl.program_object, "shader_input");
 		glUniformBlockBinding(sdl.opengl.program_object, block_index, 0);
 
 		// Get the attribute locations
