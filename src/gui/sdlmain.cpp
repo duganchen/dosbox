@@ -103,6 +103,9 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = NULL;
 PFNGLBINDVERTEXARRAYPROC glBindVertexArray = NULL;
 PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = NULL;
+PFNGLGETUNIFORMBLOCKINDEXPROC glGetUniformBlockIndex = NULL;
+PFNGLUNIFORMBLOCKBINDINGPROC glUniformBlockBinding = NULL;
+
 
 #endif //C_OPENGL
 
@@ -158,6 +161,14 @@ enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_HIGHEST
 };
 
+struct uniform_data_t {
+	GLfloat video_size[2];
+	GLfloat texture_size[2];
+	GLfloat output_size[2];
+} uniforms;
+
+
+
 struct SDL_Block {
 	bool inited;
 	bool active;							//If this isn't set don't draw
@@ -211,6 +222,10 @@ struct SDL_Block {
 
 		GLuint color_vbo;
 
+		GLuint ubo;
+
+		struct uniform_data_t uniforms;
+
 		struct {
 			// GLint position;
 			//GLint tex_coord;
@@ -263,6 +278,7 @@ struct SDL_Block {
 	SDL_EventType laltstate;
 	SDL_EventType raltstate;
 };
+
 
 char *const SDL_Block::SDL_OpenGL_Block::vertex_shader_default_src =
       "#version 330 core\n"
@@ -507,6 +523,11 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 	if (sdl.opengl.texture_vbo) {
 		glDeleteBuffers(1, &sdl.opengl.texture_vbo);
 		sdl.opengl.texture_vbo = 0;
+	}
+
+	if (sdl.opengl.ubo) {
+		glDeleteBuffers(1, &sdl.opengl.ubo);
+		sdl.opengl.ubo = 0;
 	}
 
 	if (sdl.opengl.color_vbo) {
@@ -948,6 +969,23 @@ dosurface:
 
 		// Time to take advantage of the shader now
 		glUseProgram(sdl.opengl.program_object);
+
+		// Pack the uniforms
+		sdl.opengl.uniforms.video_size[0] = width;
+		sdl.opengl.uniforms.video_size[1] = height;
+		sdl.opengl.uniforms.texture_size[0] = texsize;
+		sdl.opengl.uniforms.texture_size[1] = texsize;
+		sdl.opengl.uniforms.output_size[0] = sdl.clip.w;
+		sdl.opengl.uniforms.output_size[1] = sdl.clip.h;
+		glGenBuffers(1, &sdl.opengl.ubo);
+		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniform_data_t), &sdl.opengl.uniforms, GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
+		GLvoid *p = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+		memcpy(p, &sdl.opengl.uniforms, sizeof(sdl.opengl.uniforms));
+		glUnmapBuffer(GL_UNIFORM_BUFFER);
+		GLuint block_index = glGetUniformBlockIndex(sdl.opengl.program_object, "input");
+		glUniformBlockBinding(sdl.opengl.program_object, block_index, 0);
 
 		// Get the attribute locations
 		// sdl.opengl.program_arguments.position = glGetAttribLocation ( sdl.opengl.program_object, "a_position" );
@@ -1569,6 +1607,7 @@ static void GUI_StartUp(Section * sec) {
 			sdl.opengl.program_object=0;
 			sdl.opengl.vao = 0;
 			sdl.opengl.vertex_vbo = 0;
+			sdl.opengl.ubo = 0;
 			sdl.opengl.vertex_shader_src = sdl.opengl.vertex_shader_default_src;
 			sdl.opengl.fragment_shader_src = sdl.opengl.fragment_shader_default_src;
 			std::string glshader_filename=section->Get_string("glshader");
@@ -1638,6 +1677,8 @@ static void GUI_StartUp(Section * sec) {
 			glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glGenVertexArrays");
 			glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)SDL_GL_GetProcAddress("glBindVertexArray");
 			glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glDeleteVertexArrays");
+			glGetUniformBlockIndex = (PFNGLGETUNIFORMBLOCKINDEXPROC)SDL_GL_GetProcAddress("glGetUniformBlockIndex");
+			glUniformBlockBinding = (PFNGLUNIFORMBLOCKBINDINGPROC)SDL_GL_GetProcAddress("glUniformBlockBinding");
 		}
 	} /* OPENGL is requested end */
 
