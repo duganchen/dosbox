@@ -926,6 +926,7 @@ dosurface:
 		LOG_MSG("sdl.clip.h: %d", sdl.clip.h);
 
 		// glViewport(sdl.clip.x, windowHeight - (sdl.clip.y + sdl.clip.h), sdl.clip.w, sdl.clip.h);
+		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		glDeleteTextures(1, &sdl.opengl.texture);
  		glGenTextures(1, &sdl.opengl.texture);
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
