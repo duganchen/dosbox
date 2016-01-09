@@ -957,16 +957,12 @@ dosurface:
 		sdl.opengl.program_arguments.ruby.texture_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyTextureSize" );
 		glUniform2f (sdl.opengl.program_arguments.ruby.texture_size, texsize, texsize);
 		sdl.opengl.program_arguments.ruby.input_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyInputSize" );
-		glUniform2f (sdl.opengl.program_arguments.ruby.input_size, width, height);
+		glUniform2f (sdl.opengl.program_arguments.ruby.input_size, width / 2, height / 2);
 		sdl.opengl.program_arguments.ruby.output_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyOutputSize" );
 		glUniform2f (sdl.opengl.program_arguments.ruby.output_size, sdl.clip.w, sdl.clip.h);
 		// The following uniform is *not* set right now
 		sdl.opengl.actual_frame_count = 0;
 		sdl.opengl.program_arguments.ruby.frame_count = glGetUniformLocation ( sdl.opengl.program_object, "rubyFrameCount" );
-
-		LOG_MSG("rubyTextureSize: [%d, %d]", texsize, texsize);
-		LOG_MSG("rubyInputSize: [%d, %d]", width, height);
-		LOG_MSG("rubyOutputSize: [%d, %d]", sdl.clip.w, sdl.clip.h);
 
 		glGenVertexArrays(1, &sdl.opengl.vao);
 		glBindVertexArray(sdl.opengl.vao);
