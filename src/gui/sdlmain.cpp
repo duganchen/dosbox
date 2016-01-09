@@ -687,6 +687,19 @@ GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
 	return shader;
 }
 
+
+#ifdef C_OPENGL
+GLfloat get_texture_x(GLfloat vertex_x, GLfloat video_x, GLfloat texture_x) {
+	return (vertex_x + 1.0) / 2.0 * video_x / texture_x;
+}
+
+
+GLfloat get_texture_y(GLfloat vertex_y, GLfloat video_y, GLfloat texture_y) {
+	return (1.0 - vertex_y) / 2.0 * video_y / texture_y;
+}
+#endif
+
+
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags, double scalex, double scaley, GFX_CallBack_t callback) {
 	LOG_MSG("width: %lu", width);
 	LOG_MSG("height: %lu", height);
@@ -823,9 +836,9 @@ dosurface:
 			free(sdl.opengl.framebuf);
 		}
 		sdl.opengl.framebuf=0;
-		if (!(flags&GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface; // BGRA except on Android.
-		int texsize=2 << int_log2(width > height ? width : height);
-		if (texsize>sdl.opengl.max_texsize) {
+		if (!(flags & GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface; // BGRA except on Android.
+		int texsize = 2 << int_log2(width > height ? width : height);
+		if (texsize > sdl.opengl.max_texsize) {
 			LOG_MSG("SDL:OPENGL:No support for texturesize of %d, falling back to surface",texsize);
 			goto dosurface;
 		}
@@ -866,8 +879,8 @@ dosurface:
 		/* Sync to VBlank if desired */
 		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
 		/* Create the texture and display list */
-		sdl.opengl.framebuf=malloc(width*height*4);		//32 bit color
-		sdl.opengl.pitch=width*4;
+		sdl.opengl.framebuf = malloc(width * height * 4);		//32 bit color
+		sdl.opengl.pitch = width * 4;
 
 		int windowWidth = 0;
 		int windowHeight = 0;
@@ -920,12 +933,6 @@ dosurface:
 			goto dosurface;
 		}
 
-		LOG_MSG("sdl.clip.x: %d", sdl.clip.x);
-		LOG_MSG("sdl.clip.y: %d", sdl.clip.y);
-		LOG_MSG("sdl.clip.w: %d", sdl.clip.w);
-		LOG_MSG("sdl.clip.h: %d", sdl.clip.h);
-
-		// glViewport(sdl.clip.x, windowHeight - (sdl.clip.y + sdl.clip.h), sdl.clip.w, sdl.clip.h);
 		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		glDeleteTextures(1, &sdl.opengl.texture);
  		glGenTextures(1, &sdl.opengl.texture);
@@ -942,7 +949,7 @@ dosurface:
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		}
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
 
 		// Time to take advantage of the shader now
 		glUseProgram(sdl.opengl.program_object);
@@ -953,7 +960,7 @@ dosurface:
 		// sdl.opengl.program_arguments.ruby.texture = glGetUniformLocation ( sdl.opengl.program_object, "rubyTexture" );
 		// glUniform1i (sdl.opengl.program_arguments.ruby.texture, 0);
 		sdl.opengl.program_arguments.ruby.texture_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyTextureSize" );
-		glUniform2f (sdl.opengl.program_arguments.ruby.texture_size, 320, 240);
+		glUniform2f (sdl.opengl.program_arguments.ruby.texture_size, texsize, texsize);
 		sdl.opengl.program_arguments.ruby.input_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyInputSize" );
 		glUniform2f (sdl.opengl.program_arguments.ruby.input_size, width, height);
 		sdl.opengl.program_arguments.ruby.output_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyOutputSize" );
@@ -991,21 +998,24 @@ dosurface:
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
 		glEnableVertexAttribArray(0);
 
-		// Textures now. With DosBox's framebuffer, the origin is at the top left, and the t
-		// axis is reversed.
+		// Textures now. With DosBox's framebuffer, the origin is at the top left, and the the
+		// axis is reversed. We pass in texture coordinates that cover only the area drawn.
 
 		// lower left
-		sdl.opengl.texture_data[0] = 0.0f;
-		sdl.opengl.texture_data[1] = 1.0f;
+		sdl.opengl.texture_data[0] = get_texture_x(-1.0f, width, texsize);
+		sdl.opengl.texture_data[1] = get_texture_y(-1.0f, height, texsize);
+
 		// lower right
-		sdl.opengl.texture_data[2] = 1.0f;
-		sdl.opengl.texture_data[3] = 1.0f;
+		sdl.opengl.texture_data[1] = get_texture_x(1.0f, width, texsize);
+		sdl.opengl.texture_data[2] = get_texture_y(-1.0f, height, texsize);
+
 		// upper right
-		sdl.opengl.texture_data[4] = 1.0f;
-		sdl.opengl.texture_data[5] = 0.0f;
+		sdl.opengl.texture_data[1] = get_texture_x(1.0f, width, texsize);
+		sdl.opengl.texture_data[2] = get_texture_y(1.0f, height, texsize);
+
 		// upper left
-		sdl.opengl.texture_data[6] = 0.0f;
-		sdl.opengl.texture_data[7] = 0.0f;
+		sdl.opengl.texture_data[1] = get_texture_x(-1.0f, width, texsize);
+		sdl.opengl.texture_data[2] = get_texture_y(1.0f, height, texsize);
 
 		glGenBuffers(1, &sdl.opengl.texture_vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.texture_vbo);
@@ -1161,6 +1171,7 @@ void GFX_DrawGLTexture(void) {
 	sdl.opengl.actual_frame_count++;
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, sdl.opengl.vertex_data_indices);
 }
+
 
 bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 	if (!sdl.update_display_contents)
