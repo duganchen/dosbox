@@ -954,10 +954,9 @@ dosurface:
 		// Get uniform locations and set some of them
 		// sdl.opengl.program_arguments.ruby.texture = glGetUniformLocation ( sdl.opengl.program_object, "rubyTexture" );
 		// glUniform1i (sdl.opengl.program_arguments.ruby.texture, 0);
-		sdl.opengl.program_arguments.ruby.texture_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyTextureSize" );
-		glUniform2f (sdl.opengl.program_arguments.ruby.texture_size, texsize, texsize);
+		sdl.opengl.program_arguments.ruby.texture_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyTextureSize" ); glUniform2f (sdl.opengl.program_arguments.ruby.texture_size, texsize, texsize);
 		sdl.opengl.program_arguments.ruby.input_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyInputSize" );
-		glUniform2f (sdl.opengl.program_arguments.ruby.input_size, width / 2, height / 2);
+		glUniform2f (sdl.opengl.program_arguments.ruby.input_size, width, height);
 		sdl.opengl.program_arguments.ruby.output_size = glGetUniformLocation ( sdl.opengl.program_object, "rubyOutputSize" );
 		glUniform2f (sdl.opengl.program_arguments.ruby.output_size, sdl.clip.w, sdl.clip.h);
 		// The following uniform is *not* set right now
@@ -966,7 +965,6 @@ dosurface:
 
 		glGenVertexArrays(1, &sdl.opengl.vao);
 		glBindVertexArray(sdl.opengl.vao);
-
 
 		LOG_MSG("rubyTextureSize: [%d, %d]", texsize, texsize);
 		LOG_MSG("rubyInputSize: [%lu, %lu]", width / 2, height / 2);
