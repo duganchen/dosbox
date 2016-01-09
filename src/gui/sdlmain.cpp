@@ -701,11 +701,6 @@ GLfloat get_texture_y(GLfloat vertex_y, GLfloat video_y, GLfloat texture_y) {
 
 
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags, double scalex, double scaley, GFX_CallBack_t callback) {
-	LOG_MSG("width: %lu", width);
-	LOG_MSG("height: %lu", height);
-	LOG_MSG("scalex: %f", scalex);
-	LOG_MSG("scaley: %f", scaley);
-
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
 
