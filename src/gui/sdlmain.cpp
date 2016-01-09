@@ -971,6 +971,7 @@ dosurface:
 		glUseProgram(sdl.opengl.program_object);
 
 		// Pack the uniforms
+		// Implemenation from: http://www.geeks3d.com/20140704/gpu-buffers-introduction-to-opengl-3-1-uniform-buffers-objects/
 		sdl.opengl.uniforms.video_size[0] = width;
 		sdl.opengl.uniforms.video_size[1] = height;
 		sdl.opengl.uniforms.texture_size[0] = texsize;
