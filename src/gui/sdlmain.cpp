@@ -967,6 +967,11 @@ dosurface:
 		glGenVertexArrays(1, &sdl.opengl.vao);
 		glBindVertexArray(sdl.opengl.vao);
 
+
+		LOG_MSG("rubyTextureSize: [%d, %d]", texsize, texsize);
+		LOG_MSG("rubyInputSize: [%lu, %lu]", width / 2, height / 2);
+		LOG_MSG("rubyOutputSize: [%d, %d]", sdl.clip.w, sdl.clip.h);
+
 		// Vertex coordinates
 
 		// lower left
