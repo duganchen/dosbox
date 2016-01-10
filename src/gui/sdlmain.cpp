@@ -993,7 +993,6 @@ dosurface:
 
 		GLint block_size = 0;
 		glGetActiveUniformBlockiv(sdl.opengl.program_object, block_index, GL_UNIFORM_BLOCK_DATA_SIZE, &block_size);
-#if 0
 
 		if (!block_size) {
 			LOG_MSG("%s", SDL_GetError());
@@ -1003,6 +1002,8 @@ dosurface:
 		const GLchar *names[3] = {"video_size", "texture_size", "output_size"};
 		GLuint indices[3];
 		glGetUniformIndices(sdl.opengl.program_object, 3, names, indices);
+
+#if 0
 
 		GLint offset[3];
 		glGetActiveUniformsiv(sdl.opengl.program_object, 3, indices, GL_UNIFORM_OFFSET, offset);
