@@ -1011,17 +1011,17 @@ dosurface:
 		GLfloat video_size[2];
 		video_size[0] = width;
 		video_size[1] = height;
-		memcpy(block_buffer, video_size, 2 * sizeof(GLfloat));
+		memcpy(block_buffer + offset[0], video_size, 2 * sizeof(GLfloat));
 
 		GLfloat texture_size[2];
 		texture_size[0] = texsize;
 		texture_size[1] = texsize;
-		memcpy(block_buffer, texture_size, 2 * sizeof(GLfloat));
+		memcpy(block_buffer + offset[1], texture_size, 2 * sizeof(GLfloat));
 
 		GLfloat output_size[2];
 		output_size[0] = sdl.clip.w;
 		output_size[1] = sdl.clip.h;
-		memcpy(block_buffer, texture_size, 2 * sizeof(GLfloat));
+		memcpy(block_buffer + offset[3], texture_size, 2 * sizeof(GLfloat));
 
 		glGenBuffers(1, &sdl.opengl.ubo);
 		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
