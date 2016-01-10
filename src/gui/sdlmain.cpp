@@ -105,7 +105,10 @@ PFNGLBINDVERTEXARRAYPROC glBindVertexArray = NULL;
 PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = NULL;
 PFNGLGETUNIFORMBLOCKINDEXPROC glGetUniformBlockIndex = NULL;
 PFNGLUNIFORMBLOCKBINDINGPROC glUniformBlockBinding = NULL;
-
+PFNGLGETACTIVEUNIFORMBLOCKIVPROC glGetActiveUniformBlockiv = NULL;
+PFNGLGETUNIFORMINDICESPROC glGetUniformIndices = NULL;
+PFNGLGETACTIVEUNIFORMSIVPROC glGetActiveUniformsiv = NULL;
+PFNGLBINDBUFFERBASEPROC glBindBufferBase = NULL;
 
 #endif //C_OPENGL
 
@@ -978,8 +981,58 @@ dosurface:
 		sdl.opengl.uniforms.texture_size[1] = texsize;
 		sdl.opengl.uniforms.output_size[0] = sdl.clip.w;
 		sdl.opengl.uniforms.output_size[1] = sdl.clip.h;
+
+		// https://www.packtpub.com/books/content/opengl-40-using-uniform-blocks-and-uniform-buffer-objects
+
+		GLuint block_index = glGetUniformBlockIndex(sdl.opengl.program_object, "shader_input");
+
+		if (GL_INVALID_INDEX == block_index) {
+			LOG_MSG("%s", SDL_GetError());
+			goto dosurface;
+		}
+
+		GLint block_size = 0;
+		glGetActiveUniformBlockiv(sdl.opengl.program_object, block_index, GL_UNIFORM_BLOCK_DATA_SIZE, &block_size);
+
+		if (!block_size) {
+			LOG_MSG("%s", SDL_GetError());
+			goto dosurface;
+		}
+
+		const GLchar *names[3] = {"video_size", "texture_size", "output_size"};
+		GLuint indices[3];
+		glGetUniformIndices(sdl.opengl.program_object, 3, names, indices);
+
+		GLint offset[3];
+		glGetActiveUniformsiv(sdl.opengl.program_object, 3, indices, GL_UNIFORM_OFFSET, offset);
+
+		GLubyte *block_buffer = new GLubyte[block_size];
+
+		GLfloat video_size[2];
+		video_size[0] = width;
+		video_size[1] = height;
+		memcpy(block_buffer, video_size, 2 * sizeof(GLfloat));
+
+		GLfloat texture_size[2];
+		texture_size[0] = texsize;
+		texture_size[1] = texsize;
+		memcpy(block_buffer, texture_size, 2 * sizeof(GLfloat));
+
+		GLfloat output_size[2];
+		output_size[0] = sdl.clip.w;
+		output_size[1] = sdl.clip.h;
+		memcpy(block_buffer, texture_size, 2 * sizeof(GLfloat));
+
 		glGenBuffers(1, &sdl.opengl.ubo);
 		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
+		glBufferData(GL_UNIFORM_BUFFER, block_size, block_buffer, GL_STATIC_DRAW);
+		delete[] block_buffer;
+
+		glBindBufferBase(GL_UNIFORM_BUFFER, block_index, sdl.opengl.ubo);
+
+		/*
+		glGenBuffers(1, &sdl.opengl.ubo);
+		glBindBActiveUniformBlockivuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniform_data_t), &sdl.opengl.uniforms, GL_DYNAMIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
 		GLvoid *p = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
@@ -987,6 +1040,7 @@ dosurface:
 		glUnmapBuffer(GL_UNIFORM_BUFFER);
 		GLuint block_index = glGetUniformBlockIndex(sdl.opengl.program_object, "shader_input");
 		glUniformBlockBinding(sdl.opengl.program_object, block_index, 0);
+		*/
 
 		// Get the attribute locations
 		// sdl.opengl.program_arguments.position = glGetAttribLocation ( sdl.opengl.program_object, "a_position" );
@@ -1680,6 +1734,10 @@ static void GUI_StartUp(Section * sec) {
 			glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glDeleteVertexArrays");
 			glGetUniformBlockIndex = (PFNGLGETUNIFORMBLOCKINDEXPROC)SDL_GL_GetProcAddress("glGetUniformBlockIndex");
 			glUniformBlockBinding = (PFNGLUNIFORMBLOCKBINDINGPROC)SDL_GL_GetProcAddress("glUniformBlockBinding");
+			glGetActiveUniformBlockiv = (PFNGLGETACTIVEUNIFORMBLOCKIVPROC)SDL_GL_GetProcAddress("glGetActiveUniformBlockiv");
+			glGetUniformIndices = (PFNGLGETUNIFORMINDICESPROC)SDL_GL_GetProcAddress("glGetUniformIndices");
+			glGetActiveUniformsiv = (PFNGLGETACTIVEUNIFORMSIVPROC)SDL_GL_GetProcAddress("glGetActiveUniformsiv");
+			glBindBufferBase = (PFNGLBINDBUFFERBASEPROC)SDL_GL_GetProcAddresss("glBindBufferBase");
 		}
 	} /* OPENGL is requested end */
 
