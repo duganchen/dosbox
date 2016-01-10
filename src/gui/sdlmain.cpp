@@ -973,76 +973,22 @@ dosurface:
 		// Time to take advantage of the shader now
 		glUseProgram(sdl.opengl.program_object);
 
-		// Pack the uniforms
-		// Implemenation from: http://www.geeks3d.com/20140704/gpu-buffers-introduction-to-opengl-3-1-uniform-buffers-objects/
-		sdl.opengl.uniforms.video_size[0] = width;
-		sdl.opengl.uniforms.video_size[1] = height;
-		sdl.opengl.uniforms.texture_size[0] = texsize;
-		sdl.opengl.uniforms.texture_size[1] = texsize;
-		sdl.opengl.uniforms.output_size[0] = sdl.clip.w;
-		sdl.opengl.uniforms.output_size[1] = sdl.clip.h;
+		float uniforms[6];
+		uniforms[0] = texsize;
+		uniforms[1] = texsize;
+		uniforms[2] = width;
+		uniforms[3] = height;
+		uniforms[4] = sdl.clip.w;
+		uniforms[5] = sdl.clip.h;
 
-#if 0
-		// https://www.packtpub.com/books/content/opengl-40-using-uniform-blocks-and-uniform-buffer-objects
-
-		GLuint block_index = glGetUniformBlockIndex(sdl.opengl.program_object, "shader_input");
-
-		if (GL_INVALID_INDEX == block_index) {
-			LOG_MSG("%s", SDL_GetError());
-			goto dosurface;
-		}
-
-		GLint block_size = 0;
-		glGetActiveUniformBlockiv(sdl.opengl.program_object, block_index, GL_UNIFORM_BLOCK_DATA_SIZE, &block_size);
-
-		if (!block_size) {
-			LOG_MSG("%s", SDL_GetError());
-			goto dosurface;
-		}
-
-		const GLchar *names[3] = {"video_size", "texture_size", "output_size"};
-		GLuint indices[3];
-		glGetUniformIndices(sdl.opengl.program_object, 3, names, indices);
-
-		GLint offset[3];
-		glGetActiveUniformsiv(sdl.opengl.program_object, 3, indices, GL_UNIFORM_OFFSET, offset);
-
-		GLubyte *block_buffer = new GLubyte[block_size];
-
-		GLfloat video_size[2];
-		video_size[0] = width;
-		video_size[1] = height;
-		// memcpy(block_buffer + offset[0], video_size, 2 * sizeof(GLfloat));
-
-		delete[] block_buffer;
-
-		GLfloat texture_size[2];
-		texture_size[0] = texsize;
-		texture_size[1] = texsize;
-		memcpy(block_buffer + offset[1], texture_size, 2 * sizeof(GLfloat));
-
-		GLfloat output_size[2];
-		output_size[0] = sdl.clip.w;
-		output_size[1] = sdl.clip.h;
-		memcpy(block_buffer + offset[2], output_size, 2 * sizeof(GLfloat));
-
-		glGenBuffers(1, &sdl.opengl.ubo);
-		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
-		glBufferData(GL_UNIFORM_BUFFER, block_size, block_buffer, GL_STATIC_DRAW);
-		delete[] block_buffer;
-
-		glBindBufferBase(GL_UNIFORM_BUFFER, block_index, sdl.opengl.ubo);
-#endif
-
-		glGenBuffers(1, &sdl.opengl.ubo);
-		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
-		glBufferData(GL_UNIFORM_BUFFER, sizeof(uniform_data_t), &sdl.opengl.uniforms, GL_STATIC_DRAW);
-		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
-		GLvoid *p = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
-		memcpy(p, &sdl.opengl.uniforms, sizeof(sdl.opengl.uniforms));
-		glUnmapBuffer(GL_UNIFORM_BUFFER);
+		// Pack the uniforms block
 		GLuint block_index = glGetUniformBlockIndex(sdl.opengl.program_object, "shader_input");
 		glUniformBlockBinding(sdl.opengl.program_object, block_index, 0);
+		glGenBuffers(1, &sdl.opengl.ubo);
+		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
+		glBufferData(GL_UNIFORM_BUFFER, 24, uniforms, GL_STATIC_DRAW);
+		// glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.vertex_data), sdl.opengl.vertex_data, GL_STATIC_DRAW);
+
 
 		// Get the attribute locations
 		// sdl.opengl.program_arguments.position = glGetAttribLocation ( sdl.opengl.program_object, "a_position" );
