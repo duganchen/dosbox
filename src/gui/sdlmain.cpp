@@ -987,6 +987,7 @@ dosurface:
 		glUniformBlockBinding(sdl.opengl.program_object, block_index, 0);
 		glGenBuffers(1, &sdl.opengl.ubo);
 		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
+		glBindBufferBase(GL_UNIFORM_BUFFER, 0, sdl.opengl.ubo);
 		glBufferData(GL_UNIFORM_BUFFER, 24, uniforms, GL_STATIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 		// glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.vertex_data), sdl.opengl.vertex_data, GL_STATIC_DRAW);
