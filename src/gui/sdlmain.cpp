@@ -990,10 +990,10 @@ dosurface:
 			LOG_MSG("%s", SDL_GetError());
 			goto dosurface;
 		}
-#if 0
 
 		GLint block_size = 0;
 		glGetActiveUniformBlockiv(sdl.opengl.program_object, block_index, GL_UNIFORM_BLOCK_DATA_SIZE, &block_size);
+#if 0
 
 		if (!block_size) {
 			LOG_MSG("%s", SDL_GetError());
