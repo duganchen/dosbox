@@ -1006,12 +1006,14 @@ dosurface:
 		GLint offset[3];
 		glGetActiveUniformsiv(sdl.opengl.program_object, 3, indices, GL_UNIFORM_OFFSET, offset);
 
-		GLubyte *block_buffer = new GLubyte[block_size];
+		GLubyte *block_buffer = (GLubyte *)malloc(block_size);
 
 		GLfloat video_size[2];
 		video_size[0] = width;
 		video_size[1] = height;
 		memcpy(block_buffer + offset[0], video_size, 2 * sizeof(GLfloat));
+
+		free(block_buffer);
 #if 0
 
 		GLfloat texture_size[2];
