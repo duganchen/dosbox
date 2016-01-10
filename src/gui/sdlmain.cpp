@@ -1006,6 +1006,7 @@ dosurface:
 		GLint offset[3];
 		glGetActiveUniformsiv(sdl.opengl.program_object, 3, indices, GL_UNIFORM_OFFSET, offset);
 
+#if 0
 		GLubyte *block_buffer = new GLubyte[block_size];
 
 		GLfloat video_size[2];
@@ -1022,7 +1023,6 @@ dosurface:
 		output_size[0] = sdl.clip.w;
 		output_size[1] = sdl.clip.h;
 		memcpy(block_buffer + offset[2], output_size, 2 * sizeof(GLfloat));
-#if 0
 
 		glGenBuffers(1, &sdl.opengl.ubo);
 		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
