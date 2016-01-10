@@ -990,6 +990,7 @@ dosurface:
 			LOG_MSG("%s", SDL_GetError());
 			goto dosurface;
 		}
+#if 0
 
 		GLint block_size = 0;
 		glGetActiveUniformBlockiv(sdl.opengl.program_object, block_index, GL_UNIFORM_BLOCK_DATA_SIZE, &block_size);
@@ -1029,6 +1030,7 @@ dosurface:
 		delete[] block_buffer;
 
 		glBindBufferBase(GL_UNIFORM_BUFFER, block_index, sdl.opengl.ubo);
+#endif
 
 		/*
 		glGenBuffers(1, &sdl.opengl.ubo);
