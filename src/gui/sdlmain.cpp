@@ -974,10 +974,10 @@ dosurface:
 		glUseProgram(sdl.opengl.program_object);
 
 		float uniforms[6];
-		uniforms[0] = texsize;
-		uniforms[1] = texsize;
-		uniforms[2] = width;
-		uniforms[3] = height;
+		uniforms[0] = width;
+		uniforms[1] = height;
+		uniforms[2] = texsize;
+		uniforms[3] = texsize;
 		uniforms[4] = sdl.clip.w;
 		uniforms[5] = sdl.clip.h;
 
