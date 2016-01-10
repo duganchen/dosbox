@@ -1737,7 +1737,7 @@ static void GUI_StartUp(Section * sec) {
 			glGetActiveUniformBlockiv = (PFNGLGETACTIVEUNIFORMBLOCKIVPROC)SDL_GL_GetProcAddress("glGetActiveUniformBlockiv");
 			glGetUniformIndices = (PFNGLGETUNIFORMINDICESPROC)SDL_GL_GetProcAddress("glGetUniformIndices");
 			glGetActiveUniformsiv = (PFNGLGETACTIVEUNIFORMSIVPROC)SDL_GL_GetProcAddress("glGetActiveUniformsiv");
-			glBindBufferBase = (PFNGLBINDBUFFERBASEPROC)SDL_GL_GetProcAddresss("glBindBufferBase");
+			glBindBufferBase = (PFNGLBINDBUFFERBASEPROC)SDL_GL_GetProcAddress("glBindBufferBase");
 		}
 	} /* OPENGL is requested end */
 
