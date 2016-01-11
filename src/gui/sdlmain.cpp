@@ -303,7 +303,7 @@ char *const SDL_Block::SDL_OpenGL_Block::fragment_shader_default_src =
 	"in vec2 texCoord;\n"
 	"uniform sampler2D decal;\n"
 	"\n"
-	"out vec4 color;n"
+	"out vec4 color;"
 	"\n"
 	"void main()\n"
 	"{\n"
