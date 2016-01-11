@@ -284,29 +284,32 @@ struct SDL_Block {
 
 
 char *const SDL_Block::SDL_OpenGL_Block::vertex_shader_default_src =
-      "#version 330 core\n"
-      "in vec4 a_position;\n"
-      "out vec2 v_texCoord;\n"
-      "uniform vec2 rubyTextureSize;\n"
-      "uniform vec2 rubyInputSize;\n"
-      "uniform vec2 rubyOutputSize;\n"
-      "uniform int rubyFrameCount;\n"
-      "\n"
-      "void main()\n"
-      "{\n"
-      "  gl_Position = a_position;\n"
-      "  v_texCoord = vec2((a_position.x+1.0)/2.0*rubyInputSize.x/rubyTextureSize.x,(1.0-a_position.y)/2.0*rubyInputSize.y/rubyTextureSize.y);\n"
-      "}\n";
+	"#version 330 core\n"
+	"\n"
+	"layout(location = 0) in vec4 position;\n"
+	"layout(location = 1) in vec2 textureCoord;\n"
+	"\n"
+	"out vec2 texCoord;\n"
+	"\n"
+	"void main()\n"
+	"{\n"
+	"	gl_Position = position;\n"
+	"	texCoord = textureCoord;\n"
+	"}\n";
+
 char *const SDL_Block::SDL_OpenGL_Block::fragment_shader_default_src =
-      "#version 330 core\n"
-      "in vec2 v_texCoord;\n"
-	  "out color;\n"
-      "uniform sampler2D rubyTexture;\n"
-      "\n"
-      "void main()\n"
-      "{\n"
-      "  color = texture2D(rubyTexture, v_texCoord);\n"
-      "}\n";
+	"#version 330 core\n"
+	"\n"
+	"in vec2 texCoord;\n"
+	"uniform sampler2D decal;\n"
+	"\n"
+	"out vec4 color;n"
+	"\n"
+	"void main()\n"
+	"{\n"
+	"	color = texture(decal, texCoord);\n"
+	"}\n";
+
 const GLushort SDL_Block::SDL_OpenGL_Block::vertex_data_indices[6] = { 0, 1, 2, 0, 2, 3 };
 
 static SDL_Block sdl;
@@ -982,7 +985,7 @@ dosurface:
 		uniforms[5] = sdl.clip.h;
 
 		// Pack the uniforms block
-		GLuint block_index = glGetUniformBlockIndex(sdl.opengl.program_object, "shader_input");
+		GLuint block_index = glGetUniformBlockIndex(sdl.opengl.program_object, "program_input");
 		LOG_MSG("uniform block index: %d", block_index);
 		glUniformBlockBinding(sdl.opengl.program_object, block_index, 0);
 		glGenBuffers(1, &sdl.opengl.ubo);
