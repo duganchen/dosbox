@@ -9,6 +9,10 @@
 #include "midi.h"
 #endif
 
+#ifdef C_WORDEXP
+#include <wordexp.h>
+#endif
+
 #include "midi_mt32.h"
 
 static const Bitu MILLIS_PER_SECOND = 1000;
@@ -169,7 +173,16 @@ int MidiHandler_mt32::processingThread(void *) {
 }
 
 void MidiHandler_mt32::makeROMPathName(char pathName[], const char romDir[], const char fileName[], bool addPathSeparator) {
+
+#ifdef C_WORDEXP
+	wordexp_t p;
+	wordexp(romDir, &p, 0);
+	strcpy(pathName, p.we_wordv[0]);
+	wordfree(&p);
+#else
 	strcpy(pathName, romDir);
+#endif
+
 	if (addPathSeparator) {
 		strcat(pathName, "/");
 	}
