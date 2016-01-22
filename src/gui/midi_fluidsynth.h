@@ -124,7 +124,6 @@ public:
 #else
 			soundfont_id = fluid_synth_sfload(synth, soundfont.c_str(), 1);
 #endif
->>>>>>> upstream-r3955-fluidsynth
 			if (soundfont_id == FLUID_FAILED) {
 				/* Just consider this a warning (fluidsynth already prints) */
 				soundfont.clear();
@@ -142,4 +141,3 @@ public:
 };
 
 MidiHandler_fluidsynth Midi_fluidsynth;
->>>>>>> upstream-r3955-fluidsynth
