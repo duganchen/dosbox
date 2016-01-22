@@ -489,6 +489,16 @@ if test x$have_wordexp_h = xyes ; then
   AC_DEFINE(C_WORDEXP,1)
 fi
 
+AH_TEMPLATE(C_MUNT,[define to 1 if you have munt lib])
+AC_CHECK_LIB(mt32emu, main, have_mt32emu_lib=yes, have_mt32emu_lib=no, )
+if test x$have_mt32emu_lib = xyes ; then
+   LIBS="$LIBS -lmt32emu"
+   AC_DEFINE(C_MUNT,1)
+   AC_MSG_RESULT(yes)
+else
+	AC_MSG_WARN([Can't find munt, Roland MIDI device emulation disabled.])
+fi
+
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
 AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
 AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
