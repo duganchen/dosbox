@@ -110,7 +110,7 @@ bool MidiHandler_mt32::Open(const char *conf) {
 		playedBuffers = 1;
 		lock = SDL_CreateMutex();
 		framesInBufferChanged = SDL_CreateCond();
-		thread = SDL_CreateThread(processingThread, NULL);
+		thread = SDL_CreateThread(processingThread, NULL, NULL);
 	}
 	chan->Enable(true);
 
