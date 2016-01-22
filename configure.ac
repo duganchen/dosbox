@@ -483,6 +483,12 @@ else
   AC_MSG_WARN([fluidsynth MIDI synthesis not available])
 fi
 
+AH_TEMPLATE(C_WORDEXP,[Define to 1 if you have wordexp.h])
+AC_CHECK_HEADER(wordexp.h,have_wordexp_h=yes,)
+if test x$have_wordexp_h = xyes ; then
+  AC_DEFINE(C_WORDEXP,1)
+fi
+
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
 AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
 AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
