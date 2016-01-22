@@ -1,8 +1,8 @@
 #include "config.h"
 #ifdef C_MUNT
 
-#include <SDL_thread.h>
-#include <SDL_endian.h>
+#include "SDL_thread.h"
+#include "SDL_endian.h"
 #include "control.h"
 
 #ifndef DOSBOX_MIDI_H
