@@ -940,7 +940,6 @@ dosurface:
 
 		// Pack the uniforms block
 		GLuint block_index = glGetUniformBlockIndex(sdl.opengl.program_object, "program");
-		LOG_MSG("uniform block index: %d", block_index);
 		glUniformBlockBinding(sdl.opengl.program_object, block_index, 0);
 		glGenBuffers(1, &sdl.opengl.ubo);
 		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
