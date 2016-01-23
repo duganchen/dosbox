@@ -88,8 +88,6 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
 PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = NULL;
 PFNGLBINDVERTEXARRAYPROC glBindVertexArray = NULL;
 PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays = NULL;
-PFNGLGETUNIFORMBLOCKINDEXPROC glGetUniformBlockIndex = NULL;
-PFNGLUNIFORMBLOCKBINDINGPROC glUniformBlockBinding = NULL;
 PFNGLBINDBUFFERBASEPROC glBindBufferBase = NULL;
 
 #endif //C_OPENGL
@@ -939,8 +937,6 @@ dosurface:
 		uniforms[5] = sdl.clip.h;
 
 		// Pack the uniforms block
-		GLuint block_index = glGetUniformBlockIndex(sdl.opengl.program_object, "program");
-		glUniformBlockBinding(sdl.opengl.program_object, block_index, 0);
 		glGenBuffers(1, &sdl.opengl.ubo);
 		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
 		glBindBufferBase(GL_UNIFORM_BUFFER, 0, sdl.opengl.ubo);
@@ -1554,8 +1550,6 @@ static void GUI_StartUp(Section * sec) {
 			glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glGenVertexArrays");
 			glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)SDL_GL_GetProcAddress("glBindVertexArray");
 			glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC)SDL_GL_GetProcAddress("glDeleteVertexArrays");
-			glGetUniformBlockIndex = (PFNGLGETUNIFORMBLOCKINDEXPROC)SDL_GL_GetProcAddress("glGetUniformBlockIndex");
-			glUniformBlockBinding = (PFNGLUNIFORMBLOCKBINDINGPROC)SDL_GL_GetProcAddress("glUniformBlockBinding");
 			glBindBufferBase = (PFNGLBINDBUFFERBASEPROC)SDL_GL_GetProcAddress("glBindBufferBase");
 		}
 	} /* OPENGL is requested end */
