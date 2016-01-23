@@ -198,7 +198,6 @@ struct SDL_Block {
 
 		GLfloat vertex_data[12];
 		GLfloat texture_data[8];
-		static const GLushort vertex_data_indices[6];
 	} opengl;
 #endif	// C_OPENGL
 
@@ -263,8 +262,6 @@ char *const SDL_Block::SDL_OpenGL_Block::fragment_shader_default_src =
 	"{\n"
 	"	color = texture(decal, texCoord);\n"
 	"}\n";
-
-const GLushort SDL_Block::SDL_OpenGL_Block::vertex_data_indices[6] = { 0, 1, 2, 0, 2, 3 };
 
 static SDL_Block sdl;
 
