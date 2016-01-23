@@ -1188,7 +1188,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
 						sdl.draw.width, sdl.draw.height, GL_BGRA,
 						GL_UNSIGNED_INT_8_8_8_8_REV, (Bit8u *)sdl.opengl.framebuf);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, sdl.opengl.vertex_data_indices);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		SDL_GL_SwapWindow(sdl.window);
 		break;
 #endif
