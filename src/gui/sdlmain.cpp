@@ -949,12 +949,14 @@ dosurface:
 		sdl.opengl.vertex_data[3] = 1.0f;
 		sdl.opengl.vertex_data[4] = -1.0f;
 		sdl.opengl.vertex_data[5] = 0.0f;
-		// upper right
-		sdl.opengl.vertex_data[6] = 1.0f;
-		sdl.opengl.vertex_data[7] = 1.0f;
-		sdl.opengl.vertex_data[8] = 0.0f;
+
 		// upper left
-		sdl.opengl.vertex_data[9] = -1.0f;
+		sdl.opengl.vertex_data[6] = -1.0f;
+		sdl.opengl.vertex_data[7] = 1.0f;
+		sdl.opengl.vertex_data[9] = 0.0f;
+
+		// upper right
+		sdl.opengl.vertex_data[9] = 1.0f;
 		sdl.opengl.vertex_data[10] = 1.0f;
 		sdl.opengl.vertex_data[11] = 0.0f;
 
