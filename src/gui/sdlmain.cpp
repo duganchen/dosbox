@@ -144,13 +144,6 @@ enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_HIGHEST
 };
 
-struct uniform_data_t {
-	GLfloat video_size[2];
-	GLfloat texture_size[2];
-	GLfloat output_size[2];
-} uniforms;
-
-
 struct SDL_Block {
 	bool inited;
 	bool active;							//If this isn't set don't draw
@@ -202,8 +195,6 @@ struct SDL_Block {
 		GLuint vertex_vbo;
 		GLuint texture_vbo;
 		GLuint ubo;
-
-		struct uniform_data_t uniforms;
 
 		GLfloat vertex_data[12];
 		GLfloat texture_data[8];
@@ -935,6 +926,8 @@ dosurface:
 		uniforms[3] = texsize;
 		uniforms[4] = sdl.clip.w;
 		uniforms[5] = sdl.clip.h;
+
+		LOG_MSG("Game resolution: %lux%lu", width, height);
 
 		// Pack the uniforms block
 		glGenBuffers(1, &sdl.opengl.ubo);
