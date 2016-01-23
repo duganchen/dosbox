@@ -927,7 +927,7 @@ dosurface:
 		uniforms[4] = sdl.clip.w;
 		uniforms[5] = sdl.clip.h;
 
-		LOG_MSG("Game resolution: %lux%lu", width, height);
+		LOG_MSG("Framebuffer size: %lux%lu", width, height);
 
 		// Pack the uniforms block
 		glGenBuffers(1, &sdl.opengl.ubo);
