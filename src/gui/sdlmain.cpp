@@ -180,7 +180,7 @@ struct SDL_Block {
 		SCREEN_TYPES want_type;
 	} desktop;
 #if C_OPENGL
-	struct SDL_OpenGL_Block {
+	struct {
 		SDL_GLContext context;
 		Bitu pitch;
 		void * framebuf;
