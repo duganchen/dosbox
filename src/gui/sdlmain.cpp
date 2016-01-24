@@ -1509,7 +1509,7 @@ static void GUI_StartUp(Section * sec) {
 					ss << fragment_fstream.rdbuf();
 					sdl.opengl.fragment_shader_src = ss.str();
 				} else {
-					LOG_MSG("Unable to open: %s", vertex_shader_path.c_str());
+					LOG_MSG("Unable to open: %s", fragment_shader_path.c_str());
 				}
 			}
 
