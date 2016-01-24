@@ -1506,7 +1506,7 @@ static void GUI_StartUp(Section * sec) {
 				std::string fragment_shader_path = config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".fsh";
 				std::ifstream fragment_fstream(fragment_shader_path.c_str());
 				if (fragment_fstream.is_open()) {
-					ss << vertex_fstream.rdbuf();
+					ss << fragment_fstream.rdbuf();
 					sdl.opengl.fragment_shader_src = ss.str();
 				} else {
 					LOG_MSG("Unable to open: %s", vertex_shader_path.c_str());
