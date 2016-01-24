@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <sys/types.h>
+#include <vector>
 #ifdef WIN32
 #include <signal.h>
 #include <process.h>
@@ -645,10 +646,14 @@ GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
 		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
 
 		if (infoLen > 1) {
-			GLchar *infoLog = new GLchar[infoLen];
-			glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
-			LOG_MSG("%s", infoLog);
-			delete[] infoLog;
+			std::vector<GLchar> infoLog(infoLen);
+			glGetShaderInfoLog(shader, infoLen, NULL, &infoLog[0]);
+			std::stringstream ss;
+			for (std::vector<GLchar>::iterator it = infoLog.begin(); it != infoLog.end(); ++it)
+			{
+				ss << *it;
+			}
+			LOG_MSG("SDL:OPENGL:Error compiling program: %s", ss.rdbuf()->str().c_str());
 		}
 
 		glDeleteShader(shader);
@@ -886,11 +891,14 @@ dosurface:
 			glGetProgramiv(sdl.opengl.program_object, GL_INFO_LOG_LENGTH, &infoLen);
 
 			if (infoLen > 1) {
-				char* infoLog = (char *) malloc (sizeof(char) * infoLen);
-
-				glGetProgramInfoLog (sdl.opengl.program_object, infoLen, NULL, infoLog);
-				LOG_MSG("SDL:OPENGL:Error linking program: %s", infoLog);
-				free ( infoLog );
+				std::vector<GLchar> infoLog(infoLen);
+				glGetProgramInfoLog(sdl.opengl.program_object, infoLen, NULL, &infoLog[0]);
+				std::stringstream ss;
+				for (std::vector<GLchar>::iterator it = infoLog.begin(); it != infoLog.end(); ++it)
+				{
+					ss << *it;
+				}
+				LOG_MSG("SDL:OPENGL:Error linking program: %s", ss.rdbuf()->str().c_str());
 			}
 
 			glDeleteProgram( sdl.opengl.program_object);
