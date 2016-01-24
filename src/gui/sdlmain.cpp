@@ -22,6 +22,8 @@
 #endif
 
 #include <GL/glu.h>
+#include <fstream>
+#include <sstream>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -187,9 +189,8 @@ struct SDL_Block {
 		GLint max_texsize;
 		bool bilinear;
 
-		static char *const vertex_shader_default_src;
-		static char *const fragment_shader_default_src;
-		char *vertex_shader_src, *fragment_shader_src;
+		std::string vertex_shader_src;
+		std::string fragment_shader_src;
 		GLuint program_object;
 		GLuint vao;
 		GLuint vertex_vbo;
@@ -235,8 +236,8 @@ struct SDL_Block {
 	SDL_EventType raltstate;
 };
 
-
-char *const SDL_Block::SDL_OpenGL_Block::vertex_shader_default_src =
+#ifdef C_OPENGL
+const std::string vertex_shader_default_src =
 	"#version 330 core\n"
 	"\n"
 	"layout(location = 0) in vec4 position;\n"
@@ -250,7 +251,7 @@ char *const SDL_Block::SDL_OpenGL_Block::vertex_shader_default_src =
 	"	texCoord = textureCoord;\n"
 	"}\n";
 
-char *const SDL_Block::SDL_OpenGL_Block::fragment_shader_default_src =
+const std::string fragment_shader_default_src =
 	"#version 330 core\n"
 	"\n"
 	"in vec2 texCoord;\n"
@@ -262,6 +263,7 @@ char *const SDL_Block::SDL_OpenGL_Block::fragment_shader_default_src =
 	"{\n"
 	"	color = texture(decal, texCoord);\n"
 	"}\n";
+#endif
 
 static SDL_Block sdl;
 
@@ -848,12 +850,12 @@ dosurface:
 		int windowHeight = 0;
 		SDL_GetWindowSize(sdl.window, &windowWidth, &windowHeight);
 
-		GLuint vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, sdl.opengl.vertex_shader_src);
+		GLuint vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, sdl.opengl.vertex_shader_src.c_str());
 		if (!vertexShader) {
 			LOG_MSG("SDL:OPENGL:Can't compile vertex shader, falling back to surface.");
 			goto dosurface;
 		}
-		GLuint fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src);
+		GLuint fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src.c_str());
 		if (!fragmentShader) {
 			glDeleteShader(vertexShader);
 			LOG_MSG("SDL:OPENGL:Can't compile fragment shader, falling back to surface.");
@@ -1481,38 +1483,33 @@ static void GUI_StartUp(Section * sec) {
 			sdl.opengl.vao = 0;
 			sdl.opengl.vertex_vbo = 0;
 			sdl.opengl.ubo = 0;
-			sdl.opengl.vertex_shader_src = sdl.opengl.vertex_shader_default_src;
-			sdl.opengl.fragment_shader_src = sdl.opengl.fragment_shader_default_src;
+			sdl.opengl.vertex_shader_src = vertex_shader_default_src;
+			sdl.opengl.fragment_shader_src = fragment_shader_default_src;
 			std::string glshader_filename=section->Get_string("glshader");
 			if (!glshader_filename.empty()) {
 				std::string config_path;
 				Cross::GetPlatformConfigDir(config_path);
-				size_t file_size;
-				FILE *fp = fopen((config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".vsh").c_str(), "rb");
 
-				if (fp) {
-					fseek(fp, 0, SEEK_END);
-					file_size = ftell(fp);
-					// DO NOT FORGET TO ADD ONE MORE FOR THE NULL CHAR!
-					sdl.opengl.vertex_shader_src = (char *)malloc(file_size+1);
-					fseek(fp, 0, SEEK_SET);
-					fread(sdl.opengl.vertex_shader_src, file_size, 1, fp);
-					fclose(fp);
-					// DO NOT FORGET THIS!
-					sdl.opengl.vertex_shader_src[file_size] = '\0';
+				std::string vertex_shader_path = config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".vsh";
+				std::ifstream vertex_fstream(vertex_shader_path);
+				std::stringstream ss;
+				if (vertex_fstream.is_open()) {
+					ss << vertex_fstream.rdbuf();
+					sdl.opengl.vertex_shader_src = ss.str();
+				} else {
+					LOG_MSG("Unable to open: %s", vertex_shader_path.c_str());
 				}
 
-				fp = fopen((config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".fsh").c_str(), "rb");
-				if (fp) {
-					fseek(fp, 0, SEEK_END);
-					file_size = ftell(fp);
-					// DO NOT FORGET TO ADD ONE MORE FOR THE NULL CHAR!
-					sdl.opengl.fragment_shader_src = (char *)malloc(file_size+1);
-					fseek(fp, 0, SEEK_SET);
-					fread(sdl.opengl.fragment_shader_src, file_size, 1, fp);
-					fclose(fp);
-					// DO NOT FORGET THIS!
-					sdl.opengl.fragment_shader_src[file_size] = '\0';
+				ss.str("");
+				ss.clear();
+
+				std::string fragment_shader_path = config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".fsh";
+				std::ifstream fragment_fstream(fragment_shader_path);
+				if (fragment_fstream.is_open()) {
+					ss << vertex_fstream.rdbuf();
+					sdl.opengl.fragment_shader_src = ss.str();
+				} else {
+					LOG_MSG("Unable to open: %s", vertex_shader_path.c_str());
 				}
 			}
 
