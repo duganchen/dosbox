@@ -1493,12 +1493,12 @@ static void GUI_StartUp(Section * sec) {
 			sdl.opengl.ubo = 0;
 			sdl.opengl.vertex_shader_src = vertex_shader_default_src;
 			sdl.opengl.fragment_shader_src = fragment_shader_default_src;
-			std::string glshader_filename=section->Get_string("glshader");
-			if (!glshader_filename.empty()) {
+			std::string shader_filename=section->Get_string("gl.shader");
+			if (!shader_filename.empty()) {
 				std::string config_path;
 				Cross::GetPlatformConfigDir(config_path);
 
-				std::string vertex_shader_path = config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".vsh";
+				std::string vertex_shader_path = config_path + "shaders" + CROSS_FILESPLIT + shader_filename + ".vert";
 				std::ifstream vertex_fstream(vertex_shader_path.c_str());
 				std::stringstream ss;
 				if (vertex_fstream.is_open()) {
@@ -1511,7 +1511,7 @@ static void GUI_StartUp(Section * sec) {
 				ss.str("");
 				ss.clear();
 
-				std::string fragment_shader_path = config_path + "glshaders" + CROSS_FILESPLIT + glshader_filename + ".fsh";
+				std::string fragment_shader_path = config_path + "shaders" + CROSS_FILESPLIT + shader_filename + ".frag";
 				std::ifstream fragment_fstream(fragment_shader_path.c_str());
 				if (fragment_fstream.is_open()) {
 					ss << fragment_fstream.rdbuf();
@@ -1958,12 +1958,12 @@ void Config_Add_SDL() {
 	Pstring->Set_help("What video system to use for output.");
 	Pstring->Set_values(outputs);
 
-	Pstring = sdl_sec->Add_string("glshader",Property::Changeable::Always,"");
+	Pstring = sdl_sec->Add_string("gl.shader",Property::Changeable::Always,"");
 	Pstring->Set_help("What set of GLSL shaders to use with an OpenGL output. Keep empty if this is not desired.\n"
-	                  "  Note that in case it is used, the respective shader files must be found in the \"glshaders\" subdirectory\n"
+	                  "  Note that in case it is used, the respective shader files must be found in the \"shaders\" subdirectory\n"
 	                  "  relatively to where the default DOSBox configuration fiel is stored. For shader file naming convention,\n"
-	                  "  suppose that you have a pair of shader files ready: mysample.vsh and mysample.fsh.\n"
-	                  "  Then glshader=mysample should be set.\n");
+	                  "  suppose that you have a pair of shader files ready: mysample.vert and mysample.frag.\n"
+	                  "  Then shader=mysample should be set.\n");
 
 	const char* renderers[] = {
 		"auto",
