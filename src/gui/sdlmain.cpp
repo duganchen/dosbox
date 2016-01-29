@@ -1499,7 +1499,6 @@ static void GUI_StartUp(Section * sec) {
 				Cross::GetPlatformConfigDir(config_path);
 
 				std::string vertex_shader_path = config_path + "shaders" + CROSS_FILESPLIT + shader_filename + ".vert";
-				LOG_MSG("Loading vertex shader: %s", vertex_shader_path.c_str());
 				std::ifstream vertex_fstream(vertex_shader_path.c_str());
 				std::stringstream ss;
 				if (vertex_fstream.is_open()) {
@@ -1513,7 +1512,6 @@ static void GUI_StartUp(Section * sec) {
 				ss.clear();
 
 				std::string fragment_shader_path = config_path + "shaders" + CROSS_FILESPLIT + shader_filename + ".frag";
-				LOG_MSG("Loading fragment shader: %s", fragment_shader_path.c_str());
 				std::ifstream fragment_fstream(fragment_shader_path.c_str());
 				if (fragment_fstream.is_open()) {
 					ss << fragment_fstream.rdbuf();
