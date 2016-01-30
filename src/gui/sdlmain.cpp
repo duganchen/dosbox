@@ -1954,7 +1954,7 @@ void Config_Add_SDL() {
 		"opengl", "openglnb",
 #endif
 		0 };
-	Pstring = sdl_sec->Add_string("output",Property::Changeable::Always,"texture");
+	Pstring = sdl_sec->Add_string("output",Property::Changeable::Always,"texturenb");
 	Pstring->Set_help("What video system to use for output.");
 	Pstring->Set_values(outputs);
 
