@@ -443,7 +443,7 @@ if test x$enable_opengl = xyes; then
 case "$host" in
     *-*-darwin*)
        AC_MSG_RESULT(yes)
-       LIBS="$LIBS -framework OpenGL"
+       LIBS="$LIBS -framework OpenGL -lglew"
        AC_DEFINE(C_OPENGL,1)
        ;;
     *)
