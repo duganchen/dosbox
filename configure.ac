@@ -31,7 +31,7 @@ EXULT_CHECK_SDL(:,AC_MSG_ERROR([[*** SDL not found!]]))
 LIBS="$LIBS $SDL_LIBS"
 CPPFLAGS="$CPPFLAGS $SDL_CFLAGS"
 
-dnl Check if SDL is 1.2.x, 2.0.x
+dnl Check if SDL is 2.0.x
 AC_MSG_CHECKING([for SDL version being 2.0.x])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include "SDL.h"
@@ -44,74 +44,6 @@ void blah(){
 ])],AC_MSG_RESULT([yes]),[
  AC_MSG_RESULT([no]) 
  AC_MSG_ERROR([Only libSDL 2.0.x supported])])
-
-dnl Check for SDL_cdrom compatibility layer platform (used with SDL 2.0)
-AC_MSG_CHECKING(for SDL_cdrom compatibility layer platform)
-COMPAT_SDL_CDROM_GET_PLATFORM(:)
-AH_TEMPLATE(C_COMPAT_SDL_CDROM_PLATFORM,[Platform for SDL_cdrom compatibility layer (SDL 2.0)])
-
-physical_cdrom_mount=1
-
-case $compat_sdl_cdrom_arch in
-    linux|solaris)
-        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_LINUX])
-        AC_MSG_RESULT([linux])
-        ;;
-    *freebsd*)
-        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_FREEBSD])
-        AC_MSG_RESULT([freebsd])
-        ;;
-    *openbsd*|*netbsd*)
-        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_OPENBSD])
-        AC_MSG_RESULT([openbsd])
-        ;;
-    bsdi)
-        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_BSDI])
-        AC_MSG_RESULT([bsdi])
-        ;;
-    aix)
-        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_AIX])
-        AC_MSG_RESULT([aix])
-        ;;
-    osf)
-        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_OSF])
-        AC_MSG_RESULT([osf])
-        ;;
-    qnx)
-        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_QNX])
-        AC_MSG_RESULT([qnx])
-        ;;
-    win32)
-        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_WIN32])
-        AC_MSG_RESULT([win32])
-        ;;
-    beos)
-        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_BEOS])
-        AC_MSG_RESULT([beos])
-        ;;
-    macosx)
-        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_MACOSX])
-        AC_MSG_RESULT([macosx])
-        ;;
-    mint)
-        AC_DEFINE(C_COMPAT_SDL_CDROM_PLATFORM,[COMPAT_SDL_CDROM_PLATFORM_MINT])
-        AC_MSG_RESULT([mint])
-        ;;
-    *)
-        physical_cdrom_mount=0
-        AC_MSG_RESULT([disabled])
-esac
-
-
-AC_MSG_CHECKING(for physical cdrom mounting support)
-AH_TEMPLATE(C_PHYSICAL_CDROM_MOUNT,[Physical CD-ROM mounting support])
-if test x"$physical_cdrom_mount" = x1 ; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(C_PHYSICAL_CDROM_MOUNT,[1])
-else
-    AC_MSG_RESULT(no)
-fi
-
 
 dnl Checks for header files.
 
