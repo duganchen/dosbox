@@ -1,6 +1,6 @@
 AM_CPPFLAGS = -I$(top_srcdir)/include
 
-SUBDIRS = cpu debug dos fpu gui hardware libs ints misc shell platform sdl_cdrom 
+SUBDIRS = cpu debug dos fpu gui hardware libs ints misc shell platform
 
 bin_PROGRAMS = dosbox
 
