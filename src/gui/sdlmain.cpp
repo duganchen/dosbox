@@ -246,17 +246,10 @@ static int SDL_Init_Wrapper(void) {
 	int result = ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER
 		|SDL_INIT_NOPARACHUTE
 	));
-#if C_PHYSICAL_CDROM_MOUNT
-	return (result < 0) ? result : Compat_SDL_CDROMInit();
-#else
 	return result;
-#endif
 }
 
 static void SDL_Quit_Wrapper(void) {
-#if C_PHYSICAL_CDROM_MOUNT
-	Compat_SDL_CDROMQuit();
-#endif
 	SDL_Quit();
 }
 
