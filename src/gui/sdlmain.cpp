@@ -180,7 +180,6 @@ struct SDL_Block {
 	struct {
 		SDL_GLContext context;
 		Bitu pitch;
-		void * framebuf;
 		GLuint buffer;
 		GLuint texture;
 		GLuint displaylist;
@@ -691,7 +690,6 @@ dosurface:
 		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 		if (sdl.opengl.buffer) glDeleteBuffersARB(1, &sdl.opengl.buffer);
 
-		sdl.opengl.framebuf=0;
 		if (!(flags&GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface; // BGRA otherwise
 		int texsize=2 << int_log2(width > height ? width : height);
 		if (texsize>sdl.opengl.max_texsize) {
@@ -1259,7 +1257,6 @@ static void GUI_StartUp(Section * sec) {
 	}
 	if (sdl.desktop.want_type==SCREEN_OPENGL) {
 	sdl.opengl.buffer=0;
-	sdl.opengl.framebuf=0;
 	sdl.opengl.texture=0;
 	sdl.opengl.displaylist=0;
 
