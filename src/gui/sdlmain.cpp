@@ -1690,11 +1690,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.desktop.lazy_fullscreen=false;
 	sdl.desktop.lazy_fullscreen_req=false;
 
-#ifdef __ANDROID__
-	sdl.desktop.fullscreen=true;
-#else
 	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
-#endif
 	sdl.wait_on_error=section->Get_bool("waitonerror");
 
 	Prop_multival* p=section->Get_multival("priority");
