@@ -1131,14 +1131,6 @@ dosurface:
 		GLfloat tex_width=((GLfloat)(width)/(GLfloat)texsize);
 		GLfloat tex_height=((GLfloat)(height)/(GLfloat)texsize);
 
-#ifdef __ANDROID__
-		/* Display lists are not available with OpenGL ES (1.0, 2.0).
-		Furthermore, we can't use glBegin, glTexCoord2f and glEnd. */
-		sdl.opengl.texCoords[0] = 0; sdl.opengl.texCoords[1] = tex_height; // lower left
-		sdl.opengl.texCoords[2] = tex_width; sdl.opengl.texCoords[3] = tex_height; // lower right
-		sdl.opengl.texCoords[4] = tex_width; sdl.opengl.texCoords[5] = 0; // upper right
-		sdl.opengl.texCoords[6] = 0; sdl.opengl.texCoords[7] = 0; // upper left
-#else
 		if (glIsList(sdl.opengl.displaylist)) glDeleteLists(sdl.opengl.displaylist, 1);
 		sdl.opengl.displaylist = glGenLists(1);
 		glNewList(sdl.opengl.displaylist, GL_COMPILE);
@@ -1155,7 +1147,6 @@ dosurface:
 		glTexCoord2f(0,0); glVertex2f(-1.0f, 1.0f);
 		glEnd();
 		glEndList();
-#endif
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
 #ifndef __ANDROID__
