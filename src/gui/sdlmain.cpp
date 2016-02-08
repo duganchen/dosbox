@@ -157,7 +157,6 @@ struct SDL_Block {
 	struct {
 		SDL_GLContext context;
 		Bitu pitch;
-		void * framebuf;
 		GLuint buffer;
 		GLuint texture;
 		GLint max_texsize;
@@ -773,10 +772,6 @@ dosurface:
 			glDeleteBuffers(1, &sdl.opengl.buffer);
 		}
 
-		if (sdl.opengl.framebuf) {
-			free(sdl.opengl.framebuf);
-		}
-		sdl.opengl.framebuf = 0;
 		int texsize = 2 << int_log2(width > height ? width : height);
 		if (texsize > sdl.opengl.max_texsize) {
 			LOG_MSG("SDL:OPENGL:No support for texturesize of %d, falling back to surface",texsize);
@@ -1119,18 +1114,11 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 	}
 #if C_OPENGL
 	case SCREEN_OPENGL:
-#if 0
-		pixels=(Bit8u *)sdl.opengl.framebuf;
-		pitch=sdl.opengl.pitch;
-		sdl.updating=true;
-		return true;
-#endif
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);
 		pixels=(Bit8u *)glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
 		pitch=sdl.opengl.pitch;
 		sdl.updating=true;
 		return true;
-
 #endif
 	default:
 		break;
@@ -1177,15 +1165,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
-#if 0
-		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-						sdl.draw.width, sdl.draw.height, GL_BGRA,
-						GL_UNSIGNED_INT_8_8_8_8_REV, (Bit8u *)sdl.opengl.framebuf);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		SDL_GL_SwapWindow(sdl.window);
-#endif
 		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
@@ -1516,7 +1495,6 @@ static void GUI_StartUp(Section * sec) {
 			}
 
 			sdl.opengl.buffer=0;
-			sdl.opengl.framebuf=0;
 			sdl.opengl.texture=0;
 
 			glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
