@@ -1460,7 +1460,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 #endif	// !SDL_VERSION_ATLEAST(2,0,0)
 #if C_OPENGL
 	case SCREEN_OPENGL:
-#ifndef __ANDROID__
 		if (sdl.opengl.pixel_buffer_object) {
 			glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
 			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
@@ -1475,7 +1474,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
  			SDL_GL_SwapBuffers();
 #endif
 		} else
-#endif	// ifndef __ANDROID__
 		if (changedLines) {
 			Bitu y = 0, index = 0;
 			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
