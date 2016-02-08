@@ -678,24 +678,9 @@ SDL_Window * GFX_SetSDLSurfaceWindow(Bit16u width, Bit16u height) {
 // sub-window with the given dimensions, like the mapper UI.
 SDL_Rect GFX_GetSDLSurfaceSubwindowDims(Bit16u width, Bit16u height) {
 	SDL_Rect rect;
-#ifdef __ANDROID__
-	// Wider than width:height
-	if (height*sdl.desktop.full.width > sdl.desktop.full.height*width) {
-		rect.w=sdl.desktop.full.height*width/height;
-		rect.h=sdl.desktop.full.height;
-		rect.x=(sdl.desktop.full.width-rect.w)/2;
-		rect.y=0;
-	} else { // NOT wider than width:height
-		rect.w=sdl.desktop.full.width;
-		rect.h=sdl.desktop.full.width*height/width;
-		rect.x=0;
-		rect.y=(sdl.desktop.full.height-rect.h)/2;
-	}
-#else
 	rect.x=rect.y=0;
 	rect.w=width;
 	rect.h=height;
-#endif
 	return rect;
 }
 
