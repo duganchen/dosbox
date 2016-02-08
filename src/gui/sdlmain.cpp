@@ -1085,14 +1085,12 @@ dosurface:
 		}
 #endif	// !SDL_VERSION_ATLEAST(2,0,0)
 		/* Create the texture and display list */
-#ifndef __ANDROID__
 		if (sdl.opengl.pixel_buffer_object) {
 			glGenBuffersARB(1, &sdl.opengl.buffer);
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
 			glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, width*height*4, NULL, GL_STREAM_DRAW_ARB);
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 		} else
-#endif
 		{
 			sdl.opengl.framebuf=malloc(width*height*4);		//32 bit color
 		}
