@@ -1483,16 +1483,9 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				} else {
 					Bit8u *pixels = (Bit8u *)sdl.opengl.framebuf + y * sdl.opengl.pitch;
 					Bitu height = changedLines[index];
-#ifdef __ANDROID__
-					/* Try GL_UNSIGNED_BYTE... */
-					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
-						sdl.draw.width, height, GL_RGBA,
-						GL_UNSIGNED_BYTE, pixels );
-#else
 					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
 						sdl.draw.width, height, GL_BGRA_EXT,
 						GL_UNSIGNED_INT_8_8_8_8_REV, pixels );
-#endif
 					y += height;
 				}
 				index++;
