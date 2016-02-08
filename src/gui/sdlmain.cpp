@@ -167,9 +167,6 @@ struct SDL_Block {
 	struct {
 		Bit32u width;
 		Bit32u height;
-#if 0
-		Bit32u bpp; // Is that ever used?
-#endif
 		Bitu flags;
 		double scalex,scaley;
 		GFX_CallBack_t callback;
@@ -775,18 +772,6 @@ static SDL_Surface * GFX_SetupSurfaceScaled(Bit32u sdl_flags, Bit32u bpp)
 	}
 }
 
-#if 0 // NOTE: Do we need this? Never used and can't be used as-is with SDL 2.0
-void GFX_TearDown(void) {
-	if (sdl.updating)
-		GFX_EndUpdate( 0 );
-
-	if (sdl.blit.surface) {
-		SDL_FreeSurface(sdl.blit.surface);
-		sdl.blit.surface=0;
-	}
-}
-#endif
-
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t callback) {
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
@@ -922,11 +907,6 @@ dosurface:
 #if SDL_VERSION_ATLEAST(2,0,0)
 	case SCREEN_TEXTURE:
 	{
-#if 0
-		if (!strcmp(sdl.rendererDriver, "opengles")) {
-			if (!(flags&GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface;
-		}
-#endif
 		if (!GFX_SetupWindowScaled(sdl.desktop.want_type)) {
 			LOG_MSG("SDL:Can't set video mode, falling back to surface");
 			goto dosurface;
@@ -1398,11 +1378,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 					rect->y = sdl.clip.y + y;
 					rect->w = (Bit16u)sdl.draw.width;
 					rect->h = changedLines[index];
-#if 0
-					if (rect->h + rect->y > sdl.surface->h) {
-						LOG_MSG("WTF %d +  %d  >%d",rect->h,rect->y,sdl.surface->h);
-					}
-#endif
 					y += changedLines[index];
 				}
 				index++;
@@ -1410,16 +1385,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			if (rectCount)
 #if SDL_VERSION_ATLEAST(2,0,0)
 				SDL_UpdateWindowSurfaceRects( sdl.window, sdl.updateRects, rectCount );
-#if 0
-				if (SDL_UpdateWindowSurfaceRects( sdl.window, sdl.updateRects, rectCount ) < 0) {
-					/* Maybe window has been restored
-					 * in a way and this is needed
-					 * for some reason
-					 */
-					sdl.surface = SDL_GetWindowSurface(sdl.window);
-					SDL_UpdateWindowSurface( sdl.window );
-				}
-#endif
 #else
 				SDL_UpdateRects( sdl.surface, rectCount, sdl.updateRects );
 #endif
