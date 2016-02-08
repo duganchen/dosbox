@@ -105,7 +105,6 @@ void CMOS_Init(Section*);
 
 void MSCDEX_Init(Section*);
 void DRIVES_Init(Section*);
-void CDROM_Image_Init(Section*);
 
 /* Dos Internal mostly */
 void EMS_Init(Section*);
@@ -787,7 +786,6 @@ void DOSBOX_Init(void) {
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
 	secprop->AddInitFunction(&DRIVES_Init);
-	secprop->AddInitFunction(&CDROM_Image_Init);
 #if C_IPX
 	secprop=control->AddSection_prop("ipx",&IPX_Init,true);
 	Pbool = secprop->Add_bool("ipx",Property::Changeable::WhenIdle, false);

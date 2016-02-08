@@ -667,9 +667,3 @@ void CDROM_Interface_Image::ClearTracks()
 	}
 	tracks.clear();
 }
-
-void CDROM_Image_Destroy(Section*) {
-}
-
-void CDROM_Image_Init(Section* section) {
-}
