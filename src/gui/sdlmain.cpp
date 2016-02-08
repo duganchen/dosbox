@@ -247,13 +247,6 @@ struct SDL_Block {
 		bool requestlock;
 		bool locked;
 		Bitu sensitivity;
-#ifdef __ANDROID__
-		SDL_FingerID leftMouseFingerID, rightMouseFingerID,
-		             middleMouseFingerID, mouseMotionFingerID,
-		             escKeyFingerID;
-		bool isLeftMouseFingerUsed, isRightMouseFingerUsed,
-		     isMiddleMouseFingerUsed, isEscKeyFingerUsed;
-#endif
 	} mouse;
 	SDL_Rect updateRects[1024];
 	Bitu num_joysticks;
