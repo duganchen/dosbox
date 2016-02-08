@@ -206,12 +206,7 @@ struct SDL_Block {
 		void * framebuf;
 		GLuint buffer;
 		GLuint texture;
-#ifdef __ANDROID__ // OpenGL ES
-		GLfloat vertCoords[8];
-		GLfloat texCoords[8];
-#else // OpenGL (not ES)
 		GLuint displaylist;
-#endif
 		GLint max_texsize;
 		bool bilinear;
 		bool packed_pixel;
