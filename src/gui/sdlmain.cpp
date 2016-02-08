@@ -1719,18 +1719,10 @@ static void GUI_StartUp(Section * sec) {
 	sdl.mouse.locked=false;
 	mouselocked=false; //Global for mapper
 	sdl.mouse.requestlock=false;
-#ifdef __ANDROID__
-	sdl.mouse.isLeftMouseFingerUsed=sdl.mouse.isRightMouseFingerUsed=false;
-	sdl.mouse.isMiddleMouseFingerUsed=sdl.mouse.isEscKeyFingerUsed=false;
-	/* We force fullscreen desktop resolution */
-	sdl.desktop.full.fixed=true;
-#else
 	sdl.desktop.full.fixed=false;
 	const char* fullresolution=section->Get_string("fullresolution");
-#endif
 	sdl.desktop.full.width  = 0;
 	sdl.desktop.full.height = 0;
-#ifndef __ANDROID__
 	if(fullresolution && *fullresolution) {
 		char res[100];
 		safe_strncpy( res, fullresolution, sizeof( res ));
@@ -1747,10 +1739,8 @@ static void GUI_StartUp(Section * sec) {
 			}
 		}
 	}
-#endif
 	sdl.desktop.window.width  = 0;
 	sdl.desktop.window.height = 0;
-#ifndef __ANDROID__
 	const char* windowresolution=section->Get_string("windowresolution");
 	if(windowresolution && *windowresolution) {
 		char res[100];
@@ -1765,7 +1755,6 @@ static void GUI_StartUp(Section * sec) {
 			}
 		}
 	}
-#endif
 
 	sdl.desktop.vsync=section->Get_bool("vsync");
 
@@ -1861,16 +1850,6 @@ static void GUI_StartUp(Section * sec) {
 	sdl.overlay=0;
 #endif
 
-#if (defined C_OPENGL) && (defined __ANDROID__) // OpenGL ES
-	static const GLfloat vertCoords[] = {
-	-1, -1, //  lower left
-	1, -1, // lower right
-	1, 1, // upper right
-	-1, 1 // upper left
-	};
-	memcpy(sdl.opengl.vertCoords, vertCoords, sizeof(vertCoords));
-#endif
-
 #if C_OPENGL
    if(sdl.desktop.want_type==SCREEN_OPENGL){ /* OPENGL is requested */
 #if SDL_VERSION_ATLEAST(2,0,0)
@@ -1895,12 +1874,9 @@ static void GUI_StartUp(Section * sec) {
 	sdl.opengl.buffer=0;
 	sdl.opengl.framebuf=0;
 	sdl.opengl.texture=0;
-#ifndef __ANDROID__
 	sdl.opengl.displaylist=0;
-#endif
 
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
-#ifndef __ANDROID__
 	glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress("glGenBuffersARB");
 	glBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
 	glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)SDL_GL_GetProcAddress("glDeleteBuffersARB");
@@ -1917,7 +1893,6 @@ static void GUI_StartUp(Section * sec) {
     	} else {
 		sdl.opengl.packed_pixel=sdl.opengl.paletted_texture=false;
 	}
-#endif	// ifndef __ANDROID__
 	}
 	} /* OPENGL is requested end */
 
@@ -2081,83 +2056,6 @@ void Mouse_AutoLock(bool enable) {
 	}
 }
 
-#if defined(__ANDROID__)
-/* The way mouse emulation is done here is based on the
-following (horizontal) partitioning of the touchscreen:
-
-/-----------------------------------------------------------------------\
-|    Left   | (H)Escape |   Motion  |  Motion   |   Middle  |   Right   |
-\-----------------------------------------------------------------------/
-
-Note that the simulated Escape key is the host one
-(not the emulator's), so it can be re-mapped.
-Furthermore, that should be considered a hack for now. */
-static void HandleTouchFinger(SDL_TouchFingerEvent * tfinger) {
-	void MAPPER_CheckEvent(SDL_Event * event);
-	switch (tfinger->type) {
-		case SDL_FINGERDOWN:
-			if (tfinger->x >= 0.83f) { // Right button
-				sdl.mouse.rightMouseFingerID = tfinger->fingerId;
-				if (!sdl.mouse.isRightMouseFingerUsed) {
-					Mouse_ButtonPressed(1);
-					sdl.mouse.isRightMouseFingerUsed = true;
-				}
-			} else if (tfinger->x >= 0.67f) { // Middle button
-				sdl.mouse.middleMouseFingerID = tfinger->fingerId;
-				if (!sdl.mouse.isMiddleMouseFingerUsed) {
-					Mouse_ButtonPressed(2);
-					sdl.mouse.isMiddleMouseFingerUsed = true;
-				}
-			} else if (tfinger->x >= 0.33f) { // Motion
-				sdl.mouse.mouseMotionFingerID = tfinger->fingerId;
-			} else if (tfinger->x >= 0.17f) { // (Host) Escape key
-				sdl.mouse.escKeyFingerID = tfinger->fingerId;
-				if (!sdl.mouse.isEscKeyFingerUsed) {
-					SDL_Event event;
-					event.type = SDL_KEYDOWN;
-					event.key.keysym.scancode = SDL_SCANCODE_ESCAPE;
-					MAPPER_CheckEvent(&event);
-					sdl.mouse.isEscKeyFingerUsed = true;
-				}
-			} else { // Left button
-				sdl.mouse.leftMouseFingerID = tfinger->fingerId;
-				if (!sdl.mouse.isLeftMouseFingerUsed) {
-					Mouse_ButtonPressed(0);
-					sdl.mouse.isLeftMouseFingerUsed = true;
-				}
-			}
-			break;
-		case SDL_FINGERUP:
-			if ((sdl.mouse.leftMouseFingerID == tfinger->fingerId) && sdl.mouse.isLeftMouseFingerUsed) {
-				Mouse_ButtonReleased(0);
-				sdl.mouse.isLeftMouseFingerUsed = false;
-			} else if ((sdl.mouse.rightMouseFingerID == tfinger->fingerId) && sdl.mouse.isRightMouseFingerUsed) {
-				Mouse_ButtonReleased(1);
-				sdl.mouse.isRightMouseFingerUsed = false;
-			} else if ((sdl.mouse.middleMouseFingerID == tfinger->fingerId) && sdl.mouse.isMiddleMouseFingerUsed) {
-				Mouse_ButtonReleased(2);
-				sdl.mouse.isMiddleMouseFingerUsed = false;
-			} else if ((sdl.mouse.escKeyFingerID == tfinger->fingerId) && sdl.mouse.isEscKeyFingerUsed) {
-				SDL_Event event;
-				event.type = SDL_KEYUP;
-				event.key.keysym.scancode = SDL_SCANCODE_ESCAPE;
-				MAPPER_CheckEvent(&event);
-				sdl.mouse.isEscKeyFingerUsed = false;
-			}
-			break;
-		case SDL_FINGERMOTION:
-			/* We basically IGNORE the absolute coordinates, since
-			we emulate relative mouse movement all the time.    */
-			if (sdl.mouse.mouseMotionFingerID == tfinger->fingerId) {
-				Mouse_CursorMoved((float)tfinger->dx*sdl.clip.w*sdl.mouse.sensitivity/100.0f,
-				                  (float)tfinger->dy*sdl.clip.h*sdl.mouse.sensitivity/100.0f,
-				                  0, 0, true);
-			}
-			break;
-	}
-}
-
-#else	// Not on Android
 static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
 	if (sdl.mouse.locked || !sdl.mouse.autoenable)
 		Mouse_CursorMoved((float)motion->xrel*sdl.mouse.sensitivity/100.0f,
@@ -2206,7 +2104,6 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button) {
 		break;
 	}
 }
-#endif	// End of touch/mouse differentiation
 
 void GFX_LosingFocus(void) {
 	sdl.laltstate=SDL_KEYUP;
@@ -2425,13 +2322,6 @@ void GFX_Events() {
 			}
 			break;
 #endif	// !SDL_VERSION_ATLEAST(2,0,0)
-#if defined(__ANDROID__)
-		case SDL_FINGERDOWN:
-		case SDL_FINGERUP:
-		case SDL_FINGERMOTION:
-			HandleTouchFinger(&event.tfinger);
-			break;
-#else
 		case SDL_MOUSEMOTION:
 			HandleMouseMotion(&event.motion);
 			break;
@@ -2439,7 +2329,6 @@ void GFX_Events() {
 		case SDL_MOUSEBUTTONUP:
 			HandleMouseButton(&event.button);
 			break;
-#endif
 #if !SDL_VERSION_ATLEAST(2,0,0)
 		case SDL_VIDEORESIZE:
 			//GFX_HandleVideoResize(event.resize.w, event.resize.h);
@@ -2517,11 +2406,7 @@ void GFX_ShowMsg(char const* format,...) {
 	vsprintf(buf,format,msg);
         strcat(buf,"\n");
 	va_end(msg);
-#ifdef __ANDROID__
-	__android_log_print(ANDROID_LOG_DEBUG, "DOSBox", buf);
-#else
 	if(!no_stdout) printf("%s",buf); //Else buf is parsed again.
-#endif
 }
 
 
@@ -2533,16 +2418,13 @@ void Config_Add_SDL() {
 	Prop_int* Pint;
 	Prop_multival* Pmulti;
 
-#ifndef __ANDROID__
 	Pbool = sdl_sec->Add_bool("fullscreen",Property::Changeable::Always,false);
 	Pbool->Set_help("Start dosbox directly in fullscreen. (Press ALT-Enter to go back)");
-#endif
      
 	Pbool = sdl_sec->Add_bool("vsync",Property::Changeable::Always,false);
 	Pbool->Set_help("Sync to Vblank IF supported by the output device and renderer (if relevant).\n"
 	                "It can reduce screen flickering, but it can also result in a slow DOSBox.");
 
-#ifndef __ANDROID__
 	Pstring = sdl_sec->Add_string("fullresolution",Property::Changeable::Always,"0x0");
 	Pstring->Set_help("What resolution to use for fullscreen: original, desktop or a fixed size (e.g. 1024x768).\n"
 	                  "  Using your monitor's native resolution with aspect=true might give the best results.\n"
@@ -2551,7 +2433,6 @@ void Config_Add_SDL() {
 	Pstring = sdl_sec->Add_string("windowresolution",Property::Changeable::Always,"original");
 	Pstring->Set_help("Scale the window to this size IF the output device supports hardware scaling.\n"
 	                  "  (output=surface does not!)");
-#endif
 
 	const char* outputs[] = {
 		"surface",
@@ -2582,12 +2463,7 @@ void Config_Add_SDL() {
 #ifdef WIN32
 		"direct3d",
 #endif
-#ifdef __ANDROID__
-		"opengles2",
-		"opengles",
-#else	// On any platform other than Android
 		"opengl",
-#endif
 		"software",
 		0 };
 	Pstring = sdl_sec->Add_string("renderer",Property::Changeable::Always,"auto");
@@ -2893,11 +2769,6 @@ int main(int argc, char* argv[]) {
 	sdl.inited = true;
 
 #ifndef DISABLE_JOYSTICK
-#ifdef __ANDROID__
-	// Disable accelerometer-as-joystick emulation
-	// (available for backwards compatibility)
-	SDL_SetHint(SDL_HINT_ACCELEROMETER_AS_JOYSTICK, "0");
-#endif
 	//Initialise Joystick separately. This way we can warn when it fails instead
 	//of exiting the application
 	if( SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0 ) LOG_MSG("Failed to init joystick support");
@@ -3055,9 +2926,6 @@ int main(int argc, char* argv[]) {
 	SDL_ShowCursor(SDL_ENABLE);
 
 	SDL_Quit_Wrapper();//Let's hope sdl will quit as well when it catches an exception
-#ifdef __ANDROID__
-	exit(0); // Actually quits application... and hopefully(?) removes static values
-#endif
 	return 0;
 }
 
