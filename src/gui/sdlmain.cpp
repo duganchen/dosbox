@@ -686,11 +686,7 @@ SDL_Rect GFX_GetSDLSurfaceSubwindowDims(Bit16u width, Bit16u height) {
 
 // Currently used for an initial test here
 static SDL_Window * GFX_SetSDLOpenGLWindow(Bit16u width, Bit16u height) {
-#ifdef __ANDROID__
-	return GFX_SetSDLWindowMode(sdl.desktop.full.width, sdl.desktop.full.height, true, SCREEN_OPENGL);
-#else
 	return GFX_SetSDLWindowMode(width, height, false, SCREEN_OPENGL);
-#endif
 }
 
 #endif // SDL_VERSION_ATLEAST(2,0,0)
