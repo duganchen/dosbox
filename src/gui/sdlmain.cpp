@@ -61,11 +61,7 @@
 //#define DISABLE_JOYSTICK
 
 #if C_OPENGL
-#ifdef __ANDROID__
-#include "SDL_opengles.h"
-#else
 #include "SDL_opengl.h"
-#endif
 
 #ifndef APIENTRY
 #define APIENTRY
