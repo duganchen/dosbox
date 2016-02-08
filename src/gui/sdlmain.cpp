@@ -1344,12 +1344,10 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 #endif	// !SDL_VERSION_ATLEAST(2,0,0)
 #if C_OPENGL
 	case SCREEN_OPENGL:
-#ifndef __ANDROID__
 		if(sdl.opengl.pixel_buffer_object) {
 		    glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
 		    pixels=(Bit8u *)glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY);
 		} else
-#endif
 		{
 		    pixels=(Bit8u *)sdl.opengl.framebuf;
 		}
