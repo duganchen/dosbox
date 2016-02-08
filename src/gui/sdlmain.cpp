@@ -543,11 +543,7 @@ check_gotbpp:
 #endif	// !SDL_VERSION_ATLEAST(2,0,0)
 #if C_OPENGL
 	case SCREEN_OPENGL:
-#ifdef __ANDROID__
-		if (!(flags&GFX_CAN_32)) goto check_surface; // RGBA is used on Android (OpenGL ES v1.1)
-#else
 		if (flags & GFX_RGBONLY || !(flags&GFX_CAN_32)) goto check_surface; // BGRA otherwise
-#endif
 		flags|=GFX_SCALING;
 		flags&=~(GFX_CAN_8|GFX_CAN_15|GFX_CAN_16);
 		break;
