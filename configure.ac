@@ -553,9 +553,6 @@ src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile
 src/platform/visualc/Makefile
-src/sdl_cdrom/Makefile
-src/sdl_cdrom/macos/Makefile
-src/sdl_cdrom/macosx/Makefile
 visualc_net/Makefile
 include/Makefile
 docs/Makefile
