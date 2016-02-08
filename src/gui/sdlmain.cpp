@@ -821,13 +821,7 @@ dosurface:
 		if (sdl.desktop.fullscreen) {
 			if (sdl.desktop.full.fixed) {
 				sdl.clip.x=(Sint16)((sdl.desktop.full.width-width)/2);
-#ifdef __ANDROID__
-				/* Portrait orientation and on-screen keyboards
-				are commonly found on that platform          */
-				sdl.clip.y=0;
-#else
 				sdl.clip.y=(Sint16)((sdl.desktop.full.height-height)/2);
-#endif
 #if SDL_VERSION_ATLEAST(2,0,0)
 				sdl.window = GFX_SetSDLWindowMode(sdl.desktop.full.width,
 				                                  sdl.desktop.full.height,
