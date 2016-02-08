@@ -1910,7 +1910,7 @@ void Config_Add_SDL() {
 	Pbool = sdl_sec->Add_bool("fullscreen",Property::Changeable::Always,false);
 	Pbool->Set_help("Start dosbox directly in fullscreen. (Press ALT-Enter to go back)");
      
-	Pbool = sdl_sec->Add_bool("vsync",Property::Changeable::Always,false);
+	Pbool = sdl_sec->Add_bool("vsync",Property::Changeable::Always,true);
 	Pbool->Set_help("Sync to Vblank IF supported by the output device and renderer (if relevant).\n"
 	                "It can reduce screen flickering, but it can also result in a slow DOSBox.");
 
@@ -1931,9 +1931,16 @@ void Config_Add_SDL() {
 		"opengl", "openglnb",
 #endif
 		0 };
-	Pstring = sdl_sec->Add_string("output",Property::Changeable::Always,"texture");
+	Pstring = sdl_sec->Add_string("output",Property::Changeable::Always,"texturenb");
 	Pstring->Set_help("What video system to use for output.");
 	Pstring->Set_values(outputs);
+
+	Pstring = sdl_sec->Add_string("gl.shader",Property::Changeable::Always,"");
+	Pstring->Set_help("What set of GLSL shaders to use with an OpenGL output. Keep empty if this is not desired.\n"
+	                  "  Note that in case it is used, the respective shader files must be found in the \"shaders\" subdirectory\n"
+	                  "  relatively to where the default DOSBox configuration fiel is stored. For shader file naming convention,\n"
+	                  "  suppose that you have a pair of shader files ready: mysample.vert and mysample.frag.\n"
+	                  "  Then shader=mysample should be set.\n");
 
 	const char* renderers[] = {
 		"auto",
