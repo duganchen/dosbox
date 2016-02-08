@@ -1149,10 +1149,8 @@ dosurface:
 		glEndList();
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
-#ifndef __ANDROID__
 		if (sdl.opengl.pixel_buffer_object)
 			retFlags |= GFX_HARDWARE;
-#endif
 	break;
 		}//OPENGL
 #endif	//C_OPENGL
