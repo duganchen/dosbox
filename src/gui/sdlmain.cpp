@@ -1044,12 +1044,10 @@ dosurface:
 #if C_OPENGL
 	case SCREEN_OPENGL:
 	{
-#ifndef __ANDROID__
 		if (sdl.opengl.pixel_buffer_object) {
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 			if (sdl.opengl.buffer) glDeleteBuffersARB(1, &sdl.opengl.buffer);
 		} else
-#endif
 		if (sdl.opengl.framebuf) {
 			free(sdl.opengl.framebuf);
 		}
