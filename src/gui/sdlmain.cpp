@@ -1059,14 +1059,6 @@ dosurface:
 			goto dosurface;
 		}
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-#ifdef __ANDROID__
-		/* WARNING: OpenGL ES v2.0 is NOT backwards compatible
-		 * with v1.1! For simplicity we force v1.1 for now,
-		 * although v2.0 is probably the better way.
-		 */
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-#endif
 #if SDL_VERSION_ATLEAST(2,0,0)
 		GFX_SetupWindowScaled(sdl.desktop.want_type);
 		/* We may simply use SDL_BYTESPERPIXEL
