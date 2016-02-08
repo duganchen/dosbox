@@ -892,9 +892,6 @@ dosurface:
 		}
 
 		glViewport(sdl.clip.x,windowHeight-(sdl.clip.y+sdl.clip.h),sdl.clip.w,sdl.clip.h);
-#if 0
-		glMatrixMode (GL_PROJECTION);
-#endif
 
 		glDeleteTextures(1,&sdl.opengl.texture);
  		glGenTextures(1,&sdl.opengl.texture);
@@ -915,38 +912,10 @@ dosurface:
 
 		glClearColor (0.0, 0.0, 0.0, 1.0);
 		glShadeModel (GL_FLAT);
-#if 0
-		glDisable (GL_DEPTH_TEST);
-		glDisable (GL_LIGHTING);
-		glDisable(GL_CULL_FACE);
-		glEnable(GL_TEXTURE_2D);
-		glMatrixMode (GL_MODELVIEW);
-		glLoadIdentity ();
-#endif
 
-		GLfloat tex_width=((GLfloat)(width)/(GLfloat)texsize);
-		GLfloat tex_height=((GLfloat)(height)/(GLfloat)texsize);
-
-#if 0
-		if (glIsList(sdl.opengl.displaylist)) glDeleteLists(sdl.opengl.displaylist, 1);
-		sdl.opengl.displaylist = glGenLists(1);
-		glNewList(sdl.opengl.displaylist, GL_COMPILE);
-#endif
 		glClear(GL_COLOR_BUFFER_BIT);
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-#if 0
-		glBegin(GL_QUADS);
-		// lower left
-		glTexCoord2f(0,tex_height); glVertex2f(-1.0f,-1.0f);
-		// lower right
-		glTexCoord2f(tex_width,tex_height); glVertex2f(1.0f, -1.0f);
-		// upper right
-		glTexCoord2f(tex_width,0); glVertex2f(1.0f, 1.0f);
-		// upper left
-		glTexCoord2f(0,0); glVertex2f(-1.0f, 1.0f);
-		glEnd();
-		glEndList();
-#endif
+
 		// Time to take advantage of the shader now
 		glUseProgram(sdl.opengl.program_object);
 
@@ -957,8 +926,6 @@ dosurface:
 		uniform_block[3] = texsize;
 		uniform_block[4] = sdl.clip.w;
 		uniform_block[5] = sdl.clip.h;
-
-		LOG_MSG("Framebuffer size: %lux%lu", width, height);
 
 		// Pack the uniforms block
 		glGenBuffers(1, &sdl.opengl.ubo);
@@ -1229,9 +1196,6 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				sdl.draw.width, sdl.draw.height, GL_BGRA,
 				GL_UNSIGNED_INT_8_8_8_8_REV, 0);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-#if 0
-		glCallList(sdl.opengl.displaylist);
-#endif
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		SDL_GL_SwapWindow(sdl.window);
 		break;
@@ -1506,85 +1470,57 @@ static void GUI_StartUp(Section * sec) {
 	sdl.rendererDriver = section->Get_string("renderer");
 
 #if C_OPENGL
-   if(sdl.desktop.want_type==SCREEN_OPENGL){ /* OPENGL is requested */
-	if (!GFX_SetSDLOpenGLWindow(640,400)) {
-		LOG_MSG("Could not create OpenGL window, switching back to surface");
-		sdl.desktop.want_type=SCREEN_SURFACE;
-	} else {
-		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
-		if (sdl.opengl.context == 0) {
-			LOG_MSG("Could not create OpenGL context, switching back to surface");
+	if(sdl.desktop.want_type==SCREEN_OPENGL) { /* OPENGL is requested */
+		if (!GFX_SetSDLOpenGLWindow(640,400)) {
+			LOG_MSG("Could not create OpenGL window, switching back to surface");
 			sdl.desktop.want_type=SCREEN_SURFACE;
+		} else {
+			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
+			if (sdl.opengl.context == 0) {
+				LOG_MSG("Could not create OpenGL context, switching back to surface");
+				sdl.desktop.want_type=SCREEN_SURFACE;
+			}
 		}
-	}
-	if (sdl.desktop.want_type==SCREEN_OPENGL) {
+		sdl.opengl.program_object=0;
+		sdl.opengl.vao = 0;
+		sdl.opengl.vertex_vbo = 0;
+		sdl.opengl.ubo = 0;
+		sdl.opengl.vertex_shader_src = vertex_shader_default_src;
+		sdl.opengl.fragment_shader_src = fragment_shader_default_src;
+		std::string shader_filename=section->Get_string("gl.shader");
+		if (!shader_filename.empty()) {
+			std::string config_path;
+			Cross::GetPlatformConfigDir(config_path);
 
-
-			sdl.opengl.program_object=0;
-			sdl.opengl.vao = 0;
-			sdl.opengl.vertex_vbo = 0;
-			sdl.opengl.ubo = 0;
-			sdl.opengl.vertex_shader_src = vertex_shader_default_src;
-			sdl.opengl.fragment_shader_src = fragment_shader_default_src;
-			std::string shader_filename=section->Get_string("gl.shader");
-			if (!shader_filename.empty()) {
-				std::string config_path;
-				Cross::GetPlatformConfigDir(config_path);
-
-				std::string vertex_shader_path = config_path + "shaders" + CROSS_FILESPLIT + shader_filename + ".vert";
-				std::ifstream vertex_fstream(vertex_shader_path.c_str());
-				std::stringstream ss;
-				if (vertex_fstream.is_open()) {
-					ss << vertex_fstream.rdbuf();
-					sdl.opengl.vertex_shader_src = ss.str();
-				} else {
-					LOG_MSG("Unable to open: %s", vertex_shader_path.c_str());
-				}
-
-				ss.str("");
-				ss.clear();
-
-				std::string fragment_shader_path = config_path + "shaders" + CROSS_FILESPLIT + shader_filename + ".frag";
-				std::ifstream fragment_fstream(fragment_shader_path.c_str());
-				if (fragment_fstream.is_open()) {
-					ss << fragment_fstream.rdbuf();
-					sdl.opengl.fragment_shader_src = ss.str();
-				} else {
-					LOG_MSG("Unable to open: %s", fragment_shader_path.c_str());
-				}
+			std::string vertex_shader_path = config_path + "shaders" + CROSS_FILESPLIT + shader_filename + ".vert";
+			std::ifstream vertex_fstream(vertex_shader_path.c_str());
+			std::stringstream ss;
+			if (vertex_fstream.is_open()) {
+				ss << vertex_fstream.rdbuf();
+				sdl.opengl.vertex_shader_src = ss.str();
+			} else {
+				LOG_MSG("Unable to open: %s", vertex_shader_path.c_str());
 			}
 
+			ss.str("");
+			ss.clear();
 
+			std::string fragment_shader_path = config_path + "shaders" + CROSS_FILESPLIT + shader_filename + ".frag";
+			std::ifstream fragment_fstream(fragment_shader_path.c_str());
+			if (fragment_fstream.is_open()) {
+				ss << fragment_fstream.rdbuf();
+				sdl.opengl.fragment_shader_src = ss.str();
+			} else {
+				LOG_MSG("Unable to open: %s", fragment_shader_path.c_str());
+			}
+		}
 
-
-	sdl.opengl.buffer=0;
-	sdl.opengl.texture=0;
-	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
-	glewExperimental = GL_TRUE;
-	glewInit();
-
-#if 0
-	sdl.opengl.displaylist=0;
-	glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress("glGenBuffersARB");
-	glBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
-	glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)SDL_GL_GetProcAddress("glDeleteBuffersARB");
-	glBufferDataARB = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress("glBufferDataARB");
-	glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
-	glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
-	const char * gl_ext = (const char *)glGetString (GL_EXTENSIONS);
-	if(gl_ext && *gl_ext){
-		sdl.opengl.packed_pixel=(strstr(gl_ext,"EXT_packed_pixels") > 0);
-		sdl.opengl.paletted_texture=(strstr(gl_ext,"EXT_paletted_texture") > 0);
-		sdl.opengl.pixel_buffer_object=(strstr(gl_ext,"GL_ARB_pixel_buffer_object") >0 ) &&
-		    glGenBuffersARB && glBindBufferARB && glDeleteBuffersARB && glBufferDataARB &&
-		    glMapBufferARB && glUnmapBufferARB;
-    	} else {
-		sdl.opengl.packed_pixel=sdl.opengl.paletted_texture=false;
-	}
-#endif
-	}
+		sdl.opengl.buffer=0;
+		sdl.opengl.texture=0;
+		glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
+		glewExperimental = GL_TRUE;
+		glewInit();
 	} /* OPENGL is requested end */
-
 #endif	//OPENGL
 	/* Initialize screen for first time */
 	if (!GFX_SetSDLSurfaceWindow(640,400))
