@@ -1052,11 +1052,7 @@ dosurface:
 			free(sdl.opengl.framebuf);
 		}
 		sdl.opengl.framebuf=0;
-#ifdef __ANDROID__
-		if (!(flags&GFX_CAN_32)) goto dosurface; // RGBA is used on Android (OpenGL ES v1.1)
-#else
 		if (!(flags&GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface; // BGRA otherwise
-#endif
 		int texsize=2 << int_log2(width > height ? width : height);
 		if (texsize>sdl.opengl.max_texsize) {
 			LOG_MSG("SDL:OPENGL:No support for texturesize of %d, falling back to surface",texsize);
