@@ -671,11 +671,7 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 // Used for the mapper UI and more: Creates a fullscreen window with desktop res
 // on Android, and a non-fullscreen window with the input dimensions otherwise.
 SDL_Window * GFX_SetSDLSurfaceWindow(Bit16u width, Bit16u height) {
-#ifdef __ANDROID__
-	return GFX_SetSDLWindowMode(sdl.desktop.full.width, sdl.desktop.full.height, true, SCREEN_SURFACE);
-#else
 	return GFX_SetSDLWindowMode(width, height, false, SCREEN_SURFACE);
-#endif
 }
 
 // Returns the rectangle in the current window to be used for scaling a
