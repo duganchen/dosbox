@@ -37,7 +37,6 @@
 
 #include "cross.h"
 #include "SDL.h"
-#include "../compat_SDL_cdrom.h"
 
 #include "dosbox.h"
 #include "video.h"
