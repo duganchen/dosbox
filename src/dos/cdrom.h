@@ -13,7 +13,6 @@
 
 #define MAX_ASPI_CDROM	5
 
-#include <string.h>
 #include <string>
 #include <iostream>
 #include <vector>
