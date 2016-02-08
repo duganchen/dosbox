@@ -1545,13 +1545,7 @@ Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue) {
 		}
 #endif	// !SDL_VERSION_ATLEAST(2,0,0)
 	case SCREEN_OPENGL:
-#ifdef __ANDROID__
-		//Use RGBA on Android with OpenGL ES v1.1
-		return ((red << 0) | (green << 8) | (blue << 16)) | (255 << 24);
-#else
-		//USE BGRA otherwise
 		return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
-#endif
 	}
 	return 0;
 }
