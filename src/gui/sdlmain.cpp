@@ -687,13 +687,9 @@ dosurface:
 #if C_OPENGL
 	case SCREEN_OPENGL:
 	{
-		if (sdl.opengl.pixel_buffer_object) {
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-			if (sdl.opengl.buffer) glDeleteBuffersARB(1, &sdl.opengl.buffer);
-		} else
-		if (sdl.opengl.framebuf) {
-			free(sdl.opengl.framebuf);
-		}
+		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
+		if (sdl.opengl.buffer) glDeleteBuffersARB(1, &sdl.opengl.buffer);
+
 		sdl.opengl.framebuf=0;
 		if (!(flags&GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface; // BGRA otherwise
 		int texsize=2 << int_log2(width > height ? width : height);
@@ -716,16 +712,13 @@ dosurface:
 		}
 		/* Sync to VBlank if desired */
 		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
+
 		/* Create the texture and display list */
-		if (sdl.opengl.pixel_buffer_object) {
-			glGenBuffersARB(1, &sdl.opengl.buffer);
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
-			glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, width*height*4, NULL, GL_STREAM_DRAW_ARB);
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-		} else
-		{
-			sdl.opengl.framebuf=malloc(width*height*4);		//32 bit color
-		}
+		glGenBuffersARB(1, &sdl.opengl.buffer);
+		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
+		glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, width*height*4, NULL, GL_STREAM_DRAW_ARB);
+		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
+
 		sdl.opengl.pitch=width*4;
 		int windowHeight;
 		SDL_GetWindowSize(sdl.window, NULL, &windowHeight);
@@ -777,8 +770,7 @@ dosurface:
 		glEndList();
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
-		if (sdl.opengl.pixel_buffer_object)
-			retFlags |= GFX_HARDWARE;
+		retFlags |= GFX_HARDWARE;
 	break;
 		}//OPENGL
 #endif	//C_OPENGL
@@ -922,13 +914,8 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 	}
 #if C_OPENGL
 	case SCREEN_OPENGL:
-		if(sdl.opengl.pixel_buffer_object) {
-		    glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
-		    pixels=(Bit8u *)glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY);
-		} else
-		{
-		    pixels=(Bit8u *)sdl.opengl.framebuf;
-		}
+		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
+		pixels=(Bit8u *)glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY);
 		pitch=sdl.opengl.pitch;
 		sdl.updating=true;
 		return true;
@@ -978,35 +965,14 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
-		if (sdl.opengl.pixel_buffer_object) {
-			glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
-			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-					sdl.draw.width, sdl.draw.height, GL_BGRA_EXT,
-					GL_UNSIGNED_INT_8_8_8_8_REV, 0);
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-			glCallList(sdl.opengl.displaylist);
-			SDL_GL_SwapWindow(sdl.window);
-		} else
-		if (changedLines) {
-			Bitu y = 0, index = 0;
-			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-			while (y < sdl.draw.height) {
-				if (!(index & 1)) {
-					y += changedLines[index];
-				} else {
-					Bit8u *pixels = (Bit8u *)sdl.opengl.framebuf + y * sdl.opengl.pitch;
-					Bitu height = changedLines[index];
-					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
-						sdl.draw.width, height, GL_BGRA_EXT,
-						GL_UNSIGNED_INT_8_8_8_8_REV, pixels );
-					y += height;
-				}
-				index++;
-			}
-			glCallList(sdl.opengl.displaylist);
-			SDL_GL_SwapWindow(sdl.window);
-		}
+		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
+		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+				sdl.draw.width, sdl.draw.height, GL_BGRA_EXT,
+				GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
+		glCallList(sdl.opengl.displaylist);
+		SDL_GL_SwapWindow(sdl.window);
 		break;
 #endif
 	default:
