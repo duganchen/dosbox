@@ -32,7 +32,7 @@
 #include "mem.h"
 #include "mixer.h"
 #include "SDL.h"
-#include "../sdl_cdrom/compat_SDL_cdrom.h"
+#include "../compat_SDL_cdrom.h"
 #include "SDL_thread.h"
 
 #define RAW_SECTOR_SIZE		2352
