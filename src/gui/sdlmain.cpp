@@ -31,9 +31,6 @@
 #include <signal.h>
 #include <process.h>
 #endif
-#ifdef __ANDROID__
-#include <android/log.h>
-#endif
 
 #include "cross.h"
 #include "SDL.h"
