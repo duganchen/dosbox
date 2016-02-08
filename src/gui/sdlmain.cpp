@@ -1107,15 +1107,8 @@ dosurface:
  		glGenTextures(1,&sdl.opengl.texture);
 		glBindTexture(GL_TEXTURE_2D,sdl.opengl.texture);
 		// No borders
-#ifdef __ANDROID__
-		/* Plain OpenGL ES (v1.1) has no mention
-		of GL_CLAMP, so use GL_CLAMP_TO_EDGE  */
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-#else
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-#endif
 		if (sdl.opengl.bilinear) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
