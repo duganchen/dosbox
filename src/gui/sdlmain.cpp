@@ -751,13 +751,7 @@ static SDL_Surface * GFX_SetupSurfaceScaled(Bit32u sdl_flags, Bit32u bpp)
 		if (sdl.surface && sdl.surface->flags & SDL_FULLSCREEN) {
 			sdl.clip.x=(Sint16)((sdl.surface->w-sdl.clip.w)/2);
 #endif
-#ifdef __ANDROID__
-			/* Portrait orientation and on-screen keyboards
-			are commonly found on that platform          */
-			sdl.clip.y=0;
-#else
 			sdl.clip.y=(Sint16)((fixedHeight-sdl.clip.h)/2);
-#endif
 		} else {
 			sdl.clip.x = 0;
 			sdl.clip.y = 0;
