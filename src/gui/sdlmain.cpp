@@ -650,6 +650,17 @@ GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
 }
 #endif
 
+#ifdef C_OPENGL
+GLfloat get_texture_x(GLfloat vertex_x, GLfloat video_x, GLfloat texture_x) {
+	return (vertex_x + 1.0) / 2.0 * video_x / texture_x;
+}
+
+
+GLfloat get_texture_y(GLfloat vertex_y, GLfloat video_y, GLfloat texture_y) {
+	return (1.0 - vertex_y) / 2.0 * video_y / texture_y;
+}
+#endif
+
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t callback) {
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
@@ -994,20 +1005,20 @@ dosurface:
 		glEnableVertexAttribArray(POSITION_LOCATION);
 
 		// upper left
-		sdl.opengl.texture_data[0] = 0;
-		sdl.opengl.texture_data[1] = 0;
+		sdl.opengl.texture_data[0] = get_texture_x(-1.0f, width, texsize);
+		sdl.opengl.texture_data[1] = get_texture_y(1.0f, height, texsize);
 
 		// lower left
-		sdl.opengl.texture_data[2] = tex_width;
-		sdl.opengl.texture_data[3] = tex_height;
+		sdl.opengl.texture_data[2] = get_texture_x(-1.0f, width, texsize);
+		sdl.opengl.texture_data[3] = get_texture_y(-1.0f, height, texsize);
 
 		// upper right
-		sdl.opengl.texture_data[4] = tex_width;
-		sdl.opengl.texture_data[5] = 0;
+		sdl.opengl.texture_data[4] = get_texture_x(1.0f, width, texsize);
+		sdl.opengl.texture_data[5] = get_texture_y(1.0f, height, texsize);
 
 		// lower right
-		sdl.opengl.texture_data[6] = 0;
-		sdl.opengl.texture_data[7] = tex_height;
+		sdl.opengl.texture_data[6] = get_texture_x(1.0f, width, texsize);
+		sdl.opengl.texture_data[7] = get_texture_y(-1.0f, height, texsize);
 
 		glGenBuffers(1, &sdl.opengl.texture_vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.texture_vbo);
