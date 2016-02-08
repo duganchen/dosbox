@@ -1490,24 +1490,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				}
 				index++;
 			}
-#ifdef __ANDROID__
-			/* We can't use display lists with OpenGL ES
-			and we should use Vertex Buffer Arrays    */
-			glClear(GL_COLOR_BUFFER_BIT);
-			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
-
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-			glVertexPointer(2, GL_FLOAT, 0, sdl.opengl.vertCoords);
-			glTexCoordPointer(2, GL_FLOAT, 0, sdl.opengl.texCoords);
-			glDrawArrays(GL_TRIANGLE_FAN,0,4);
-
-			glDisableClientState(GL_VERTEX_ARRAY);
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#else	// !__ANDROID__
 			glCallList(sdl.opengl.displaylist);
-#endif	// !__ANDROID__
 #if SDL_VERSION_ATLEAST(2,0,0)
 			SDL_GL_SwapWindow(sdl.window);
 #else
