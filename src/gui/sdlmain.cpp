@@ -236,6 +236,18 @@ const std::string fragment_shader_default_src =
 	"{\n"
 	"	color = texture(decal, texCoord);\n"
 	"}\n";
+
+	const GLuint POSITION_LOCATION = 0;
+	const GLuint TEXTURE_LOCATION = 1;
+
+	// AKA: rubyInputSize 
+	const GLuint VIDEO_SIZE_LOCATION = 2;
+
+	// AKA: rubyTextureSize, OGLSize
+	const GLuint TEXTURE_SIZE_LOCATION = 3;
+
+	// AKA: rubyOutputSize
+	const GLuint OUTPUT_SIZE_LOCATION = 4;
 #endif
 
 static SDL_Block sdl;
@@ -896,13 +908,13 @@ dosurface:
 		// Time to take advantage of the shader now
 		glUseProgram(sdl.opengl.program_object);
 
-		float uniforms[6];
-		uniforms[0] = width;
-		uniforms[1] = height;
-		uniforms[2] = texsize;
-		uniforms[3] = texsize;
-		uniforms[4] = sdl.clip.w;
-		uniforms[5] = sdl.clip.h;
+		float uniform_block[6];
+		uniform_block[0] = width;
+		uniform_block[1] = height;
+		uniform_block[2] = texsize;
+		uniform_block[3] = texsize;
+		uniform_block[4] = sdl.clip.w;
+		uniform_block[5] = sdl.clip.h;
 
 		LOG_MSG("Framebuffer size: %lux%lu", width, height);
 
@@ -910,8 +922,13 @@ dosurface:
 		glGenBuffers(1, &sdl.opengl.ubo);
 		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
 		glBindBufferBase(GL_UNIFORM_BUFFER, 0, sdl.opengl.ubo);
-		glBufferData(GL_UNIFORM_BUFFER, 24, uniforms, GL_STATIC_DRAW);
+		glBufferData(GL_UNIFORM_BUFFER, 24, uniform_block, GL_STATIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+		// And pass them again as individual uniforms.
+		glUniform2f(VIDEO_SIZE_LOCATION, width, height);
+		glUniform2f(TEXTURE_SIZE_LOCATION, texsize, texsize);
+		glUniform2f(OUTPUT_SIZE_LOCATION, sdl.clip.w, sdl.clip.h);
 
 		glGenVertexArrays(1, &sdl.opengl.vao);
 		glBindVertexArray(sdl.opengl.vao);
@@ -942,7 +959,7 @@ dosurface:
 		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.vertex_vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.vertex_data), sdl.opengl.vertex_data, GL_STATIC_DRAW);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
+		glVertexAttribPointer(POSITION_LOCATION, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
 		glEnableVertexAttribArray(0);
 
 		// Textures now. With DosBox's framebuffer, the origin is at the top left, and the the
@@ -967,7 +984,7 @@ dosurface:
 		glGenBuffers(1, &sdl.opengl.texture_vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.texture_vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.texture_data), sdl.opengl.texture_data, GL_STATIC_DRAW);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_TRUE, 2 * sizeof (GLfloat), (GLvoid *)0);
+		glVertexAttribPointer(TEXTURE_LOCATION, 2, GL_FLOAT, GL_TRUE, 2 * sizeof (GLfloat), (GLvoid *)0);
 		glEnableVertexAttribArray(1);
 
 		sdl.desktop.type=SCREEN_OPENGL;
