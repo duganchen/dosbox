@@ -265,6 +265,7 @@ void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused){
 static unsigned char logo[32*32*4]= {
 #include "dosbox_logo.h"
 };
+
 static void GFX_SetIcon() {
 #if !defined(MACOSX)
 	/* Set Icon (must be done before any sdl_setvideomode call) */
@@ -277,8 +278,8 @@ static void GFX_SetIcon() {
 #endif // WORDS_BIGENDIAN
 
 	SDL_SetWindowIcon(sdl.window, logos);
+#endif // !defined(MACOSX)
 }
-
 
 static void KillSwitch(bool pressed) {
 	if (!pressed)
