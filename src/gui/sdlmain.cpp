@@ -21,6 +21,8 @@
 #define _GNU_SOURCE
 #endif
 
+#include <fstream>
+#include <sstream>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -54,40 +56,8 @@
 //#define DISABLE_JOYSTICK
 
 #if C_OPENGL
+#include <GL/glew.h>
 #include "SDL_opengl.h"
-
-#ifndef APIENTRY
-#define APIENTRY
-#endif
-#ifndef APIENTRYP
-#define APIENTRYP APIENTRY *
-#endif
-
-#ifndef GL_ARB_pixel_buffer_object
-#define GL_ARB_pixel_buffer_object 1
-#define GL_PIXEL_PACK_BUFFER_ARB           0x88EB
-#define GL_PIXEL_UNPACK_BUFFER_ARB         0x88EC
-#define GL_PIXEL_PACK_BUFFER_BINDING_ARB   0x88ED
-#define GL_PIXEL_UNPACK_BUFFER_BINDING_ARB 0x88EF
-#endif
-
-#ifndef GL_ARB_vertex_buffer_object
-#define GL_ARB_vertex_buffer_object 1
-typedef void (APIENTRYP PFNGLGENBUFFERSARBPROC) (GLsizei n, GLuint *buffers);
-typedef void (APIENTRYP PFNGLBINDBUFFERARBPROC) (GLenum target, GLuint buffer);
-typedef void (APIENTRYP PFNGLDELETEBUFFERSARBPROC) (GLsizei n, const GLuint *buffers);
-typedef void (APIENTRYP PFNGLBUFFERDATAARBPROC) (GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
-typedef GLvoid* (APIENTRYP PFNGLMAPBUFFERARBPROC) (GLenum target, GLenum access);
-typedef GLboolean (APIENTRYP PFNGLUNMAPBUFFERARBPROC) (GLenum target);
-#endif
-
-PFNGLGENBUFFERSARBPROC glGenBuffersARB = NULL;
-PFNGLBINDBUFFERARBPROC glBindBufferARB = NULL;
-PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = NULL;
-PFNGLBUFFERDATAARBPROC glBufferDataARB = NULL;
-PFNGLMAPBUFFERARBPROC glMapBufferARB = NULL;
-PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;
-
 #endif //C_OPENGL
 
 #if !(ENVIRON_INCLUDED)
@@ -182,12 +152,19 @@ struct SDL_Block {
 		Bitu pitch;
 		GLuint buffer;
 		GLuint texture;
-		GLuint displaylist;
 		GLint max_texsize;
 		bool bilinear;
-		bool packed_pixel;
-		bool paletted_texture;
-		bool pixel_buffer_object;
+
+		std::string vertex_shader_src;
+		std::string fragment_shader_src;
+		GLuint program_object;
+		GLuint vao;
+		GLuint vertex_vbo;
+		GLuint texture_vbo;
+		GLuint ubo;
+
+		GLfloat vertex_data[12];
+		GLfloat texture_data[8];
 	} opengl;
 #endif	// C_OPENGL
 	struct {
@@ -225,6 +202,47 @@ struct SDL_Block {
 };
 
 static SDL_Block sdl;
+
+#ifdef C_OPENGL
+const std::string vertex_shader_default_src =
+	"#version 330 core\n"
+	"\n"
+	"layout(location = 0) in vec4 position;\n"
+	"layout(location = 1) in vec2 textureCoord;\n"
+	"\n"
+	"out vec2 texCoord;\n"
+	"\n"
+	"void main()\n"
+	"{\n"
+	"	gl_Position = position;\n"
+	"	texCoord = textureCoord;\n"
+	"}\n";
+
+const std::string fragment_shader_default_src =
+	"#version 330 core\n"
+	"\n"
+	"in vec2 texCoord;\n"
+	"uniform sampler2D decal;\n"
+	"\n"
+	"out vec4 color;"
+	"\n"
+	"void main()\n"
+	"{\n"
+	"	color = texture(decal, texCoord);\n"
+	"}\n";
+
+	const GLuint POSITION_LOCATION = 0;
+	const GLuint TEXTURE_LOCATION = 1;
+
+	// AKA: rubyInputSize 
+	const GLuint VIDEO_SIZE_LOCATION = 2;
+
+	// AKA: rubyTextureSize, OGLSize
+	const GLuint TEXTURE_SIZE_LOCATION = 3;
+
+	// AKA: rubyOutputSize
+	const GLuint OUTPUT_SIZE_LOCATION = 4;
+#endif
 
 static int SDL_Init_Wrapper(void)
 {
@@ -422,6 +440,33 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		SDL_GL_DeleteContext(sdl.opengl.context);
 		sdl.opengl.context=0;
 	}
+
+	if (sdl.opengl.vao) {
+		glBindVertexArray(0);
+		glDeleteVertexArrays(1, &sdl.opengl.vao);
+		sdl.opengl.vao = 0;
+	}
+
+	if (sdl.opengl.vertex_vbo) {
+		glDeleteBuffers(1, &sdl.opengl.vertex_vbo);
+		sdl.opengl.vertex_vbo = 0;
+	}
+
+	if (sdl.opengl.texture_vbo) {
+		glDeleteBuffers(1, &sdl.opengl.texture_vbo);
+		sdl.opengl.texture_vbo = 0;
+	}
+
+	if (sdl.opengl.ubo) {
+		glDeleteBuffers(1, &sdl.opengl.ubo);
+		sdl.opengl.ubo = 0;
+	}
+
+	if (sdl.opengl.program_object) {
+		glUseProgram(0);
+		glDeleteProgram(sdl.opengl.program_object);
+		sdl.opengl.program_object = 0;
+	}
 #endif
 	sdl.window_desired_width = width;
 	sdl.window_desired_height = height;
@@ -561,6 +606,50 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType)
 	}
 }
 
+#ifdef C_OPENGL
+/* Create a GLSL shader object, load the shader source, and compile the shader.
+ */
+GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
+
+	// Create the shader object
+	GLuint shader = 0;
+	if (!(shader = glCreateShader(type))) {
+		LOG_MSG("%s", SDL_GetError());
+		return 0;
+	}
+
+	// Load the shader source
+	glShaderSource(shader, 1, &shaderSrc, NULL);
+
+	// Compile the shader
+	glCompileShader(shader);
+
+	// Check the compile status
+	GLint compiled = 0;
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+	if (!compiled) {
+		GLint infoLen = 0;
+
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
+
+		if (infoLen > 1) {
+			std::vector<GLchar> infoLog(infoLen);
+			glGetShaderInfoLog(shader, infoLen, NULL, &infoLog[0]);
+			std::stringstream ss;
+			for (std::vector<GLchar>::iterator it = infoLog.begin(); it != infoLog.end(); ++it)
+			{
+				ss << *it;
+			}
+			LOG_MSG("SDL:OPENGL:Error compiling program: %s", ss.rdbuf()->str().c_str());
+		}
+
+		glDeleteShader(shader);
+		return 0;
+	}
+	return shader;
+}
+#endif
+
 Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,GFX_CallBack_t callback) {
 	if (sdl.updating)
 		GFX_EndUpdate( 0 );
@@ -687,8 +776,8 @@ dosurface:
 #if C_OPENGL
 	case SCREEN_OPENGL:
 	{
-		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-		if (sdl.opengl.buffer) glDeleteBuffersARB(1, &sdl.opengl.buffer);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+		if (sdl.opengl.buffer) glDeleteBuffers(1, &sdl.opengl.buffer);
 
 		if (!(flags&GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface; // BGRA otherwise
 		int texsize=2 << int_log2(width > height ? width : height);
@@ -696,8 +785,14 @@ dosurface:
 			LOG_MSG("SDL:OPENGL:No support for texturesize of %d, falling back to surface",texsize);
 			goto dosurface;
 		}
+
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 		GFX_SetupWindowScaled(sdl.desktop.want_type);
+
 		/* We may simply use SDL_BYTESPERPIXEL
 		here rather than SDL_BITSPERPIXEL   */
 		if (!sdl.window || SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window))<2) {
@@ -709,26 +804,94 @@ dosurface:
 			LOG_MSG("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
 			goto dosurface;
 		}
+
+		int major_version = 0;
+		if (SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major_version) != 0) {
+			LOG_MSG("%s", SDL_GetError());
+		}
+		int minor_version = 0;
+		if (SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor_version) != 0) {
+			LOG_MSG("%s", SDL_GetError());
+		}
+		if (major_version < 3 || minor_version < 3) {
+			LOG_MSG("SDL:OPENGL:Can't create OpenGL 3.3 context, falling back to surface.");
+			goto dosurface;
+		}
+
 		/* Sync to VBlank if desired */
 		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
 
-		/* Create the texture and display list */
-		glGenBuffersARB(1, &sdl.opengl.buffer);
-		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
-		glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, width*height*4, NULL, GL_STREAM_DRAW_ARB);
-		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
+		glGenBuffers(1, &sdl.opengl.buffer);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);
+		glBufferData(GL_PIXEL_UNPACK_BUFFER, width*height*4, NULL, GL_STREAM_DRAW);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
 		sdl.opengl.pitch=width*4;
 		int windowHeight;
 		SDL_GetWindowSize(sdl.window, NULL, &windowHeight);
+
+		GLuint vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, sdl.opengl.vertex_shader_src.c_str());
+		if (!vertexShader) {
+			LOG_MSG("SDL:OPENGL:Can't compile vertex shader, falling back to surface.");
+			goto dosurface;
+		}
+		GLuint fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src.c_str());
+		if (!fragmentShader) {
+			glDeleteShader(vertexShader);
+			LOG_MSG("SDL:OPENGL:Can't compile fragment shader, falling back to surface.");
+			goto dosurface;
+		}
+		sdl.opengl.program_object = glCreateProgram();
+
+		if (!sdl.opengl.program_object) {
+			glDeleteShader(vertexShader);
+			glDeleteShader(fragmentShader);
+			goto dosurface;
+		}
+		glAttachShader (sdl.opengl.program_object, vertexShader);
+		glAttachShader (sdl.opengl.program_object, fragmentShader);
+		// Link the program
+		glLinkProgram (sdl.opengl.program_object);
+		// Even if we *are* successful, we may delete the shader objects
+		glDeleteShader(vertexShader);
+		glDeleteShader(fragmentShader);
+
+		// Check the link status
+		GLint isProgramLinked;
+		glGetProgramiv (sdl.opengl.program_object, GL_LINK_STATUS, &isProgramLinked);
+
+		if (!isProgramLinked)  {
+			GLint infoLen = 0;
+
+			glGetProgramiv(sdl.opengl.program_object, GL_INFO_LOG_LENGTH, &infoLen);
+
+			if (infoLen > 1) {
+				std::vector<GLchar> infoLog(infoLen);
+				glGetProgramInfoLog(sdl.opengl.program_object, infoLen, NULL, &infoLog[0]);
+				std::stringstream ss;
+				for (std::vector<GLchar>::iterator it = infoLog.begin(); it != infoLog.end(); ++it)
+				{
+					ss << *it;
+				}
+				LOG_MSG("SDL:OPENGL:Error linking program: %s", ss.rdbuf()->str().c_str());
+			}
+
+			glDeleteProgram( sdl.opengl.program_object);
+			goto dosurface;
+		}
+
 		glViewport(sdl.clip.x,windowHeight-(sdl.clip.y+sdl.clip.h),sdl.clip.w,sdl.clip.h);
+#if 0
 		glMatrixMode (GL_PROJECTION);
+#endif
+
 		glDeleteTextures(1,&sdl.opengl.texture);
  		glGenTextures(1,&sdl.opengl.texture);
 		glBindTexture(GL_TEXTURE_2D,sdl.opengl.texture);
 		// No borders
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
 		if (sdl.opengl.bilinear) {
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -737,25 +900,30 @@ dosurface:
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		}
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
 
 		glClearColor (0.0, 0.0, 0.0, 1.0);
 		glShadeModel (GL_FLAT);
+#if 0
 		glDisable (GL_DEPTH_TEST);
 		glDisable (GL_LIGHTING);
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_TEXTURE_2D);
 		glMatrixMode (GL_MODELVIEW);
 		glLoadIdentity ();
+#endif
 
 		GLfloat tex_width=((GLfloat)(width)/(GLfloat)texsize);
 		GLfloat tex_height=((GLfloat)(height)/(GLfloat)texsize);
 
+#if 0
 		if (glIsList(sdl.opengl.displaylist)) glDeleteLists(sdl.opengl.displaylist, 1);
 		sdl.opengl.displaylist = glGenLists(1);
 		glNewList(sdl.opengl.displaylist, GL_COMPILE);
+#endif
 		glClear(GL_COLOR_BUFFER_BIT);
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
+#if 0
 		glBegin(GL_QUADS);
 		// lower left
 		glTexCoord2f(0,tex_height); glVertex2f(-1.0f,-1.0f);
@@ -767,6 +935,86 @@ dosurface:
 		glTexCoord2f(0,0); glVertex2f(-1.0f, 1.0f);
 		glEnd();
 		glEndList();
+#endif
+		// Time to take advantage of the shader now
+		glUseProgram(sdl.opengl.program_object);
+
+		float uniform_block[6];
+		uniform_block[0] = width;
+		uniform_block[1] = height;
+		uniform_block[2] = texsize;
+		uniform_block[3] = texsize;
+		uniform_block[4] = sdl.clip.w;
+		uniform_block[5] = sdl.clip.h;
+
+		LOG_MSG("Framebuffer size: %lux%lu", width, height);
+
+		// Pack the uniforms block
+		glGenBuffers(1, &sdl.opengl.ubo);
+		glBindBuffer(GL_UNIFORM_BUFFER, sdl.opengl.ubo);
+		glBindBufferBase(GL_UNIFORM_BUFFER, 0, sdl.opengl.ubo);
+		glBufferData(GL_UNIFORM_BUFFER, 24, uniform_block, GL_STATIC_DRAW);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+		// And pass them again as individual uniforms.
+		glUniform2f(VIDEO_SIZE_LOCATION, width, height);
+		glUniform2f(TEXTURE_SIZE_LOCATION, texsize, texsize);
+		glUniform2f(OUTPUT_SIZE_LOCATION, sdl.clip.w, sdl.clip.h);
+
+		glGenVertexArrays(1, &sdl.opengl.vao);
+		glBindVertexArray(sdl.opengl.vao);
+
+		// Vertex coordinates
+
+		// upper left
+		sdl.opengl.vertex_data[0] = -1.0f;
+		sdl.opengl.vertex_data[1] = 1.0f;
+		sdl.opengl.vertex_data[2] = 0.0f;
+
+		// lower left
+		sdl.opengl.vertex_data[3] = -1.0f;
+		sdl.opengl.vertex_data[4] = -1.0f;
+		sdl.opengl.vertex_data[5] = 0.0f;
+
+		// upper right
+		sdl.opengl.vertex_data[6] = 1.0f;
+		sdl.opengl.vertex_data[7] = 1.0f;
+		sdl.opengl.vertex_data[8] = 0.0f;
+
+		// lower right
+		sdl.opengl.vertex_data[9] = 1.0f;
+		sdl.opengl.vertex_data[10] = -1.0f;
+		sdl.opengl.vertex_data[11] = 0.0f;
+
+		glGenBuffers(1, &sdl.opengl.vertex_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.vertex_vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.vertex_data), sdl.opengl.vertex_data, GL_STATIC_DRAW);
+
+		glVertexAttribPointer(POSITION_LOCATION, 3, GL_FLOAT, GL_FALSE, 3 * sizeof (GLfloat), (GLvoid *)0);
+		glEnableVertexAttribArray(POSITION_LOCATION);
+
+		// upper left
+		sdl.opengl.texture_data[0] = 0;
+		sdl.opengl.texture_data[1] = 0;
+
+		// lower left
+		sdl.opengl.texture_data[2] = tex_width;
+		sdl.opengl.texture_data[3] = tex_height;
+
+		// upper right
+		sdl.opengl.texture_data[4] = tex_width;
+		sdl.opengl.texture_data[5] = 0;
+
+		// lower right
+		sdl.opengl.texture_data[6] = 0;
+		sdl.opengl.texture_data[7] = tex_height;
+
+		glGenBuffers(1, &sdl.opengl.texture_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, sdl.opengl.texture_vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(sdl.opengl.texture_data), sdl.opengl.texture_data, GL_STATIC_DRAW);
+		glVertexAttribPointer(TEXTURE_LOCATION, 2, GL_FLOAT, GL_TRUE, 2 * sizeof (GLfloat), (GLvoid *)0);
+		glEnableVertexAttribArray(TEXTURE_LOCATION);
+
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
 		retFlags |= GFX_HARDWARE;
@@ -913,8 +1161,8 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 	}
 #if C_OPENGL
 	case SCREEN_OPENGL:
-		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
-		pixels=(Bit8u *)glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);
+		pixels=(Bit8u *)glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
 		pitch=sdl.opengl.pitch;
 		sdl.updating=true;
 		return true;
@@ -964,13 +1212,16 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
-		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
+		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
-				sdl.draw.width, sdl.draw.height, GL_BGRA_EXT,
+				sdl.draw.width, sdl.draw.height, GL_BGRA,
 				GL_UNSIGNED_INT_8_8_8_8_REV, 0);
-		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+#if 0
 		glCallList(sdl.opengl.displaylist);
+#endif
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		SDL_GL_SwapWindow(sdl.window);
 		break;
 #endif
@@ -1258,9 +1509,12 @@ static void GUI_StartUp(Section * sec) {
 	if (sdl.desktop.want_type==SCREEN_OPENGL) {
 	sdl.opengl.buffer=0;
 	sdl.opengl.texture=0;
-	sdl.opengl.displaylist=0;
 
-	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
+	glewExperimental = GL_TRUE;
+	glewInit();
+
+#if 0
+	sdl.opengl.displaylist=0;
 	glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress("glGenBuffersARB");
 	glBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
 	glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)SDL_GL_GetProcAddress("glDeleteBuffersARB");
@@ -1277,6 +1531,7 @@ static void GUI_StartUp(Section * sec) {
     	} else {
 		sdl.opengl.packed_pixel=sdl.opengl.paletted_texture=false;
 	}
+#endif
 	}
 	} /* OPENGL is requested end */
 
