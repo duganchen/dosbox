@@ -768,6 +768,11 @@ dosurface:
 #if C_OPENGL
 	case SCREEN_OPENGL:
 	{
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+		if (sdl.opengl.buffer) {
+			glDeleteBuffers(1, &sdl.opengl.buffer);
+		}
+
 		if (sdl.opengl.framebuf) {
 			free(sdl.opengl.framebuf);
 		}
@@ -813,8 +818,12 @@ dosurface:
 
 		/* Sync to VBlank if desired */
 		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
-		/* Create the texture and display list */
-		sdl.opengl.framebuf = malloc(width * height * 4);		//32 bit color
+
+		glGenBuffers(1, &sdl.opengl.buffer);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);
+		glBufferData(GL_PIXEL_UNPACK_BUFFER, width*height*4, NULL, GL_STREAM_DRAW);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
 		sdl.opengl.pitch = width * 4;
 
 		int windowWidth = 0;
@@ -968,6 +977,7 @@ dosurface:
 
 		sdl.desktop.type=SCREEN_OPENGL;
 		retFlags = GFX_CAN_32 | GFX_SCALING;
+		retFlags |= GFX_HARDWARE;
 	break;
 		}//OPENGL
 #endif	//C_OPENGL
@@ -1109,10 +1119,18 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 	}
 #if C_OPENGL
 	case SCREEN_OPENGL:
+#if 0
 		pixels=(Bit8u *)sdl.opengl.framebuf;
 		pitch=sdl.opengl.pitch;
 		sdl.updating=true;
 		return true;
+#endif
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);
+		pixels=(Bit8u *)glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
+		pitch=sdl.opengl.pitch;
+		sdl.updating=true;
+		return true;
+
 #endif
 	default:
 		break;
@@ -1159,11 +1177,21 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
+#if 0
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
 						sdl.draw.width, sdl.draw.height, GL_BGRA,
 						GL_UNSIGNED_INT_8_8_8_8_REV, (Bit8u *)sdl.opengl.framebuf);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		SDL_GL_SwapWindow(sdl.window);
+#endif
+		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+				sdl.draw.width, sdl.draw.height, GL_BGRA,
+				GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		SDL_GL_SwapWindow(sdl.window);
 		break;
