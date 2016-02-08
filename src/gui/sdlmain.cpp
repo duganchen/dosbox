@@ -1509,6 +1509,7 @@ static void GUI_StartUp(Section * sec) {
 	if (sdl.desktop.want_type==SCREEN_OPENGL) {
 	sdl.opengl.buffer=0;
 	sdl.opengl.texture=0;
+	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
 
 	glewExperimental = GL_TRUE;
 	glewInit();
