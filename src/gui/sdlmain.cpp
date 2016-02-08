@@ -1507,10 +1507,48 @@ static void GUI_StartUp(Section * sec) {
 		}
 	}
 	if (sdl.desktop.want_type==SCREEN_OPENGL) {
+
+
+			sdl.opengl.program_object=0;
+			sdl.opengl.vao = 0;
+			sdl.opengl.vertex_vbo = 0;
+			sdl.opengl.ubo = 0;
+			sdl.opengl.vertex_shader_src = vertex_shader_default_src;
+			sdl.opengl.fragment_shader_src = fragment_shader_default_src;
+			std::string shader_filename=section->Get_string("gl.shader");
+			if (!shader_filename.empty()) {
+				std::string config_path;
+				Cross::GetPlatformConfigDir(config_path);
+
+				std::string vertex_shader_path = config_path + "shaders" + CROSS_FILESPLIT + shader_filename + ".vert";
+				std::ifstream vertex_fstream(vertex_shader_path.c_str());
+				std::stringstream ss;
+				if (vertex_fstream.is_open()) {
+					ss << vertex_fstream.rdbuf();
+					sdl.opengl.vertex_shader_src = ss.str();
+				} else {
+					LOG_MSG("Unable to open: %s", vertex_shader_path.c_str());
+				}
+
+				ss.str("");
+				ss.clear();
+
+				std::string fragment_shader_path = config_path + "shaders" + CROSS_FILESPLIT + shader_filename + ".frag";
+				std::ifstream fragment_fstream(fragment_shader_path.c_str());
+				if (fragment_fstream.is_open()) {
+					ss << fragment_fstream.rdbuf();
+					sdl.opengl.fragment_shader_src = ss.str();
+				} else {
+					LOG_MSG("Unable to open: %s", fragment_shader_path.c_str());
+				}
+			}
+
+
+
+
 	sdl.opengl.buffer=0;
 	sdl.opengl.texture=0;
 	glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
-
 	glewExperimental = GL_TRUE;
 	glewInit();
 
