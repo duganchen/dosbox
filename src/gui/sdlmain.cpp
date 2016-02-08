@@ -34,9 +34,6 @@
 
 #include "cross.h"
 #include "SDL.h"
-#if SDL_VERSION_ATLEAST(2,0,0) && C_PHYSICAL_CDROM_MOUNT
-#include "../sdl_cdrom/compat_SDL_cdrom.h"
-#endif
 
 #include "dosbox.h"
 #include "video.h"
@@ -326,11 +323,7 @@ static int SDL_Init_Wrapper(void)
 	int result = ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER
 		|SDL_INIT_NOPARACHUTE
 	));
-#if C_PHYSICAL_CDROM_MOUNT
-	return (result < 0) ? result : Compat_SDL_CDROMInit();
-#else
 	return result;
-#endif
 }
 #else
 static int SDL_Init_Wrapper(void)
@@ -344,9 +337,6 @@ static int SDL_Init_Wrapper(void)
 
 static void SDL_Quit_Wrapper(void)
 {
-#if SDL_VERSION_ATLEAST(2,0,0) && C_PHYSICAL_CDROM_MOUNT
-	Compat_SDL_CDROMQuit();
-#endif
 	SDL_Quit();
 }
 
