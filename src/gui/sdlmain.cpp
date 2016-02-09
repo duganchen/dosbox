@@ -811,7 +811,7 @@ dosurface:
 			goto dosurface;
 		}
 		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
-		if (sdl.opengl.context == NULL) {
+		if (NULL == sdl.opengl.context) {
 			LOG_MSG("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
 			goto dosurface;
 		}
@@ -828,6 +828,8 @@ dosurface:
 			LOG_MSG("SDL:OPENGL:Can't create OpenGL 3.3 context, falling back to surface.");
 			goto dosurface;
 		}
+
+		SDL_GL_MakeCurrent(sdl.window, sdl.opengl.context);
 
 		/* Sync to VBlank if desired */
 		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
