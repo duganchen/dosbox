@@ -233,15 +233,6 @@ const std::string fragment_shader_default_src =
 
 	const GLuint POSITION_LOCATION = 0;
 	const GLuint TEXTURE_LOCATION = 1;
-
-	// AKA: rubyInputSize 
-	const GLuint VIDEO_SIZE_LOCATION = 2;
-
-	// AKA: rubyTextureSize, OGLSize
-	const GLuint TEXTURE_SIZE_LOCATION = 3;
-
-	// AKA: rubyOutputSize
-	const GLuint OUTPUT_SIZE_LOCATION = 4;
 #endif
 
 static int SDL_Init_Wrapper(void)
@@ -830,7 +821,6 @@ dosurface:
 		}
 
 		SDL_GL_MakeCurrent(sdl.window, sdl.opengl.context);
-		LOG_MSG("%s", glGetString(GL_VERSION));
 
 		/* Sync to VBlank if desired */
 		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
@@ -936,11 +926,6 @@ dosurface:
 		glBindBufferBase(GL_UNIFORM_BUFFER, 0, sdl.opengl.ubo);
 		glBufferData(GL_UNIFORM_BUFFER, 24, uniform_block, GL_STATIC_DRAW);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-		// And pass them again as individual uniforms.
-		glUniform2f(VIDEO_SIZE_LOCATION, width, height);
-		glUniform2f(TEXTURE_SIZE_LOCATION, texsize, texsize);
-		glUniform2f(OUTPUT_SIZE_LOCATION, sdl.clip.w, sdl.clip.h);
 
 		glGenVertexArrays(1, &sdl.opengl.vao);
 		glBindVertexArray(sdl.opengl.vao);
