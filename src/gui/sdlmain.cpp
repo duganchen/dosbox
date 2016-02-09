@@ -830,6 +830,7 @@ dosurface:
 		}
 
 		SDL_GL_MakeCurrent(sdl.window, sdl.opengl.context);
+		LOG_MSG("%s", glGetString(GL_VERSION));
 
 		/* Sync to VBlank if desired */
 		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
