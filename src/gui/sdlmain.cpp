@@ -1470,7 +1470,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.texture.pixelFormat=0;
 	sdl.window=0;
 	sdl.renderer=0;
-	sdl.rendererDriver = section->Get_string("renderer");
+	sdl.rendererDriver = section->Get_string("texture.renderer");
 
 #if C_OPENGL
 	if(sdl.desktop.want_type==SCREEN_OPENGL) { /* OPENGL is requested */
@@ -1955,7 +1955,7 @@ void Config_Add_SDL() {
 		"opengl",
 		"software",
 		0 };
-	Pstring = sdl_sec->Add_string("renderer",Property::Changeable::Always,"auto");
+	Pstring = sdl_sec->Add_string("texture.renderer",Property::Changeable::Always,"auto");
 	Pstring->Set_help("Choose a renderer driver if output=texture or output=texturenb. Use output=auto for an automatic choice.");
 	Pstring->Set_values(renderers);
 
