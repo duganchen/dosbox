@@ -162,6 +162,8 @@ struct SDL_Block {
 		GLuint vertex_vbo;
 		GLuint texture_vbo;
 		GLuint ubo;
+		GLuint vertex_shader;
+		GLuint fragment_shader;
 
 		GLfloat vertex_data[12];
 		GLfloat texture_data[8];
@@ -458,6 +460,7 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		glDeleteProgram(sdl.opengl.program_object);
 		sdl.opengl.program_object = 0;
 	}
+
 #endif
 	sdl.window_desired_width = width;
 	sdl.window_desired_height = height;
@@ -836,14 +839,15 @@ dosurface:
 
 		GLuint vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, sdl.opengl.vertex_shader_src.c_str());
 		if (!vertexShader) {
-			LOG_MSG("SDL:OPENGL:Can't compile vertex shader, falling back to surface.");
-			goto dosurface;
+			LOG_MSG("SDL:OPENGL:Can't compile vertex shader, falling back to stock.");
+			vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, vertex_shader_default_src.c_str());
 		}
 		GLuint fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src.c_str());
 		if (!fragmentShader) {
 			glDeleteShader(vertexShader);
-			LOG_MSG("SDL:OPENGL:Can't compile fragment shader, falling back to surface.");
-			goto dosurface;
+			LOG_MSG("SDL:OPENGL:Can't compile fragment shader, falling back to stock.");
+			vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, vertex_shader_default_src.c_str());
+			fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, fragment_shader_default_src.c_str());
 		}
 		sdl.opengl.program_object = glCreateProgram();
 
@@ -880,8 +884,19 @@ dosurface:
 				LOG_MSG("SDL:OPENGL:Error linking program: %s", ss.rdbuf()->str().c_str());
 			}
 
-			glDeleteProgram( sdl.opengl.program_object);
-			goto dosurface;
+			glDeleteProgram(sdl.opengl.program_object);
+			glDeleteShader(vertexShader);
+			glDeleteShader(fragmentShader);
+				
+			// Fall back to stock shaders.
+			vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, vertex_shader_default_src.c_str());
+			fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, fragment_shader_default_src.c_str());
+			sdl.opengl.program_object = glCreateProgram();
+			glAttachShader (sdl.opengl.program_object, vertexShader);
+			glAttachShader (sdl.opengl.program_object, fragmentShader);
+			glLinkProgram (sdl.opengl.program_object);
+			glDeleteShader(vertexShader);
+			glDeleteShader(fragmentShader);
 		}
 
 		glViewport(sdl.clip.x,windowHeight-(sdl.clip.y+sdl.clip.h),sdl.clip.w,sdl.clip.h);
@@ -1473,6 +1488,8 @@ static void GUI_StartUp(Section * sec) {
 		sdl.opengl.vao = 0;
 		sdl.opengl.vertex_vbo = 0;
 		sdl.opengl.ubo = 0;
+		sdl.opengl.vertex_shader = 0;
+		sdl.opengl.fragment_shader = 0;
 		sdl.opengl.vertex_shader_src = vertex_shader_default_src;
 		sdl.opengl.fragment_shader_src = fragment_shader_default_src;
 		std::string shader_filename=section->Get_string("gl.shader");
