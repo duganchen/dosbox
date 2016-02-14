@@ -837,20 +837,23 @@ dosurface:
 		int windowHeight;
 		SDL_GetWindowSize(sdl.window, NULL, &windowHeight);
 
+		GLuint fragmentShader = 0;
 		GLuint vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, sdl.opengl.vertex_shader_src.c_str());
-		if (!vertexShader) {
+		if (vertexShader) {
+			fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src.c_str());
+			if (!fragmentShader) {
+				glDeleteShader(vertexShader);
+				LOG_MSG("SDL:OPENGL:Can't compile fragment shader, falling back to stock.");
+				vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, vertex_shader_default_src.c_str());
+				fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, fragment_shader_default_src.c_str());
+			}
+		} else {
 			LOG_MSG("SDL:OPENGL:Can't compile vertex shader, falling back to stock.");
-			vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, vertex_shader_default_src.c_str());
-		}
-		GLuint fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src.c_str());
-		if (!fragmentShader) {
-			glDeleteShader(vertexShader);
-			LOG_MSG("SDL:OPENGL:Can't compile fragment shader, falling back to stock.");
 			vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, vertex_shader_default_src.c_str());
 			fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, fragment_shader_default_src.c_str());
 		}
-		sdl.opengl.program_object = glCreateProgram();
 
+		sdl.opengl.program_object = glCreateProgram();
 		if (!sdl.opengl.program_object) {
 			glDeleteShader(vertexShader);
 			glDeleteShader(fragmentShader);
