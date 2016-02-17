@@ -923,8 +923,6 @@ dosurface:
 
 		glClearColor (0.0, 0.0, 0.0, 1.0);
 		glShadeModel (GL_FLAT);
-
-		glClear(GL_COLOR_BUFFER_BIT);
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 
 		// Time to take advantage of the shader now
@@ -1202,6 +1200,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				sdl.draw.width, sdl.draw.height, GL_BGRA,
 				GL_UNSIGNED_INT_8_8_8_8_REV, 0);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		SDL_GL_SwapWindow(sdl.window);
 		break;
