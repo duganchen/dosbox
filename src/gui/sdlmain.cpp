@@ -928,7 +928,7 @@ dosurface:
 		// Time to take advantage of the shader now
 		glUseProgram(sdl.opengl.program_object);
 
-		LOG_MSG("Game resolution: %dx%d", width, height)
+		LOG_MSG("Game resolution: %dx%d", width, height);
 
 		float uniform_block[6];
 		uniform_block[0] = width;
