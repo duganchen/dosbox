@@ -46,6 +46,12 @@
 #include "os2.h"
 #endif
 
+#if defined(WIN32)
+#ifndef S_ISDIR
+#define S_ISDIR(m) (((m)&S_IFMT)==S_IFDIR)
+#endif
+#endif
+
 #if C_DEBUG
 Bitu DEBUG_EnableDebugger(void);
 #endif
@@ -293,7 +299,7 @@ public:
 				return;
 			}
 			/* Not a switch so a normal directory/file */
-			if (!(test.st_mode & S_IFDIR)) {
+			if (!S_ISDIR(test.st_mode)) {
 #ifdef OS2
 				HFILE cdrom_fd = 0;
 				ULONG ulAction = 0;
@@ -1193,7 +1199,7 @@ public:
 						}
 					}
 				}
-				if ((test.st_mode & S_IFDIR)) {
+				if (S_ISDIR(test.st_mode)) {
 					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT"));
 					return;
 				}
@@ -1209,7 +1215,7 @@ public:
 			if(fstype=="fat") {
 				if (imgsizedetect) {
 					FILE * diskfile = fopen(temp_line.c_str(), "rb+");
-					if(!diskfile) {
+					if (!diskfile) {
 						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
 						return;
 					}
@@ -1353,6 +1359,10 @@ public:
 
 			} else {
 				FILE *newDisk = fopen(temp_line.c_str(), "rb+");
+				if (!newDisk) {
+					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
+					return;
+				}
 				fseek(newDisk,0L, SEEK_END);
 				imagesize = (ftell(newDisk) / 1024);
 
