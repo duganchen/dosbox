@@ -149,8 +149,11 @@ struct SDL_Block {
 #if C_OPENGL
 	struct {
 		SDL_GLContext context;
+		void * framebuf;
 		Bitu pitch;
+#if 0
 		GLuint buffer;
+#endif
 		GLuint texture;
 		GLint max_texsize;
 		bool bilinear;
@@ -781,9 +784,10 @@ dosurface:
 #if C_OPENGL
 	case SCREEN_OPENGL:
 	{
+#if 0
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 		if (sdl.opengl.buffer) glDeleteBuffers(1, &sdl.opengl.buffer);
-
+#endif
 		if (!(flags&GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface; // BGRA otherwise
 		int texsize=2 << int_log2(width > height ? width : height);
 		if (texsize>sdl.opengl.max_texsize) {
@@ -828,10 +832,13 @@ dosurface:
 		/* Sync to VBlank if desired */
 		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
 
+#if 0
 		glGenBuffers(1, &sdl.opengl.buffer);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);
 		glBufferData(GL_PIXEL_UNPACK_BUFFER, width*height*4, NULL, GL_STREAM_DRAW);
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+#endif
+		sdl.opengl.framebuf=malloc(width*height*4);		//32 bit color
 
 		sdl.opengl.pitch=width*4;
 		int windowHeight;
@@ -1145,8 +1152,12 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 	}
 #if C_OPENGL
 	case SCREEN_OPENGL:
+#if 0
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, sdl.opengl.buffer);
 		pixels=(Bit8u *)glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY);
+#endif
+	    pixels=(Bit8u *)sdl.opengl.framebuf;
+
 		pitch=sdl.opengl.pitch;
 		sdl.updating=true;
 		return true;
@@ -1196,6 +1207,7 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
+#if 0
 		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 		glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
@@ -1205,6 +1217,26 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		glClear(GL_COLOR_BUFFER_BIT);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		SDL_GL_SwapWindow(sdl.window);
+#endif
+		if (changedLines) {
+			Bitu y = 0, index = 0;
+			glBindTexture(GL_TEXTURE_2D, sdl.opengl.texture);
+			while (y < sdl.draw.height) {
+				if (!(index & 1)) {
+					y += changedLines[index];
+				} else {
+					Bit8u *pixels = (Bit8u *)sdl.opengl.framebuf + y * sdl.opengl.pitch;
+					Bitu height = changedLines[index];
+					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
+						sdl.draw.width, height, GL_BGRA_EXT,
+						GL_UNSIGNED_INT_8_8_8_8_REV, pixels );
+					y += height;
+				}
+				index++;
+			}
+			glCallList(sdl.opengl.displaylist);
+			SDL_GL_SwapBuffers();
+		}
 		break;
 #endif
 	default:
@@ -1524,7 +1556,9 @@ static void GUI_StartUp(Section * sec) {
 			}
 		}
 
+#if 0
 		sdl.opengl.buffer=0;
+#endif
 		sdl.opengl.texture=0;
 		glGetIntegerv (GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
 		glewExperimental = GL_TRUE;
