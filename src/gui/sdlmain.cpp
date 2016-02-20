@@ -1234,8 +1234,9 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				}
 				index++;
 			}
-			glCallList(sdl.opengl.displaylist);
-			SDL_GL_SwapBuffers();
+			glClear(GL_COLOR_BUFFER_BIT);
+			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+			SDL_GL_SwapWindow(sdl.window);
 		}
 		break;
 #endif
