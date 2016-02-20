@@ -825,7 +825,7 @@ dosurface:
 		/* Sync to VBlank if desired */
 		SDL_GL_SetSwapInterval(sdl.desktop.vsync ? 1 : 0);
 
-		sdl.opengl.framebuf=malloc(width*height*4);		//32 bit color
+		sdl.opengl.framebuf=calloc(1, texsize*texsize*4);		//32 bit color
 
 		sdl.opengl.pitch=width*4;
 		int windowHeight;
@@ -913,7 +913,7 @@ dosurface:
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		}
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, sdl.opengl.framebuf);
 
 		glClearColor (0.0, 0.0, 0.0, 1.0);
 		glShadeModel (GL_FLAT);
