@@ -61,8 +61,8 @@ The shaders are stored in a separate project. Download them from from here:
 * [dosbox\_shaders](https://github.com/duganchen/dosbox_shaders)
 
 Then create a "shaders" directory in the same parent directory that has your
-DosBox configuration file.  Then put the *.vert and *.frag files from the
-collection of shaders in the "shaders" directory.
+DosBox configuration file.  Put the *.vert and *.frag files from the
+shader collection into the "shaders" directory.
 
 On Linux, you should have:
 
