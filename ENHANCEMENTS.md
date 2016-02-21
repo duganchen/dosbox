@@ -51,7 +51,7 @@ mt32.romdir paths. That means that these paths are allowed to contain dollar sig
 
 The default video output method, "texturenb", is equivalent to "openglnb" in
 vanilla DosBox. Now, "openglnb" and "opengl" use OpenGL 3 and can take advantage
-of custom shaders.
+of external shaders.
 
 #### External Shaders
 
