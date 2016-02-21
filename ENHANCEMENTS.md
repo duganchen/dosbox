@@ -56,7 +56,7 @@ of external shaders.
 
 #### External Shaders
 
-The shaders are stored in a separate project. Download them from from here:
+The shaders are stored in a separate project. Download them from here:
 
 * [dosbox\_shaders](https://github.com/duganchen/dosbox_shaders)
 
@@ -100,7 +100,7 @@ shaders to work as designed.
 
 ## Credit
 
-This fork either directly uses or builds on the following community contributions:
+This fork uses, either directly or by building on, the following community contributions:
 
 * [Patch for OpenGL fullscreen bug](http://www.vogons.org/viewtopic.php?f=32&t=27487&start=20#p276738)
 * [Official Munt DosBox patch](https://github.com/munt/munt/blob/master/DOSBox-mt32-patch/dosbox-SVN-r3892-mt32-patch.diff)
