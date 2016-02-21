@@ -1,6 +1,6 @@
 # Enhanced DosBox Fork
 
-This is an enhanced for of DosBox. It is currently in sync with revision 3969.
+This is an enhanced fork of DosBox. It is currently in sync with revision 3969.
 
 ## Requirements 
 
