@@ -2,7 +2,9 @@
 
 This is an enhanced for of DosBox. It is currently in sync with revision 3969.
 
-## Requiremnts 
+## Requirements 
+
+### Building
 
 A full-featured build will need the following dependencies:
 
@@ -12,19 +14,18 @@ A full-featured build will need the following dependencies:
 * [GLEW](http://glew.sourceforge.net/) (OpenGL 3 and shader support)
 * [munt](http://munt.sourceforge.net/) (built-in MT32 emulation)
 
-## Differences
+### Configuration
 
-* physical CD-ROMs are no longer supported (use IMGMOUNT and ISOs instead)
-* "aspect"'s default value is now true
-* "output"'s default value is now "texturenb"
-* "scaler's" default value is now none
+There are new configuration options, and some existing ones have new defaults.
+defaults. If you have a configuration file from different version of DosBox, I
+recommend removing it and letting this version generate a replacement.
 
 ## Features
 
 ### Soundfont Support
 	
-Games that use General MIDI can use the FluidSynth backend and play audio
-using a soundfont, specified in your configuration file:
+Games that use General MIDI can use the new FluidSynth backend to
+play BGM using a soundfont. Specify that in your configuration file:
 	
 	[midi]
 	mididevice=fluidsynth
@@ -33,16 +34,17 @@ using a soundfont, specified in your configuration file:
 
 ### MT-32 Emulation
 
-While I still recommend running munt as a separate application (mt32em-qt) and then
-connecting DosBox to its MIDI port, native MT-32 emulation is available as another
-option.  Simply specify the path to the ROM directory in your configuration file:
+I still recommend running munt as a separate application (mt32emu-qt) and then
+connecting DosBox to its MIDI port. However, native MT-32 emulation is now
+available as another option. Simply specify the path to the ROM directory in
+your configuration file:
 
 	[midi]
 	mididevice=mt32
 	mt32.romdir=/path/to/roms
 
-On OS X and Linux, DosBox performs shell-expansion on the fluid.soundfont and
-mt32.romdir paths. Therefore, these paths are allowed to contain dollar signs
+On OS X and Linux, DosBox will perform shell-expansion on the fluid.soundfont and
+mt32.romdir paths. That means that, these paths are allowed to contain dollar signs
 (environment variables) and tildes (home directories).
 
 ### OpenGL 3 Support
@@ -86,6 +88,13 @@ EGA games typically work well with the *jinc2-sharp* shader, which removes dithe
 Please note that the new defaults (no scaler, aspect ratio on) are needed for the
 shaders to work as designed.
 
+## Misc Differences
+
+* physical CD-ROMs are no longer supported (use IMGMOUNT and ISOs instead)
+* "aspect"'s default value is now true
+* "output"'s default value is now "texturenb"
+* "scaler's" default value is now none
+* pixel buffer objects are no longer used for rendering (I've found them to be the cause of a screen corruption bug)
 ## Credit
 
 This fork either directly uses or builds on the following community contributions:
