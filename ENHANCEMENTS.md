@@ -85,7 +85,7 @@ To use one, specify its name, without the path or the file extension, as the *gl
 
 EGA games typically work well with the *jinc2-sharp* shader, which removes dithering.
 
-Please note that the new defaults (no scaler, aspect ratio on) are needed for the
+Please note that the new defaults (scaler=none, aspect=on) are needed for the
 shaders to work as designed.
 
 ## Misc Differences
