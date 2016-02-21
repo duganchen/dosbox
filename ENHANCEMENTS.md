@@ -37,8 +37,8 @@ play BGM using a soundfont. Specify that in your configuration file:
 For games that use the Roland MT-32, I still recommend running Munt as
 a separate application (mt32emu-qt) and then connecting DosBox to its MIDI
 port (specified as the "mididevice").  However, native MT-32 emulation is
-now available as an alternative. To use it, specify in your configuration
-file the path to the ROM directory:
+now available as an alternative. To use it, specify, in your configuration
+file, the path to the ROM directory:
 
 	[midi]
 	mididevice=mt32
