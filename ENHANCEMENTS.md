@@ -85,7 +85,7 @@ To use one, specify its name, without the path or the file extension, as the *gl
 	output=openglnb
 	gl.shader=crt-lottes
 
-EGA games typically work well with the *jinc2-sharp* shader, which removes dithering.
+EGA games tend to work well with the *jinc2-sharp* shader, which removes dithering.
 
 Please note that the new defaults (scaler=none, aspect=on) are needed for the
 shaders to work as designed.
