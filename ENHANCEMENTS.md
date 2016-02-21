@@ -94,7 +94,7 @@ shaders to work as designed.
 * "aspect"'s default value is now true
 * "output"'s default value is now "texturenb"
 * "scaler's" default value is now none
-* pixel buffer objects are no longer used for rendering (I've found them to be the cause of a screen corruption bug)
+* Pixel Buffer Objects are no longer used for rendering (I've found them to be the cause of a screen corruption bug)
 
 ## Credit
 
