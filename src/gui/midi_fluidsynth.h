@@ -20,6 +20,10 @@
 #include "control.h"
 #include <string.h>
 
+#ifdef C_WORDEXP
+#include <wordexp.h>
+#endif
+
 class MidiHandler_fluidsynth : public MidiHandler {
 private:	
 	std::string soundfont;
@@ -111,7 +115,15 @@ public:
 
 		/* Optionally load a soundfont */
 		if (!soundfont.empty()) {
+#ifdef C_WORDEXP
+			wordexp_t p;
+			if (!wordexp(soundfont.c_str(), &p, 0)) {
+				soundfont_id = fluid_synth_sfload(synth, p.we_wordv[0], 1);
+				wordfree(&p);
+			}
+#else
 			soundfont_id = fluid_synth_sfload(synth, soundfont.c_str(), 1);
+#endif
 			if (soundfont_id == FLUID_FAILED) {
 				/* Just consider this a warning (fluidsynth already prints) */
 				soundfont.clear();

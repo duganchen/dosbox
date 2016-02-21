@@ -1102,6 +1102,11 @@ public:
 		CALLBACK_Setup(call_irq2,NULL,CB_IRET_EOI_PIC1,Real2Phys(BIOS_DEFAULT_IRQ2_LOCATION),"irq 2 bios");
 		RealSetVec(0x0a,BIOS_DEFAULT_IRQ2_LOCATION);
 
+		// INT 05h: Print Screen
+		// IRQ1 handler calls it when PrtSc key is pressed; does nothing unless hooked
+		phys_writeb(Real2Phys(BIOS_DEFAULT_INT5_LOCATION),0xcf);
+		RealSetVec(0x05,BIOS_DEFAULT_INT5_LOCATION);
+
 		/* Some hardcoded vectors */
 		phys_writeb(Real2Phys(BIOS_DEFAULT_HANDLER_LOCATION),0xcf);	/* bios default interrupt vector location -> IRET */
 		phys_writew(Real2Phys(RealGetVec(0x12))+0x12,0x20); //Hack for Jurresic
@@ -1248,6 +1253,8 @@ public:
 		}
 		// PS2 mouse
 		config |= 0x04;
+		// DMA *not* supported - Ancient Art of War CGA uses this to identify PCjr
+		if (machine==MCH_PCJR) config |= 0x100;
 		// Gameport
 		config |= 0x1000;
 		mem_writew(BIOS_CONFIGURATION,config);

@@ -24,31 +24,26 @@ dnl perharps join this with the other target depended checks. move them upwards
 if test x$host = xi386-pc-os2-emx ; then
     CXXFLAGS="$CXXFLAGS -Zmt"
     LDFLAGS="$LDFLAGS -Zomf -Zmt"
-    LIBS="$LIBS -los2me"
 fi
 
 dnl Check for SDL
-SDL_VERSION=1.2.0
-AM_PATH_SDL($SDL_VERSION,
-            :,
-	    AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
-)
+EXULT_CHECK_SDL(:,AC_MSG_ERROR([[*** SDL not found!]]))
 LIBS="$LIBS $SDL_LIBS"
 CPPFLAGS="$CPPFLAGS $SDL_CFLAGS"
 
-dnl Check if SDL is 1.2.x (1.3 not supported)
-AC_MSG_CHECKING([SDL version only being 1.2.X])
+dnl Check if SDL is 2.0.x
+AC_MSG_CHECKING([for SDL version being 2.0.x])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include "SDL.h"
 void blah(){
-#if SDL_MINOR_VERSION != 2
-#error "Only SDL 1.2 supported"
+#if !((SDL_MAJOR_VERSION == 2) && (SDL_MINOR_VERSION == 0))
+#error "Only SDL 2.0 supported"
 #endif
 ;
 }
 ])],AC_MSG_RESULT([yes]),[
  AC_MSG_RESULT([no]) 
- AC_MSG_ERROR([Only libSDL 1.2.X supported])])
+ AC_MSG_ERROR([Only libSDL 2.0.x supported])])
 
 dnl Checks for header files.
 
@@ -377,23 +372,25 @@ AH_TEMPLATE(C_MODEM,[Define to 1 to enable internal modem support, requires SDL_
 AH_TEMPLATE(C_IPX,[Define to 1 to enable IPX over Internet networking, requires SDL_net])
 AC_CHECK_HEADER(SDL_net.h,have_sdl_net_h=yes,)
 
+LIBSDL_HEADER="SDL2"
+
 if test x$host = xi386-pc-os2-emx ; then
-  AC_MSG_CHECKING(for SDLNet_Init in SDL_net);
+  AC_MSG_CHECKING(for SDLNet_Init in ${LIBSDL_HEADER}_net);
   LIBS_BACKUP=$LIBS;
-  LIBS="$LIBS -lSDL_Net";
+  LIBS="$LIBS -l${LIBSDL_HEADER}_Net";
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <SDL_Net.h>]],[[
 	SDLNet_Init ();
   ]])], [AC_MSG_RESULT(yes); have_sdl_net_lib=yes], AC_MSG_RESULT(no))
   LIBS=$LIBS_BACKUP
 else
-AC_CHECK_LIB(SDL_net, SDLNet_Init, have_sdl_net_lib=yes, , )
+AC_CHECK_LIB(${LIBSDL_HEADER}_net, SDLNet_Init, have_sdl_net_lib=yes, , )
 fi
 if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
-   LIBS="$LIBS -lSDL_net"
+   LIBS="$LIBS -l${LIBSDL_HEADER}_net"
    AC_DEFINE(C_MODEM,1)
    AC_DEFINE(C_IPX,1)
 else 
-   AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
+   AC_MSG_WARN([Can't find ${LIBSDL_HEADER}_net, internal modem and ipx disabled])
 fi
 
 AH_TEMPLATE(C_X11_XKB,[define to 1 if you have XKBlib.h and X11 lib])
@@ -410,7 +407,7 @@ fi
 
 AH_TEMPLATE(C_FLUIDSYNTH,[Define to 1 to enable fluidsynth MIDI synthesis])
 AC_CHECK_HEADER(fluidsynth.h,have_fluidsynth_h=yes,)
-AC_CHECK_LIB(fluidsynth, new_fluid_synth, have_fluidsynth_lib=yes, have_fluidsynth_lib=no,)
+AC_CHECK_LIB(fluidsynth, new_fluid_synth, have_fluidsynth_lib=yes,,)
 if test x$have_fluidsynth_lib = xyes -a x$have_fluidsynth_h = xyes ; then
   LIBS="$LIBS -lfluidsynth"
   AC_DEFINE(C_FLUIDSYNTH,1)
@@ -418,18 +415,12 @@ else
   AC_MSG_WARN([fluidsynth MIDI synthesis not available])
 fi
 
-AH_TEMPLATE(C_XBRZ,[Define to 1 to use xBRZ scaling support])
-AC_CHECK_LIB(tbb, main, have_tbb_lib=yes, have_tbb_lib=no , )
-AC_MSG_CHECKING(Intel(R) Thread Building Blocks)
-if test x$have_tbb_lib = xyes ; then
-   LIBS="$LIBS -ltbb"
-   AC_DEFINE(C_XBRZ,1)
-   AC_MSG_RESULT(yes)
-   CXXFLAGS="$CXXFLAGS -std=c++11"
-else
-	AC_MSG_WARN([Cannot find tbb, xBRZ scaler disabled.])
+AH_TEMPLATE(C_WORDEXP,[Define to 1 if you have wordexp.h])
+AC_CHECK_HEADER(wordexp.h,have_wordexp_h=yes,)
+if test x$have_wordexp_h = xyes ; then
+  AC_DEFINE(C_WORDEXP,1)
 fi
-	
+
 AH_TEMPLATE(C_MUNT,[define to 1 if you have munt lib])
 AC_CHECK_LIB(mt32emu, main, have_mt32emu_lib=yes, have_mt32emu_lib=no, )
 if test x$have_mt32emu_lib = xyes ; then
@@ -437,51 +428,38 @@ if test x$have_mt32emu_lib = xyes ; then
    AC_DEFINE(C_MUNT,1)
    AC_MSG_RESULT(yes)
 else
-	AC_MSG_WARN([Cannot find munt, Roland MIDI device emulation disabled.])
+	AC_MSG_WARN([Can't find munt, Roland MIDI device emulation disabled.])
 fi
 
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
 AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
 AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
 AC_CHECK_HEADER(GL/gl.h, have_gl_h=yes , have_gl_h=no , )
+AC_CHECK_HEADER(GL/glew.h, have_glew_h=yes , have_glew_h=no , )
+AC_CHECK_LIB(GLEW, main, have_glew_lib=yes,have_glew_lib=no , )
 AC_ARG_ENABLE(opengl,AC_HELP_STRING([--disable-opengl],[Disable opengl support]),,enable_opengl=yes)
 AC_MSG_CHECKING(whether opengl display output will be enabled) 
 if test x$enable_opengl = xyes; then
 case "$host" in
     *-*-darwin*)
        AC_MSG_RESULT(yes)
-       LIBS="$LIBS -framework OpenGL"
+       LIBS="$LIBS -framework OpenGL -lglew"
        AC_DEFINE(C_OPENGL,1)
        ;;
     *)
-       if test x$have_gl_h = xyes -a x$have_gl_lib = xyes ; then 
+       if test x$have_gl_h = xyes -a x$have_gl_lib = xyes -a x$have_glew_h = xyes -a x$have_glew_lib = xyes; then 
          AC_MSG_RESULT(yes)
-         LIBS="$LIBS -lGL"
+         LIBS="$LIBS -lGL -lGLU -lGLEW"
          AC_DEFINE(C_OPENGL,1)
-       elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes ; then 
+       elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes -a x$have_glew_h = xyes -a x$have_glew_lib = xyes; then 
          AC_MSG_RESULT(yes)
-         LIBS="$LIBS -lopengl32"
+         LIBS="$LIBS -lopengl32 -lGLEW"
          AC_DEFINE(C_OPENGL,1)
        else
          AC_MSG_RESULT(no)
        fi
        ;;
 esac
-fi
-
-AH_TEMPLATE(C_SDL_SOUND,[Define to 1 to enable SDL_sound support])
-AC_CHECK_HEADER(SDL_sound.h,have_SDL_sound_h=yes,)
-AC_CHECK_LIB(SDL_sound, Sound_Init, have_SDL_sound_init=yes,,)
-AC_CHECK_LIB(SDL_sound, Sound_Seek, have_SDL_sound_seek=yes,,)
-if test x$have_SDL_sound_h = xyes -a x$have_SDL_sound_init = xyes ; then
-  if test x$have_SDL_sound_seek = xyes ; then
-    LIBS="-lSDL_sound $LIBS"
-    AC_DEFINE(C_SDL_SOUND,1)
-   else 
-     AC_MSG_WARN([Can't find SoundSeek in libSDL_Sound, libSDL_sound support disabled])
-   fi
-else
-  AC_MSG_WARN([Can't find libSDL_sound, libSDL_sound support disabled])
 fi
 
 dnl Check for mprotect. Needed for 64 bits linux 
@@ -517,7 +495,7 @@ case "$host" in
        dnl to do more to distinguish them.
        dnl For now I am lazy and do not add proper detection code.
        AC_DEFINE(MACOSX, 1, [Compiling on Mac OS X])
-       LIBS="$LIBS -framework CoreMIDI -framework AudioUnit -framework AudioToolbox"
+       LIBS="$LIBS -framework CoreMIDI -framework AudioUnit -framework AudioToolbox -framework AppKit"
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2).])
        ;;
     *-*-linux*)

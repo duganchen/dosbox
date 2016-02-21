@@ -233,34 +233,38 @@ void DOS_Shell::CMD_HELP(char * args){
 void DOS_Shell::CMD_RENAME(char * args){
 	HELP("RENAME");
 	StripSpaces(args);
-	if(!*args) {SyntaxError();return;}
-	if((strchr(args,'*')!=NULL) || (strchr(args,'?')!=NULL) ) { WriteOut(MSG_Get("SHELL_CMD_NO_WILD"));return;}
+	if (!*args) {SyntaxError();return;}
+	if ((strchr(args,'*')!=NULL) || (strchr(args,'?')!=NULL) ) { WriteOut(MSG_Get("SHELL_CMD_NO_WILD"));return;}
 	char * arg1=StripWord(args);
+	StripSpaces(args);
+	if (!*args) {SyntaxError();return;}
 	char* slash = strrchr(arg1,'\\');
-	if(slash) { 
-		slash++;
+	if (slash) { 
 		/* If directory specified (crystal caves installer)
 		 * rename from c:\X : rename c:\abc.exe abc.shr. 
-		 * File must appear in C:\ */ 
+		 * File must appear in C:\ 
+		 * Ren X:\A\B C => ren X:\A\B X:\A\C */ 
 		
-		char dir_source[DOS_PATHLENGTH]={0};
+		char dir_source[DOS_PATHLENGTH + 4] = {0}; //not sure if drive portion is included in pathlength
 		//Copy first and then modify, makes GCC happy
-		strcpy(dir_source,arg1);
+		safe_strncpy(dir_source,arg1,DOS_PATHLENGTH + 4);
 		char* dummy = strrchr(dir_source,'\\');
-		*dummy=0;
-
-		if((strlen(dir_source) == 2) && (dir_source[1] == ':')) 
-			strcat(dir_source,"\\"); //X: add slash
-
-		char dir_current[DOS_PATHLENGTH + 1];
-		dir_current[0] = '\\'; //Absolute addressing so we can return properly
-		DOS_GetCurrentDir(0,dir_current + 1);
-		if(!DOS_ChangeDir(dir_source)) {
+		if (!dummy) { //Possible due to length
 			WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 			return;
 		}
-		DOS_Rename(slash,args);
-		DOS_ChangeDir(dir_current);
+		dummy++;
+		*dummy = 0;
+
+		//Maybe check args for directory, as I think that isn't allowed
+
+		//dir_source and target are introduced for when we support multiple files being renamed.
+		char target[DOS_PATHLENGTH+CROSS_LEN + 5] = {0};
+		strcpy(target,dir_source);
+		strncat(target,args,CROSS_LEN);
+
+		DOS_Rename(arg1,target);
+
 	} else {
 		DOS_Rename(arg1,args);
 	}
@@ -944,6 +948,7 @@ nextfile:
 	do {
 		n=1;
 		DOS_ReadFile(handle,&c,&n);
+		if (c==0x1a) break; // stop at EOF
 		DOS_WriteFile(STDOUT,&c,&n);
 	} while (n);
 	DOS_CloseFile(handle);
@@ -958,7 +963,8 @@ void DOS_Shell::CMD_PAUSE(char * args){
 	HELP("PAUSE");
 	WriteOut(MSG_Get("SHELL_CMD_PAUSE"));
 	Bit8u c;Bit16u n=1;
-	DOS_ReadFile (STDIN,&c,&n);
+	DOS_ReadFile(STDIN,&c,&n);
+	if (c==0) DOS_ReadFile(STDIN,&c,&n); // read extended key
 }
 
 void DOS_Shell::CMD_CALL(char * args){
@@ -1229,7 +1235,16 @@ void DOS_Shell::CMD_VER(char *args) {
 		char* word = StripWord(args);
 		if(strcasecmp(word,"set")) return;
 		word = StripWord(args);
-		dos.version.major = (Bit8u)(atoi(word));
-		dos.version.minor = (Bit8u)(atoi(args));
+		if (!*args && !*word) { //Reset
+			dos.version.major = 5;
+			dos.version.minor = 0;
+		} else if (*args == 0 && *word && (strchr(word,'.') != 0)) { //Allow: ver set 5.1
+			const char * p = strchr(word,'.');
+			dos.version.major = (Bit8u)(atoi(word));
+			dos.version.minor = (Bit8u)(atoi(p+1));
+		} else { //Official syntax: ver set 5 2
+			dos.version.major = (Bit8u)(atoi(word));
+			dos.version.minor = (Bit8u)(atoi(args));
+		}
 	} else WriteOut(MSG_Get("SHELL_CMD_VER_VER"),VERSION,dos.version.major,dos.version.minor);
 }

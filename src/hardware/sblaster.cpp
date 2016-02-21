@@ -699,6 +699,7 @@ static void DSP_Reset(void) {
 
 	DSP_ChangeMode(MODE_NONE);
 	DSP_FlushData();
+	sb.dsp.cmd=DSP_NO_COMMAND;
 	sb.dsp.cmd_len=0;
 	sb.dsp.in.pos=0;
 	sb.dsp.write_busy=0;
@@ -858,11 +859,10 @@ static void DSP_DoCommand(void) {
 		DSP_ChangeRate(1000000 / (256 - sb.dsp.in.data[0]));
 		break;
 	case 0x41:	/* Set Output Samplerate */
+	case 0x42:	/* Set Input Samplerate */
+		/* Note: 0x42 is handled like 0x41, needed by Fasttracker II */
 		DSP_SB16_ONLY;
 		DSP_ChangeRate((sb.dsp.in.data[0] << 8) | sb.dsp.in.data[1]);
-		break;
-	case 0x42:	/* Set Input Samplerate */
-		LOG(LOG_SB,LOG_ERROR)("DSP:Unimplemented input sample rate command");
 		break;
 	case 0x48:	/* Set DMA Block Size */
 		DSP_SB2_ABOVE;
@@ -1533,6 +1533,7 @@ private:
 		else if (!strcasecmp(omode,"opl2")) opl_mode=OPL_opl2;
 		else if (!strcasecmp(omode,"dualopl2")) opl_mode=OPL_dualopl2;
 		else if (!strcasecmp(omode,"opl3")) opl_mode=OPL_opl3;
+		else if (!strcasecmp(omode,"opl3gold")) opl_mode=OPL_opl3gold;
 		/* Else assume auto */
 		else {
 			switch (type) {
@@ -1588,6 +1589,7 @@ public:
 			// fall-through
 		case OPL_dualopl2:
 		case OPL_opl3:
+		case OPL_opl3gold:
 			OPL_Init(section,oplmode);
 			break;
 		}
@@ -1645,6 +1647,7 @@ public:
 			// fall-through
 		case OPL_dualopl2:
 		case OPL_opl3:
+		case OPL_opl3gold:
 			OPL_ShutDown(m_configuration);
 			break;
 		}

@@ -1,12 +1,16 @@
 #include "config.h"
 #ifdef C_MUNT
 
-#include <SDL_thread.h>
-#include <SDL_endian.h>
+#include "SDL_thread.h"
+#include "SDL_endian.h"
 #include "control.h"
 
 #ifndef DOSBOX_MIDI_H
 #include "midi.h"
+#endif
+
+#ifdef C_WORDEXP
+#include <wordexp.h>
 #endif
 
 #include "midi_mt32.h"
@@ -110,7 +114,7 @@ bool MidiHandler_mt32::Open(const char *conf) {
 		playedBuffers = 1;
 		lock = SDL_CreateMutex();
 		framesInBufferChanged = SDL_CreateCond();
-		thread = SDL_CreateThread(processingThread, NULL);
+		thread = SDL_CreateThread(processingThread, NULL, NULL);
 	}
 	chan->Enable(true);
 
@@ -169,7 +173,16 @@ int MidiHandler_mt32::processingThread(void *) {
 }
 
 void MidiHandler_mt32::makeROMPathName(char pathName[], const char romDir[], const char fileName[], bool addPathSeparator) {
+
+#ifdef C_WORDEXP
+	wordexp_t p;
+	wordexp(romDir, &p, 0);
+	strcpy(pathName, p.we_wordv[0]);
+	wordfree(&p);
+#else
 	strcpy(pathName, romDir);
+#endif
+
 	if (addPathSeparator) {
 		strcat(pathName, "/");
 	}

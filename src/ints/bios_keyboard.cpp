@@ -30,11 +30,7 @@
 /* SDL by default treats numlock and scrolllock different from all other keys.
  * In recent versions this can disabled by a environment variable which we set in sdlmain.cpp
  * Define the following if this is the case */
-#if SDL_VERSION_ATLEAST(1, 2, 14)
 #define CAN_USE_LOCK 1
-/* For lower versions of SDL we also use a slight hack to get the startup states of numclock and capslock right.
- * The proper way is in the mapper, but the repeating key is an unwanted side effect for lower versions of SDL */
-#endif
 
 static Bitu call_int16,call_irq1,call_irq6;
 
@@ -284,6 +280,13 @@ static Bitu IRQ1_Handler(void) {
 	case 0xb6:						/* Right Shift Released */
 		flags1 &=~0x01;
 		break;
+	case 0x37:						/* Keypad * or PrtSc Pressed */
+		if (!(flags3 &0x02)) goto normal_key;
+		reg_ip+=7; // call int 5
+		break;
+	case 0xb7:						/* Keypad * or PrtSc Released */
+		if (!(flags3 &0x02)) goto normal_key;
+		break;
 	case 0x38:						/* Alt Pressed */
 		flags1 |=0x08;
 		if (flags3 &0x02) flags3 |=0x08;
@@ -399,6 +402,7 @@ static Bitu IRQ1_Handler(void) {
 		break;
 
 	default: /* Normal Key */
+normal_key:
 		Bit16u asciiscan;
 		/* Now Handle the releasing of keys and see if they match up for a code */
 		/* Handle the actual scancode */
@@ -598,13 +602,6 @@ static void InitBiosSegment(void) {
 	Bit8u flag1 = 0;
 	Bit8u leds = 16; /* Ack received */
 
-#if SDL_VERSION_ATLEAST(1, 2, 14)
-//Nothing, mapper handles all.
-#else
-	if (startup_state_capslock) { flag1|=0x40; leds|=0x04;}
-	if (startup_state_numlock)  { flag1|=0x20; leds|=0x02;}
-#endif
-
 	mem_writeb(BIOS_KEYBOARD_FLAGS1,flag1);
 	mem_writeb(BIOS_KEYBOARD_FLAGS2,0);
 	mem_writeb(BIOS_KEYBOARD_FLAGS3,16); /* Enhanced keyboard installed */	
@@ -638,6 +635,14 @@ void BIOS_SetupKeyboard(void) {
 	//	out 0x20, al
 	//	pop ax
 	//	iret
+	//	cli
+	//	mov al, 0x20
+	//	out 0x20, al
+	//	push bp
+	//	int 0x05
+	//	pop bp
+	//	pop ax
+	//	iret
 
 	if (machine==MCH_PCJR) {
 		call_irq6=CALLBACK_Allocate();
@@ -648,7 +653,11 @@ void BIOS_SetupKeyboard(void) {
 		//	in al, 0x60
 		//	cmp al, 0xe0
 		//	je skip
+		//	push ds
+		//	push 0x40
+		//	pop ds
 		//	int 0x09
+		//	pop ds
 		//	label skip:
 		//	cli
 		//	mov al, 0x20

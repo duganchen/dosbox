@@ -411,7 +411,8 @@ static void MIXER_Mix_NoSound(void) {
 	mixer.done=0;
 }
 
-static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
+static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
+	memset(stream, 0, len);
 	Bitu need=(Bitu)len/MIXER_SSIZE;
 	Bit16s * output=(Bit16s *)stream;
 	Bitu reduce;

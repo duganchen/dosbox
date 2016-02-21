@@ -1,100 +1,89 @@
 # Enhanced DosBox Fork
 
-This is an enhanced DosBox fork. It is targeted at Linux and has a number of added
-features. Each feature will be built if the needed dependency is available at build-time.
-If not, then it will be built without that feature.
+This is an enhanced for of DosBox. It is currently in sync with revision 3969.
 
-It is currently in sync with revision 3911.
+## Requiremnts 
 
-The features are:
+For all features, pleaes build it with the following dependencies:
 
-## GLSL Shaders
+* [SDL2](http://libsdl.org/download-2.0.php) (required)
+* [SDL2\_net](https://www.libsdl.org/projects/SDL_net/)
+* [FluidSynth](http://www.fluidsynth.org/) (soundfont support)
+* [GLEW](http://glew.sourceforge.net/) (OpenGL 3 and shader support)
+* [munt](http://munt.sourceforge.net/) (built-in MT32 emulation)
 
-### Configuration
 
-Copy the "glshaders" directory to the directory where dosbox-SVN.conf is found. On Linux, that means that you
-should end up with ~/.dosbox/glshaders, and ~/.dosbox/glshaders should contain a selection of .glslv and .glslf
-files.
+## Differences
 
-Each shader comes in two parts: a vertex shader with a glslv extension, and a fragment shader with a glslf
-extension.
+* physical CD-ROM support is no longer available
+* "aspect"'s default value is now true
+* "output"'s default value is now "texturenb"
+* "scaler's" default value is now none
 
-In your dosbox-SVN.conf, set output as shown and glshader to taste. I recommend the SABR shader, which
-is variation on the xBR shader.
+## Features
 
-    [sdl]
-	output=openglnb
-	glshader=SABR
-
-### Credit:
-
-* [Basic GLSL shader support (prototype)](http://www.vogons.org/viewtopic.php?f=41&t=36342&start=20#p319636)
-
-## xBRZ scaling
-
-If you can't use OpenGL output, then you can turn on Surface output and take advantage of the xBRZ scaler instead.
-This scaler will be turn on automatically if you have your output set to surface.
-
-### Requirements
-
-* [Intel(R) Threading Building Blocks](https://www.threadingbuildingblocks.org/)
-
-### Configuration
-
-Set as shown.
-
-    [sdl]
-	fullscreen=true
-	fullresolution=original
-	output=surface
-
-	[render]
-	aspect=false
-	scaler=none
-
-### Credit:
-
-* [xBRZ 1.3](http://www.vogons.org/viewtopic.php?t=34125)
-
-## Soundfont Support
-
-Specify a General MIDI soundfont for DosBox to use. You no longer need to have
-FluidSynth running as an ALSA server in the background.
-
-### Requirements
-
-* [FluidSynth](http://www.fluidsynth.org/)
-
-### Configuration
-
-Set mididevice as shown, fluid.driver and fluid.soundfont as appropriate.
-
+### Soundfont Support
+	
+Games that use General MIDI can use the FluidSynth backend and play audio
+using a soundfont, specified in your configuration file:
+	
 	[midi]
 	mididevice=fluidsynth
-	fluid.driver=alsa
+	fluid.driver=alsa # set as appropriate
 	fluid.soundfont=/path/to/soundfont.sf2
 
-### Credit:
+### MT-32 Emulation
 
-* [FluidSynth](http://www.vogons.org/viewtopic.php?f=32&t=27831&start=20#p385413)
-
-## MT-32 Emulation
-
-Tell DosBox where your MT-32 ROMs are, and DosBox will use them for MT-32 emulation.
-You no longer need to have munt-qt running in the background.
-
-### Requirements
-
-* [Munt](http://munt.sourceforge.net/)
-
-### Configuration
-
-Set mididevice as shown, mt32.romdir as appropriate.
+While I still recommend using munt as a separate application and then connecting
+DosBox to its MIDI port, native MT-32 emulation is available as another option.
+Simply specify the path to the soundfont in your configuration file:
 
 	[midi]
 	mididevice=mt32
 	mt32.romdir=/path/to/roms
 
-## Credit:
+### OpenGL 3 Support
 
-* [MT-32 Emulation](https://raw.githubusercontent.com/munt/munt/master/DOSBox-mt32-patch/dosbox-SVN-r3892-mt32-patch.diff)
+The default video output method, "texturenb", is equivalent to "openglnb" in
+vanilla DosBox. In this version, "openglnb" and "opengl" use OpenGL 3 and can
+take advantage of custom shaders.
+
+#### External Shaders
+
+Download the shaders from here:
+
+* [dosbox\_shaders](https://github.com/duganchen/dosbox_shaders)
+
+Then create a "shader" directory in the same one as your DosBox configuration file.
+Then put the *.vert and *.frag files from the collection of shaders in that directory.
+
+On Linux, you should have:
+
+	~/.dosbox/shaders/*.vert
+	~/.dosbox/shaders/*.frag
+
+And on OS X, you should have::w
+
+	~/Library/Preferences/shaders/*.vert
+	~/Library/Preferences/shaders/*.frag
+
+Each shader is two files. For example:
+
+* crt-lottes.vert
+* crt-lottes.frag
+
+To use one, specify its name, without the path or the file extension, as the *gl.shader*:
+
+	[sdl]
+	output=openglnb
+	gl.shader=crt-lottes
+
+## Credit
+
+This fork either directly uses or builds on the following community contributions:
+
+* [Patch for OpenGL fullscreen bug](http://www.vogons.org/viewtopic.php?f=32&t=27487&start=20#p276738)
+* [Official Munt DosBox patch](https://github.com/munt/munt/blob/master/DOSBox-mt32-patch/dosbox-SVN-r3892-mt32-patch.diff)
+* [FluidSynth soundfont patch](http://www.vogons.org/viewtopic.php?f=32&t=27831&start=20#p385413)
+* [Basic GLSL shader support (prototype)](http://www.vogons.org/viewtopic.php?f=41&t=36342&start=20#p319636)
+* [An adaptation to SDL 2.0](http://www.vogons.org/viewtopic.php?f=32&t=34770&start=40#p433097)
