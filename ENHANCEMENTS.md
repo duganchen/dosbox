@@ -4,7 +4,7 @@ This is an enhanced for of DosBox. It is currently in sync with revision 3969.
 
 ## Requiremnts 
 
-For all features, please build it with the following dependencies:
+A full-featured build will need the following dependencies:
 
 * [SDL2](http://libsdl.org/download-2.0.php) (required)
 * [SDL2\_net](https://www.libsdl.org/projects/SDL_net/)
@@ -12,10 +12,9 @@ For all features, please build it with the following dependencies:
 * [GLEW](http://glew.sourceforge.net/) (OpenGL 3 and shader support)
 * [munt](http://munt.sourceforge.net/) (built-in MT32 emulation)
 
-
 ## Differences
 
-* physical CD-ROM support is no longer available
+* physical CD-ROMs are no longer supported (use IMGMOUNT and ISOs instead)
 * "aspect"'s default value is now true
 * "output"'s default value is now "texturenb"
 * "scaler's" default value is now none
@@ -34,13 +33,17 @@ using a soundfont, specified in your configuration file:
 
 ### MT-32 Emulation
 
-While I still recommend using munt as a separate application and then connecting
-DosBox to its MIDI port, native MT-32 emulation is available as another option.
-Simply specify the path to the soundfont in your configuration file:
+While I still recommend running munt as a separate application (mt32em-qt) and then
+connecting DosBox to its MIDI port, native MT-32 emulation is available as another
+option.  Simply specify the path to the ROM directory in your configuration file:
 
 	[midi]
 	mididevice=mt32
 	mt32.romdir=/path/to/roms
+
+On OS X and Linux, DosBox performs shell-expansion on the fluid.soundfont and
+mt32.romdir paths. Therefore, these paths are allowed to contain dollar signs
+(environment variables) and tildes (home directories).
 
 ### OpenGL 3 Support
 
@@ -50,7 +53,7 @@ take advantage of custom shaders.
 
 #### External Shaders
 
-Download the shaders from here:
+The shaders are stored in a separate project. Download them from from here:
 
 * [dosbox\_shaders](https://github.com/duganchen/dosbox_shaders)
 
@@ -62,7 +65,7 @@ On Linux, you should have:
 	~/.dosbox/shaders/*.vert
 	~/.dosbox/shaders/*.frag
 
-And on OS X, you should have::w
+On OS X, you should have:
 
 	~/Library/Preferences/shaders/*.vert
 	~/Library/Preferences/shaders/*.frag
@@ -77,6 +80,11 @@ To use one, specify its name, without the path or the file extension, as the *gl
 	[sdl]
 	output=openglnb
 	gl.shader=crt-lottes
+
+EGA games typically work well with the *jinc2-sharp* shader, which removes dithering.
+
+Please note that the new defaults (no scaler, aspect ratio on) are needed for the
+shaders to work as designed.
 
 ## Credit
 
