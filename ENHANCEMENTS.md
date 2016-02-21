@@ -12,7 +12,7 @@ A full-featured build will need the following dependencies:
 * [SDL2\_net](https://www.libsdl.org/projects/SDL_net/)
 * [FluidSynth](http://www.fluidsynth.org/) (soundfont support)
 * [GLEW](http://glew.sourceforge.net/) (OpenGL 3 and shader support)
-* [munt](http://munt.sourceforge.net/) (built-in MT32 emulation)
+* [Munt](http://munt.sourceforge.net/) (built-in MT-32 emulation)
 
 ### Configuration
 
@@ -34,9 +34,9 @@ play BGM using a soundfont. Specify that in your configuration file:
 
 ### MT-32 Emulation
 
-I still recommend running munt as a separate application (mt32emu-qt) and then
+I still recommend running Munt as a separate application (mt32emu-qt) and then
 connecting DosBox to its MIDI port. However, native MT-32 emulation is now
-available as another option. Simply specify the path to the ROM directory in
+available as an alternative. Simply specify the path to the ROM directory in
 your configuration file:
 
 	[midi]
@@ -44,14 +44,14 @@ your configuration file:
 	mt32.romdir=/path/to/roms
 
 On OS X and Linux, DosBox will perform shell-expansion on the fluid.soundfont and
-mt32.romdir paths. That means that, these paths are allowed to contain dollar signs
+mt32.romdir paths. That means that these paths are allowed to contain dollar signs
 (environment variables) and tildes (home directories).
 
 ### OpenGL 3 Support
 
 The default video output method, "texturenb", is equivalent to "openglnb" in
-vanilla DosBox. In this version, "openglnb" and "opengl" use OpenGL 3 and can
-take advantage of custom shaders.
+vanilla DosBox. Now, "openglnb" and "opengl" use OpenGL 3 and can take advantage
+of custom shaders.
 
 #### External Shaders
 
@@ -95,6 +95,7 @@ shaders to work as designed.
 * "output"'s default value is now "texturenb"
 * "scaler's" default value is now none
 * pixel buffer objects are no longer used for rendering (I've found them to be the cause of a screen corruption bug)
+
 ## Credit
 
 This fork either directly uses or builds on the following community contributions:
