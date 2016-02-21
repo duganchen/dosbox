@@ -4,7 +4,7 @@ This is an enhanced for of DosBox. It is currently in sync with revision 3969.
 
 ## Requiremnts 
 
-For all features, pleaes build it with the following dependencies:
+For all features, please build it with the following dependencies:
 
 * [SDL2](http://libsdl.org/download-2.0.php) (required)
 * [SDL2\_net](https://www.libsdl.org/projects/SDL_net/)
