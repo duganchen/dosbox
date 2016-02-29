@@ -1,31 +1,31 @@
 # Enhanced DosBox Fork
 
-This is an enhanced for of DosBox. It is currently in sync with revision 3969.
+This is an enhanced fork of DosBox. It is currently in sync with revision 3969.
 
-## Requiremnts 
+## Requirements 
 
-For all features, please build it with the following dependencies:
+### Building
+
+A full-featured build will need the following dependencies:
 
 * [SDL2](http://libsdl.org/download-2.0.php) (required)
 * [SDL2\_net](https://www.libsdl.org/projects/SDL_net/)
 * [FluidSynth](http://www.fluidsynth.org/) (soundfont support)
 * [GLEW](http://glew.sourceforge.net/) (OpenGL 3 and shader support)
-* [munt](http://munt.sourceforge.net/) (built-in MT32 emulation)
+* [Munt](http://munt.sourceforge.net/) (built-in MT-32 emulation)
 
+### Configuration
 
-## Differences
-
-* physical CD-ROM support is no longer available
-* "aspect"'s default value is now true
-* "output"'s default value is now "texturenb"
-* "scaler's" default value is now none
+There are new configuration options, and some existing options have new defaults.
+If you have a configuration file from different version of DosBox, I
+recommend removing it and letting this version generate a replacement.
 
 ## Features
 
 ### Soundfont Support
 	
-Games that use General MIDI can use the FluidSynth backend and play audio
-using a soundfont, specified in your configuration file:
+Games that use General MIDI can use the new FluidSynth backend to
+play BGM using a soundfont. Specify that in your configuration file:
 	
 	[midi]
 	mididevice=fluidsynth
@@ -34,35 +34,42 @@ using a soundfont, specified in your configuration file:
 
 ### MT-32 Emulation
 
-While I still recommend using munt as a separate application and then connecting
-DosBox to its MIDI port, native MT-32 emulation is available as another option.
-Simply specify the path to the soundfont in your configuration file:
+For games that use the Roland MT-32, I still recommend running Munt as
+a separate application (mt32emu-qt) and then connecting DosBox to its MIDI
+port (specified as the "mididevice").  However, native MT-32 emulation is
+now available as an alternative. To use it, specify, in your configuration
+file, the path to the ROM directory:
 
 	[midi]
 	mididevice=mt32
 	mt32.romdir=/path/to/roms
 
+On OS X and Linux, DosBox will perform shell-expansion on the fluid.soundfont and
+mt32.romdir paths. That means that these paths are allowed to contain dollar signs
+(environment variables) and tildes (home directories).
+
 ### OpenGL 3 Support
 
 The default video output method, "texturenb", is equivalent to "openglnb" in
-vanilla DosBox. In this version, "openglnb" and "opengl" use OpenGL 3 and can
-take advantage of custom shaders.
+vanilla DosBox. Now, "openglnb" and "opengl" use OpenGL 3 and can take advantage
+of external shaders.
 
 #### External Shaders
 
-Download the shaders from here:
+The shaders are stored in a separate project. Download them from here:
 
 * [dosbox\_shaders](https://github.com/duganchen/dosbox_shaders)
 
-Then create a "shader" directory in the same one as your DosBox configuration file.
-Then put the *.vert and *.frag files from the collection of shaders in that directory.
+Then create a "shaders" directory in the same parent directory that has your
+DosBox configuration file.  Put the *.vert and *.frag files from the
+dosbox\_shaders project into the "shaders" directory.
 
 On Linux, you should have:
 
 	~/.dosbox/shaders/*.vert
 	~/.dosbox/shaders/*.frag
 
-And on OS X, you should have::w
+On OS X, you should have:
 
 	~/Library/Preferences/shaders/*.vert
 	~/Library/Preferences/shaders/*.frag
@@ -78,9 +85,22 @@ To use one, specify its name, without the path or the file extension, as the *gl
 	output=openglnb
 	gl.shader=crt-lottes
 
+EGA games tend to work well with the *jinc2-sharp* shader, which removes dithering.
+
+Please note that the new defaults (scaler=none, aspect=on) are needed for the
+shaders to work as designed.
+
+## Misc Differences
+
+* physical CD-ROMs are no longer supported (use IMGMOUNT and ISOs instead)
+* "aspect"'s default value is now true
+* "output"'s default value is now "texturenb"
+* "scaler's" default value is now none
+* Pixel Buffer Objects are no longer used for rendering (I've found them to be the cause of a screen corruption bug)
+
 ## Credit
 
-This fork either directly uses or builds on the following community contributions:
+This fork uses, either directly or by building on, the following community contributions:
 
 * [Patch for OpenGL fullscreen bug](http://www.vogons.org/viewtopic.php?f=32&t=27487&start=20#p276738)
 * [Official Munt DosBox patch](https://github.com/munt/munt/blob/master/DOSBox-mt32-patch/dosbox-SVN-r3892-mt32-patch.diff)
