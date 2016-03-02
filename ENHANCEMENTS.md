@@ -17,7 +17,7 @@ A full-featured build will need the following dependencies:
 ### Configuration
 
 There are new configuration options, and some existing options have new defaults.
-If you have a configuration file from a different version of DosBox, I
+If you have a configuration file from a different version of DosBox, then I
 recommend removing it and letting this version generate a replacement.
 
 ## Features
