@@ -71,7 +71,7 @@ public:
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_FORMAT"),"Drive","Type","Label");
 		for(int p = 0;p < 8;p++) WriteOut("----------");
 
-		for (int d = 0;d < DOS_DRIVES;d++) {
+		for (char d = 0;d < DOS_DRIVES;d++) {
 			if (!Drives[d]) continue;
 
 			char root[7] = {'A'+d,':','\\','*','.','*',0};
