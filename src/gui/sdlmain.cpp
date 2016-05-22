@@ -1153,9 +1153,6 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 
 
 void GFX_EndUpdate( const Bit16u *changedLines ) {
-#if (HAVE_DDRAW_H) && defined(WIN32)
-	int ret;
-#endif
 	if (!sdl.update_display_contents)
 		return;
 	if (!sdl.updating)
