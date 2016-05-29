@@ -7,7 +7,7 @@
 #define C_SSHOT 0
 
 /* Define to 1 to use opengl display output support */
-#define C_OPENGL 1
+#define C_OPENGL 0
 
 /* Define to 1 to enable internal modem support, requires SDL_net */
 #define C_MODEM 1
