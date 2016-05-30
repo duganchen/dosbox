@@ -205,7 +205,7 @@ struct SDL_Block {
 
 static SDL_Block sdl;
 
-#ifdef C_OPENGL
+#if C_OPENGL
 const std::string vertex_shader_default_src =
 	"#version 330 core\n"
 	"\n"
@@ -600,7 +600,7 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType)
 	}
 }
 
-#ifdef C_OPENGL
+#if C_OPENGL
 /* Create a GLSL shader object, load the shader source, and compile the shader.
  */
 GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
@@ -644,7 +644,7 @@ GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
 }
 #endif
 
-#ifdef C_OPENGL
+#if C_OPENGL
 GLfloat get_texture_x(GLfloat vertex_x, GLfloat video_x, GLfloat texture_x) {
 	return (vertex_x + 1.0) / 2.0 * video_x / texture_x;
 }
@@ -1153,9 +1153,6 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 
 
 void GFX_EndUpdate( const Bit16u *changedLines ) {
-#if (HAVE_DDRAW_H) && defined(WIN32)
-	int ret;
-#endif
 	if (!sdl.update_display_contents)
 		return;
 	if (!sdl.updating)

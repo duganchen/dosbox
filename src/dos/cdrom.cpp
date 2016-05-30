@@ -39,7 +39,6 @@ int CDROM_GetMountType(char* path, int forceCD) {
 	// 1. Smells like a real cdrom 
 	// if ((strlen(path)<=3) && (path[2]=='\\') && (strchr(path,'\\')==strrchr(path,'\\')) && 	(GetDriveType(path)==DRIVE_CDROM)) return 0;
 
-	const char* cdName;
 	char buffer[512];
 	strcpy(buffer,path);
 #if defined (WIN32) || defined(OS2)
