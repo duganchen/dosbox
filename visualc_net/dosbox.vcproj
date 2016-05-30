@@ -412,13 +412,7 @@
 						RelativePath="..\src\dos\cdrom.h">
 					</File>
 					<File
-						RelativePath="..\src\dos\cdrom_aspi_win32.cpp">
-					</File>
-					<File
 						RelativePath="..\src\dos\cdrom_image.cpp">
-					</File>
-					<File
-						RelativePath="..\src\dos\cdrom_ioctl_win32.cpp">
 					</File>
 				</Filter>
 				<Filter
