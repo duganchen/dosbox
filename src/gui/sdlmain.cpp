@@ -337,7 +337,7 @@ static void PauseDOSBox(bool pressed) {
 				/* On macs, all aps exit when pressing cmd-q */
 				KillSwitch(true);
 				break;
-			} 
+			}
 #endif
 		}
 	}
@@ -415,7 +415,7 @@ static int int_log2 (int val) {
 }
 
 static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fullscreen, SCREEN_TYPES screenType) {
-	static SCREEN_TYPES lastType = SCREEN_SURFACE; 
+	static SCREEN_TYPES lastType = SCREEN_SURFACE;
 	if (sdl.renderer) {
 		SDL_DestroyRenderer(sdl.renderer);
 		sdl.renderer=0;
@@ -568,13 +568,13 @@ static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType)
 		if ( ratio_w < ratio_h) {
 			sdl.clip.w=fixedWidth;
 			sdl.clip.h=(Bit16u)(sdl.draw.height*sdl.draw.scaley*ratio_w + 0.1); //possible rounding issues
-		} else { 
-			/* 
+		} else {
+			/*
 			 * The 0.4 is there to correct for rounding issues.
-			 * (partly caused by the rounding issues fix in RENDER_SetSize) 
-			 */ 
+			 * (partly caused by the rounding issues fix in RENDER_SetSize)
+			 */
 			sdl.clip.w=(Bit16u)(sdl.draw.width*sdl.draw.scalex*ratio_h + 0.4);
-			sdl.clip.h=(Bit16u)fixedHeight;			
+			sdl.clip.h=(Bit16u)fixedHeight;
 		}
 		if (sdl.desktop.fullscreen) {
 			sdl.window = GFX_SetSDLWindowMode(fixedWidth, fixedHeight, sdl.desktop.fullscreen, screenType);
@@ -634,7 +634,7 @@ GLuint GFX_LoadGLShader(GLenum type, const char *shaderSrc) {
 			{
 				ss << *it;
 			}
-			LOG_MSG("SDL:OPENGL:Error compiling program: %s", ss.rdbuf()->str().c_str());
+			LOG_MSG("SDL:OPENGL: Error compiling program: %s", ss.rdbuf()->str().c_str());
 		}
 
 		glDeleteShader(shader);
@@ -720,17 +720,17 @@ dosurface:
 	case SCREEN_TEXTURE:
 	{
 		if (!GFX_SetupWindowScaled(sdl.desktop.want_type)) {
-			LOG_MSG("SDL:Can't set video mode, falling back to surface");
+			LOG_MSG("SDL: Can't set video mode, falling back to surface");
 			goto dosurface;
 		}
 		if (strcmp(sdl.rendererDriver, "auto"))
-			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.rendererDriver); 
+			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.rendererDriver);
 		sdl.renderer = SDL_CreateRenderer(sdl.window, -1,
 		                                  SDL_RENDERER_ACCELERATED |
 		                                  (sdl.desktop.vsync ? SDL_RENDERER_PRESENTVSYNC : 0));
 		if (!sdl.renderer) {
 			LOG_MSG("%s\n", SDL_GetError());
-			LOG_MSG("SDL:Can't create renderer, falling back to surface");
+			LOG_MSG("SDL: Can't create renderer, falling back to surface");
 			goto dosurface;
 		}
 		/* SDL_PIXELFORMAT_ARGB8888 is possible with most
@@ -747,7 +747,7 @@ dosurface:
 		if (!sdl.texture.texture) {
 			SDL_DestroyRenderer(sdl.renderer);
 			sdl.renderer = NULL;
-			LOG_MSG("SDL:Can't create texture, falling back to surface");
+			LOG_MSG("SDL: Can't create texture, falling back to surface");
 			goto dosurface;
 		}
 		SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -784,7 +784,7 @@ dosurface:
 		if (!(flags&GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface; // BGRA otherwise
 		int texsize=2 << int_log2(width > height ? width : height);
 		if (texsize>sdl.opengl.max_texsize) {
-			LOG_MSG("SDL:OPENGL:No support for texturesize of %d, falling back to surface",texsize);
+			LOG_MSG("SDL:OPENGL: No support for texturesize of %d, falling back to surface",texsize);
 			goto dosurface;
 		}
 
@@ -798,12 +798,12 @@ dosurface:
 		/* We may simply use SDL_BYTESPERPIXEL
 		here rather than SDL_BITSPERPIXEL   */
 		if (!sdl.window || SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window))<2) {
-			LOG_MSG("SDL:OPENGL:Can't open drawing window, are you running in 16bpp(or higher) mode?");
+			LOG_MSG("SDL:OPENGL: Can't open drawing window, are you running in 16bpp(or higher) mode?");
 			goto dosurface;
 		}
 		sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 		if (NULL == sdl.opengl.context) {
-			LOG_MSG("SDL:OPENGL:Can't create OpenGL context, falling back to surface");
+			LOG_MSG("SDL:OPENGL: Can't create OpenGL context, falling back to surface");
 			goto dosurface;
 		}
 
@@ -816,7 +816,7 @@ dosurface:
 			LOG_MSG("%s", SDL_GetError());
 		}
 		if (major_version < 3 || minor_version < 3) {
-			LOG_MSG("SDL:OPENGL:Can't create OpenGL 3.3 context, falling back to surface.");
+			LOG_MSG("SDL:OPENGL: Can't create OpenGL 3.3 context, falling back to surface.");
 			goto dosurface;
 		}
 
@@ -837,12 +837,12 @@ dosurface:
 			fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, sdl.opengl.fragment_shader_src.c_str());
 			if (!fragmentShader) {
 				glDeleteShader(vertexShader);
-				LOG_MSG("SDL:OPENGL:Can't compile fragment shader, falling back to stock.");
+				LOG_MSG("SDL:OPENGL: Can't compile fragment shader, falling back to stock.");
 				vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, vertex_shader_default_src.c_str());
 				fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, fragment_shader_default_src.c_str());
 			}
 		} else {
-			LOG_MSG("SDL:OPENGL:Can't compile vertex shader, falling back to stock.");
+			LOG_MSG("SDL:OPENGL: Can't compile vertex shader, falling back to stock.");
 			vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, vertex_shader_default_src.c_str());
 			fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, fragment_shader_default_src.c_str());
 		}
@@ -878,13 +878,13 @@ dosurface:
 				{
 					ss << *it;
 				}
-				LOG_MSG("SDL:OPENGL:Error linking program: %s", ss.rdbuf()->str().c_str());
+				LOG_MSG("SDL:OPENGL: Error linking program: %s", ss.rdbuf()->str().c_str());
 			}
 
 			glDeleteProgram(sdl.opengl.program_object);
 			glDeleteShader(vertexShader);
 			glDeleteShader(fragmentShader);
-				
+
 			// Fall back to stock shaders.
 			vertexShader = GFX_LoadGLShader(GL_VERTEX_SHADER, vertex_shader_default_src.c_str());
 			fragmentShader = GFX_LoadGLShader(GL_FRAGMENT_SHADER, fragment_shader_default_src.c_str());
@@ -1048,7 +1048,7 @@ void sticky_keys(bool restore){
 	if (!inited){
 		inited = true;
 		SystemParametersInfo(SPI_GETSTICKYKEYS, sizeof(STICKYKEYS), &stick_keys, 0);
-	} 
+	}
 	if (restore) {
 		SystemParametersInfo(SPI_SETSTICKYKEYS, sizeof(STICKYKEYS), &stick_keys, 0);
 		return;
@@ -1072,7 +1072,7 @@ void GFX_SwitchFullScreen(void) {
 #endif
 	} else {
 		if (sdl.mouse.locked) GFX_CaptureMouse();
-#if defined (WIN32)		
+#if defined (WIN32)
 		sticky_keys(true); //restore sticky keys to default state in windowed mode.
 #endif
 	}
@@ -1434,7 +1434,7 @@ static void GUI_StartUp(Section * sec) {
 	sdl.displayNumber=section->Get_int("display");
 	if ((sdl.displayNumber < 0) || (sdl.displayNumber >= SDL_GetNumVideoDisplays())) {
 		sdl.displayNumber = 0;
-		LOG_MSG("SDL:Display number out of bounds, switching back to 0");
+		LOG_MSG("SDL: Display number out of bounds, switching back to 0");
 	}
 	sdl.desktop.full.display_res = sdl.desktop.full.fixed && (!sdl.desktop.full.width || !sdl.desktop.full.height);
 	if (sdl.desktop.full.display_res) {
@@ -1468,7 +1468,7 @@ static void GUI_StartUp(Section * sec) {
 		sdl.opengl.bilinear=false;
 #endif
 	} else {
-		LOG_MSG("SDL:Unsupported output device %s, switching back to surface",output.c_str());
+		LOG_MSG("SDL: Unsupported output device %s, switching back to surface",output.c_str());
 		sdl.desktop.want_type=SCREEN_SURFACE;//SHOULDN'T BE POSSIBLE anymore
 	}
 
@@ -1537,13 +1537,13 @@ static void GUI_StartUp(Section * sec) {
 	sdl.surface = SDL_GetWindowSurface(sdl.window);
 	SDL_Rect splash_rect=GFX_GetSDLSurfaceSubwindowDims(640,400);
 	sdl.desktop.sdl2pixelFormat = SDL_GetWindowPixelFormat(sdl.window);
-	LOG_MSG("SDL:Current window pixel format: %s", SDL_GetPixelFormatName(sdl.desktop.sdl2pixelFormat));
+	LOG_MSG("SDL: Current window pixel format: %s", SDL_GetPixelFormatName(sdl.desktop.sdl2pixelFormat));
 	/* Do NOT use SDL_BITSPERPIXEL here - It returns 24 for
 	SDL_PIXELFORMAT_RGB888, while SDL_BYTESPERPIXEL returns 4.
 	To compare, with SDL 1.2 the detected desktop color depth is 32 bpp. */
 	sdl.desktop.bpp=8*SDL_BYTESPERPIXEL(sdl.desktop.sdl2pixelFormat);
 	if (sdl.desktop.bpp==24) {
-		LOG_MSG("SDL:You are running in 24 bpp mode, this will slow down things!");
+		LOG_MSG("SDL: You are running in 24 bpp mode, this will slow down things!");
 	}
 	GFX_Stop();
 	SDL_SetWindowTitle(sdl.window,"DOSBox"); // VERSION is gone...
@@ -1858,7 +1858,7 @@ void GFX_Events() {
 			// ignore tab events that arrive just after regaining focus. (likely the result of alt-tab)
 			if ((event.key.keysym.sym == SDLK_TAB) && (GetTicks() - sdl.focus_ticks < 2)) break;
 #endif
-#if defined (MACOSX)			
+#if defined (MACOSX)
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
 			/* On macs CMD-Q is the default key to close an application */
@@ -1868,7 +1868,7 @@ void GFX_Events() {
 			    ) {
 				KillSwitch(true);
 				break;
-			} 
+			}
 #endif
 		default:
 			void MAPPER_CheckEvent(SDL_Event * event);
@@ -1918,7 +1918,7 @@ void Config_Add_SDL() {
 
 	Pbool = sdl_sec->Add_bool("fullscreen",Property::Changeable::Always,false);
 	Pbool->Set_help("Start dosbox directly in fullscreen. (Press ALT-Enter to go back)");
-     
+
 	Pbool = sdl_sec->Add_bool("vsync",Property::Changeable::Always,false);
 	Pbool->Set_help("Sync to Vblank IF supported by the output device and renderer (if relevant).\n"
 	                "It can reduce screen flickering, but it can also result in a slow DOSBox.");
@@ -2010,7 +2010,7 @@ static void show_warning(char const * const message) {
 	Bit32u bmask = 0x0000ff00;
 #else
 	Bit32u rmask = 0x000000ff;
-	Bit32u gmask = 0x0000ff00;                    
+	Bit32u gmask = 0x0000ff00;
 	Bit32u bmask = 0x00ff0000;
 #endif
 	SDL_Surface* splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32, rmask, gmask, bmask, 0);
@@ -2019,22 +2019,22 @@ static void show_warning(char const * const message) {
 	int x = 120,y = 20;
 	std::string m(message),m2;
 	std::string::size_type a,b,c,d;
-   
+
 	while(m.size()) { //Max 50 characters. break on space before or on a newline
 		c = m.find('\n');
 		d = m.rfind(' ',50);
 		if(c>d) a=b=d; else a=b=c;
-		if( a != std::string::npos) b++; 
+		if( a != std::string::npos) b++;
 		m2 = m.substr(0,a); m.erase(0,b);
 		OutputString(x,y,m2.c_str(),0xffffffff,0,splash_surf);
 		y += 20;
 	}
-   
+
 	SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
 	SDL_UpdateWindowSurface(sdl.window);
 	SDL_Delay(12000);
 }
-   
+
 static void launcheditor() {
 	std::string path,file;
 	Cross::CreatePlatformConfigDir(path);
@@ -2126,7 +2126,7 @@ static void printconfiglocation() {
 	Cross::CreatePlatformConfigDir(path);
 	Cross::GetPlatformConfigName(file);
 	path += file;
-     
+
 	FILE* f = fopen(path.c_str(),"r");
 	if(!f && !control->PrintConfig(path.c_str())) {
 		printf("tried creating %s. but failed",path.c_str());
@@ -2190,7 +2190,7 @@ int main(int argc, char* argv[]) {
 		if(control->cmdline->FindExist("-resetconf")) eraseconfigfile();
 		if(control->cmdline->FindExist("-erasemapper")) erasemapperfile();
 		if(control->cmdline->FindExist("-resetmapper")) erasemapperfile();
-		
+
 		/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
 		if (control->cmdline->FindExist("-noconsole")) {
@@ -2264,7 +2264,7 @@ int main(int argc, char* argv[]) {
 	/* Parse configuration files */
 	std::string config_file,config_path;
 	Cross::GetPlatformConfigDir(config_path);
-	
+
 	//First parse -userconf
 	if(control->cmdline->FindExist("-userconf",true)){
 		config_file.clear();
@@ -2367,7 +2367,7 @@ int main(int argc, char* argv[]) {
 	}
 #if defined (WIN32)
 	sticky_keys(true); //Might not be needed if the shutdown function switches to windowed mode, but it doesn't hurt
-#endif 
+#endif
 	//Force visible mouse to end user. Somehow this sometimes doesn't happen
 	SDL_SetRelativeMouseMode(SDL_FALSE);
 	SDL_ShowCursor(SDL_ENABLE);
