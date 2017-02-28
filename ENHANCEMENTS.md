@@ -11,7 +11,6 @@ A full-featured build will need the following dependencies:
 * [SDL2](http://libsdl.org/download-2.0.php) (required)
 * [SDL2\_net](https://www.libsdl.org/projects/SDL_net/)
 * [FluidSynth](http://www.fluidsynth.org/) (soundfont support)
-* [GLEW](http://glew.sourceforge.net/) (OpenGL 3 and shader support)
 * [Munt](http://munt.sourceforge.net/) (built-in MT-32 emulation)
 
 ### Configuration
