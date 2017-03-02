@@ -390,6 +390,7 @@ check_surface:
 
 
 void GFX_ResetScreen(void) {
+	printf("GFX_ResetScreen\n");
 	GFX_Stop();
 	if (sdl.draw.callback)
 		(sdl.draw.callback)( GFX_CallBackReset );
@@ -398,6 +399,7 @@ void GFX_ResetScreen(void) {
 }
 
 void GFX_ForceFullscreenExit(void) {
+	printf("GFX_ForceFullscreenExit");
 	if (sdl.desktop.lazy_fullscreen) {
 //		sdl.desktop.lazy_fullscreen_req=true;
 		LOG_MSG("GFX LF: invalid screen change");
@@ -415,6 +417,7 @@ static int int_log2 (int val) {
 }
 
 static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fullscreen, SCREEN_TYPES screenType) {
+	printf("GFX_SetSDLWindowMode(%d, %d, %d, %d)\n", width, height, fullscreen, screenType);
 	static SCREEN_TYPES lastType = SCREEN_SURFACE;
 	if (sdl.renderer) {
 		SDL_DestroyRenderer(sdl.renderer);
@@ -488,6 +491,7 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		if (sdl.window) {
 			SDL_DestroyWindow(sdl.window);
 		}
+		printf("SDL_CreateWindow\n");
 		sdl.window = SDL_CreateWindow("",
 		                 SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
 		                 SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
@@ -515,8 +519,10 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		displayMode.h = height;
 		SDL_SetWindowDisplayMode(sdl.window, &displayMode);
 
+		printf("SDL_SetWindowFullscreen to true\n");
 		SDL_SetWindowFullscreen(sdl.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 	} else {
+		printf("SDL_SetWindowFullscreen to false\n");
 		SDL_SetWindowFullscreen(sdl.window, 0);
 
 		SDL_SetWindowSize(sdl.window, width, height);
@@ -530,6 +536,7 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 // Used for the mapper UI and more: Creates a fullscreen window with desktop res
 // on Android, and a non-fullscreen window with the input dimensions otherwise.
 SDL_Window * GFX_SetSDLSurfaceWindow(Bit16u width, Bit16u height) {
+	printf("GFX_SetSDLSurfaceWindow(%d, %d)\n", width, height);
 	return GFX_SetSDLWindowMode(width, height, false, SCREEN_SURFACE);
 }
 
@@ -545,6 +552,7 @@ SDL_Rect GFX_GetSDLSurfaceSubwindowDims(Bit16u width, Bit16u height) {
 
 // Currently used for an initial test here
 static SDL_Window * GFX_SetSDLOpenGLWindow(Bit16u width, Bit16u height) {
+	printf("GFX_SetSDLOpenGLWindow(%d, %d)\n", width, height);
 	return GFX_SetSDLWindowMode(width, height, false, SCREEN_OPENGL);
 }
 
@@ -552,6 +560,7 @@ static SDL_Window * GFX_SetSDLOpenGLWindow(Bit16u width, Bit16u height) {
 
 static SDL_Window * GFX_SetupWindowScaled(SCREEN_TYPES screenType)
 {
+	printf("GFX_SetupWindowScaled\n");
 	Bit16u fixedWidth;
 	Bit16u fixedHeight;
 
@@ -669,6 +678,7 @@ Bitu GFX_SetSize(Bitu width,Bitu height,Bitu flags,double scalex,double scaley,G
 	switch (sdl.desktop.want_type) {
 	case SCREEN_SURFACE:
 dosurface:
+		printf("surface\n");
 		sdl.desktop.type=SCREEN_SURFACE;
 		sdl.clip.w=width;
 		sdl.clip.h=height;
@@ -1064,6 +1074,7 @@ void sticky_keys(bool restore){
 #endif
 
 void GFX_SwitchFullScreen(void) {
+	printf("GFX_SwitchFullScreen\n");
 	sdl.desktop.fullscreen=!sdl.desktop.fullscreen;
 	if (sdl.desktop.fullscreen) {
 		if (!sdl.mouse.locked) GFX_CaptureMouse();
@@ -1080,6 +1091,7 @@ void GFX_SwitchFullScreen(void) {
 }
 
 static void SwitchFullScreen(bool pressed) {
+	printf("SwitchFullScreen(%d)\n", pressed);
 	if (!pressed)
 		return;
 
@@ -1097,6 +1109,7 @@ void GFX_SwitchLazyFullscreen(bool lazy) {
 }
 
 void GFX_SwitchFullscreenNoReset(void) {
+	printf("GFX_SwitchFullscreenNoReset\n");
 	sdl.desktop.fullscreen=!sdl.desktop.fullscreen;
 }
 
@@ -1266,6 +1279,7 @@ void GFX_UpdateDisplayDimensions(int width, int height) {
 }
 
 static void GUI_ShutDown(Section * /*sec*/) {
+	printf("GUI_ShutDown\n");
 	GFX_Stop();
 	if (sdl.draw.callback) (sdl.draw.callback)( GFX_CallBackStop );
 	if (sdl.mouse.locked) GFX_CaptureMouse();
@@ -1351,6 +1365,7 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 void Restart(bool pressed);
 
 static void GUI_StartUp(Section * sec) {
+	printf("GUI_StartUp\n");
 	sec->AddDestroyFunction(&GUI_ShutDown);
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	sdl.active=false;
@@ -1708,6 +1723,7 @@ bool GFX_IsFullscreen(void) {
 }
 
 void GFX_HandleVideoResize(int width, int height) {
+	printf("GFX_HandleVideoResize(%d, %d)\n", width, height);
 	/* Maybe a screen rotation has just occurred, so we simply resize.
 	There may be a different cause for a forced resized, though.    */
 	if (sdl.desktop.full.display_res && sdl.desktop.fullscreen) {
