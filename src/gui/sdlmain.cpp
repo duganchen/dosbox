@@ -493,14 +493,14 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		                 SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
 		                 SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
 		                 width, height,
-		                 (fullscreen ? (sdl.desktop.full.display_res ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN) : 0)
+		                 (fullscreen ? SDL_WINDOW_FULLSCREEN : 0)
 		                 | ((screenType == SCREEN_OPENGL) ? SDL_WINDOW_OPENGL : 0) | SDL_WINDOW_SHOWN);
 #else
 		sdl.window = SDL_CreateWindow("",
 		                 SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
 		                 SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
 		                 width, height,
-		                 (fullscreen ? SDL_WINDOW_FULLSCREEN : 0)
+		                 (fullscreen ? (sdl.desktop.full.display_res ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN) : 0)
 		                 | ((screenType == SCREEN_OPENGL) ? SDL_WINDOW_OPENGL : 0) | SDL_WINDOW_SHOWN);
 #endif
 		if (sdl.window)
