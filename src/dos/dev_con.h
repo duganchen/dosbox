@@ -53,6 +53,7 @@ private:
 bool device_CON::Read(Bit8u * data,Bit16u * size) {
 	Bit16u oldax=reg_ax;
 	Bit16u count=0;
+	INT10_SetCurMode();
 	if ((readcache) && (*size)) {
 		data[count++]=readcache;
 		if(dos.echo) INT10_TeletypeOutput(readcache,7);
@@ -114,9 +115,10 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 bool device_CON::Write(Bit8u * data,Bit16u * size) {
 	Bit16u count=0;
 	Bitu i;
-	Bit8u col,row;
+	Bit8u col,row,page;
 	Bit16u ncols,nrows;
 	Bit8u tempdata;
+	INT10_SetCurMode();
 	while (*size>count) {
 		if (!ansi.esc){
 			if(data[count]=='\033') {
@@ -126,15 +128,22 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 				ansi.esc=true;
 				count++;
 				continue;
+			} else if(data[count] == '\t' && !dos.direct_output) {
+				/* expand tab if not direct output */
+				page = real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
+				do {
+					INT10_TeletypeOutputAttr(' ',ansi.enabled?ansi.attr:7,true);
+					col=CURSOR_POS_COL(page);
+				} while(col%8);
+				lastwrite = data[count++];
+				continue;
 			} else { 
 				/* Some sort of "hack" now that '\n' doesn't set col to 0 (int10_char.cpp old chessgame) */
 				if((data[count] == '\n') && (lastwrite != '\r')) {
-					if(ansi.enabled) INT10_TeletypeOutputAttr('\r',ansi.attr,true);
-					else INT10_TeletypeOutput('\r',7);
+					INT10_TeletypeOutputAttr('\r',ansi.enabled?ansi.attr:7,true);
 				}
 				/* use ansi attribute if ansi is enabled, otherwise use DOS default attribute*/
-				if(ansi.enabled) INT10_TeletypeOutputAttr(data[count],ansi.attr,true);
-				else INT10_TeletypeOutput(data[count],7);
+				INT10_TeletypeOutputAttr(data[count],ansi.enabled?ansi.attr:7,true);
 				lastwrite = data[count++];
 				continue;
 		}
@@ -159,7 +168,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 		continue;
 	}
 	/*ansi.esc and ansi.sci are true */
-	Bit8u page = real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
+	page = real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 	switch(data[count]){
 		case '0':
 		case '1':
