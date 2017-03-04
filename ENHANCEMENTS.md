@@ -11,7 +11,6 @@ A full-featured build will need the following dependencies:
 * [SDL2](http://libsdl.org/download-2.0.php) (required)
 * [SDL2\_net](https://www.libsdl.org/projects/SDL_net/)
 * [FluidSynth](http://www.fluidsynth.org/) (soundfont support)
-* [Munt](http://munt.sourceforge.net/) (built-in MT-32 emulation)
 
 ### Configuration
 
@@ -31,20 +30,7 @@ play BGM using a soundfont. Specify that in your configuration file:
 	fluid.driver=alsa # set as appropriate
 	fluid.soundfont=/path/to/soundfont.sf2
 
-### MT-32 Emulation
-
-For games that use the Roland MT-32, I still recommend running Munt as
-a separate application (mt32emu-qt) and then connecting DosBox to its MIDI
-port (specified as the "mididevice").  However, native MT-32 emulation is
-now available as an alternative. To use it, specify, in your configuration
-file, the path to the ROM directory:
-
-	[midi]
-	mididevice=mt32
-	mt32.romdir=/path/to/roms
-
-On OS X and Linux, DosBox will perform shell-expansion on the fluid.soundfont and
-mt32.romdir paths. That means that these paths are allowed to contain dollar signs
+On OS X and Linux, DosBox will perform shell-expansion on the fluid.soundfont paths. That means that it'ss allowed to have dollar signs
 (environment variables) and tildes (home directories).
 
 ### OpenGL 3 Support
@@ -102,7 +88,6 @@ shaders to work as designed.
 This fork uses, either directly or by building on, the following community contributions:
 
 * [Patch for OpenGL fullscreen bug](http://www.vogons.org/viewtopic.php?f=32&t=27487&start=20#p276738)
-* [Official Munt DosBox patch](https://github.com/munt/munt/blob/master/DOSBox-mt32-patch/dosbox-SVN-r3892-mt32-patch.diff)
 * [FluidSynth soundfont patch](http://www.vogons.org/viewtopic.php?f=32&t=27831&start=20#p385413)
 * [Basic GLSL shader support (prototype)](http://www.vogons.org/viewtopic.php?f=41&t=36342&start=20#p319636)
 * [An adaptation to SDL 2.0](http://www.vogons.org/viewtopic.php?f=32&t=34770&start=40#p433097)

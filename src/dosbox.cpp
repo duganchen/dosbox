@@ -501,9 +501,6 @@ void DOSBOX_Init(void) {
 #ifdef C_FLUIDSYNTH
 		"fluidsynth",
 #endif
-#ifdef C_MUNT
-		"mt32",
-#endif
 		"none",
 		0
 	};
@@ -588,10 +585,6 @@ void DOSBOX_Init(void) {
 	Pint = secprop->Add_int("fluid.chorus.type",Property::Changeable::WhenIdle,0);
 	Pint->Set_values(fluidchorustypes);
 	Pint->Set_help("Fluidsynth chorus type. 0 is sine wave, 1 is triangle wave.");
-#endif
-
-#ifdef C_MUNT
-#include "mt32options.h"
 #endif
 
 #if C_DEBUG

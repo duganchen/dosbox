@@ -95,11 +95,6 @@ MidiHandler Midi_none;
 
 #endif
 
-#ifdef C_MUNT
-#include "midi_mt32.h"
-static MidiHandler_mt32 &Midi_mt32 = MidiHandler_mt32::GetInstance();
-#endif
-
 DB_Midi midi;
 
 void MIDI_RawOutByte(Bit8u data) {
