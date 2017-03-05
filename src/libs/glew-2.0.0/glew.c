@@ -1,3 +1,4 @@
+#if C_OPENGL
 /*
 ** The OpenGL Extension Wrangler Library
 ** Copyright (C) 2008-2015, Nigel Stewart <nigels[]users sourceforge net>
@@ -23950,3 +23951,6 @@ GLboolean eglewIsSupported (const char* name)
 }
 
 #endif /* _WIN32 */
+
+// C_OPENGL
+#endif
