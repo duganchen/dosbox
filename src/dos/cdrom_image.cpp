@@ -738,7 +738,7 @@ void CDROM_Interface_Image::ClearTracks()
 		i++;
 	}
 	tracks.clear();
-
+}
 
 void CDROM_Image_Destroy(Section*) {
 #if defined(C_SDL_SOUND)
@@ -751,4 +751,3 @@ void CDROM_Image_Init(Section* section) {
 	Sound_Init();
 	section->AddDestroyFunction(CDROM_Image_Destroy, false);
 #endif
-}
