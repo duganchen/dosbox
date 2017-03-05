@@ -527,6 +527,21 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 			if (type == "BINARY") {
 				track.file = new BinaryFile(filename.c_str(), error);
 			}
+#if defined(C_SDL_SOUND)
+			//The next if has been surpassed by the else, but leaving it in as not 
+			//to break existing cue sheets that depend on this.(mine with OGG tracks specifying MP3 as type)
+			else if (type == "WAVE" || type == "AIFF" || type == "MP3") {
+				track.file = new AudioFile(filename.c_str(), error);
+			} else { 
+				const Sound_DecoderInfo **i;
+				for (i = Sound_AvailableDecoders(); *i != NULL; i++) {
+					if (*(*i)->extensions == type) {
+						track.file = new AudioFile(filename.c_str(), error);
+						break;
+					}
+				}
+			}
+#endif
 			if (error) {
 				delete track.file;
 				success = false;
@@ -723,4 +738,17 @@ void CDROM_Interface_Image::ClearTracks()
 		i++;
 	}
 	tracks.clear();
+
+
+void CDROM_Image_Destroy(Section*) {
+#if defined(C_SDL_SOUND)
+	Sound_Quit();
+#endif
+}
+
+void CDROM_Image_Init(Section* section) {
+#if defined(C_SDL_SOUND)
+	Sound_Init();
+	section->AddDestroyFunction(CDROM_Image_Destroy, false);
+#endif
 }
