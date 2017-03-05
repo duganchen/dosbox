@@ -751,3 +751,4 @@ void CDROM_Image_Init(Section* section) {
 	Sound_Init();
 	section->AddDestroyFunction(CDROM_Image_Destroy, false);
 #endif
+}
