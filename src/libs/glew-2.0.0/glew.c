@@ -1,3 +1,4 @@
+#include "../../../config.h"
 #if C_OPENGL
 /*
 ** The OpenGL Extension Wrangler Library
