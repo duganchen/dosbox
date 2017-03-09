@@ -450,6 +450,15 @@ case "$host" in
 esac
 fi
 
+AH_TEMPLATE(C_RETINAFIX,[Define to 1 to use opengl display output support])
+AC_ARG_ENABLE(retinafix,AC_HELP_STRING([--enable-retinafix],[Enable fullscreen fix for retina Macs]),[
+   if test x$enable_retinafix = xyes; then
+     AC_MSG_RESULT([Fullscreen fix for retina Macs enabled])
+     AC_DEFINE(C_RETINAFIX,1)
+   fi 
+],)
+
+
 AH_TEMPLATE(C_SDL_SOUND,[Define to 1 to enable SDL_sound support])
 AC_CHECK_HEADER(SDL_sound.h,have_SDL_sound_h=yes,)
 AC_CHECK_LIB(SDL_sound, Sound_Init, have_SDL_sound_init=yes,,)

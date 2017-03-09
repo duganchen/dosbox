@@ -82,6 +82,7 @@ shaders to work as designed.
 * "output"'s default value is now "texturenb"
 * "scaler's" default value is now none
 * Pixel Buffer Objects are no longer used for rendering (I've found them to be the cause of a screen corruption bug)
+* --enable-retinafix option is available to fix fullscreen support on OS X 
 
 ## Credit
 

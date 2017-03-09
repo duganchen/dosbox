@@ -488,7 +488,7 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		if (sdl.window) {
 			SDL_DestroyWindow(sdl.window);
 		}
-#if defined(MACOSX)
+#if defined(C_RETINAFIX)
 		sdl.window = SDL_CreateWindow("",
 		                 SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
 		                 SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.displayNumber),
@@ -524,7 +524,7 @@ static SDL_Window * GFX_SetSDLWindowMode(Bit16u width, Bit16u height, bool fulls
 		displayMode.h = height;
 		SDL_SetWindowDisplayMode(sdl.window, &displayMode);
 
-#if defined(MACOSX)
+#if defined(C_RETINAFIX)
 		SDL_SetWindowFullscreen(sdl.window, SDL_WINDOW_FULLSCREEN);
 #else
 		SDL_SetWindowFullscreen(sdl.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
