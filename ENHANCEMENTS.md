@@ -83,6 +83,7 @@ shaders to work as designed.
 * "scaler's" default value is now none
 * Pixel Buffer Objects are no longer used for rendering (I've found them to be the cause of a screen corruption bug)
 * --enable-retinafix option is available to fix fullscreen support on OS X 
+* game resolution is printed to the console (so you can set your DosBox window resolution to a multiple of it)
 
 ## Credit
 
