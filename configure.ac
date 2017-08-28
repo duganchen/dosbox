@@ -424,6 +424,7 @@ fi
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
 AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
 AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
+AC_CHECK_LIB(glew32, main, have_glew32_lib=yes,have_glew32_lib=no , )
 AC_CHECK_HEADER(GL/gl.h, have_gl_h=yes , have_gl_h=no , )
 AC_ARG_ENABLE(opengl,AC_HELP_STRING([--disable-opengl],[Disable opengl support]),,enable_opengl=yes)
 AC_MSG_CHECKING(whether opengl display output will be enabled) 
@@ -435,13 +436,13 @@ case "$host" in
        AC_DEFINE(C_OPENGL,1)
        ;;
     *)
-       if test x$have_gl_h = xyes -a x$have_gl_lib = xyes; then 
+       if test x$have_gl_h = xyes -a x$have_gl_lib = xyes -a x$have_glew32_lib = xyes; then 
          AC_MSG_RESULT(yes)
-         LIBS="$LIBS -lGL -lGLU"
+         LIBS="$LIBS -lGL -lGLU -lglew32"
          AC_DEFINE(C_OPENGL,1)
-       elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes; then 
+       elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes -a x$have_glew32_lib = xyes; then 
          AC_MSG_RESULT(yes)
-         LIBS="$LIBS -lopengl32"
+         LIBS="$LIBS -lopengl32 -lglew32"
          AC_DEFINE(C_OPENGL,1)
        else
          AC_MSG_RESULT(no)
