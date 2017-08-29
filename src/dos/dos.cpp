@@ -30,6 +30,8 @@
 #include "support.h"
 #include "serialport.h"
 
+#include "../save_state.h"
+
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;
 
@@ -1256,4 +1258,86 @@ void DOS_Init(Section* sec) {
 	test = new DOS(sec);
 	/* shutdown function */
 	sec->AddDestroyFunction(&DOS_ShutDown,false);
+}
+
+//save state support
+
+extern void POD_Save_DOS_Files( std::ostream& stream );
+extern void POD_Save_DOS_DriveManager( std::ostream& stream );
+extern void POD_Load_DOS_Files( std::istream& stream );
+extern void POD_Load_DOS_DriveManager( std::istream& stream );
+
+namespace
+{
+class SerializeDos : public SerializeGlobalPOD
+{
+public:
+	SerializeDos() : SerializeGlobalPOD("Dos") 
+	{}
+
+private:
+	virtual void getBytes(std::ostream& stream)
+	{
+		SerializeGlobalPOD::getBytes(stream);
+
+
+
+		//***********************************************
+		//***********************************************
+		//***********************************************
+
+		// - pure data
+		WRITE_POD( &dos.firstMCB, dos.firstMCB );
+		WRITE_POD( &dos.errorcode, dos.errorcode );
+		WRITE_POD( &dos.env, dos.env );
+		WRITE_POD( &dos.cpmentry, dos.cpmentry );
+		WRITE_POD( &dos.return_code, dos.return_code );
+		WRITE_POD( &dos.return_mode, dos.return_mode );
+
+		WRITE_POD( &dos.current_drive, dos.current_drive );
+		WRITE_POD( &dos.verify, dos.verify );
+		WRITE_POD( &dos.breakcheck, dos.breakcheck );
+		WRITE_POD( &dos.echo, dos.echo );
+
+		WRITE_POD( &dos.loaded_codepage, dos.loaded_codepage );
+
+
+
+
+		POD_Save_DOS_Files(stream);
+		POD_Save_DOS_DriveManager(stream);
+	}
+
+	virtual void setBytes(std::istream& stream)
+	{
+		SerializeGlobalPOD::setBytes(stream);
+
+
+
+		//***********************************************
+		//***********************************************
+		//***********************************************
+
+		// - pure data
+		READ_POD( &dos.firstMCB, dos.firstMCB );
+		READ_POD( &dos.errorcode, dos.errorcode );
+		READ_POD( &dos.env, dos.env );
+		READ_POD( &dos.cpmentry, dos.cpmentry );
+		READ_POD( &dos.return_code, dos.return_code );
+		READ_POD( &dos.return_mode, dos.return_mode );
+
+		READ_POD( &dos.current_drive, dos.current_drive );
+		READ_POD( &dos.verify, dos.verify );
+		READ_POD( &dos.breakcheck, dos.breakcheck );
+		READ_POD( &dos.echo, dos.echo );
+	
+		READ_POD( &dos.loaded_codepage, dos.loaded_codepage );
+
+
+
+
+		POD_Load_DOS_Files(stream);
+		POD_Load_DOS_DriveManager(stream);
+	}
+} dummy;
 }

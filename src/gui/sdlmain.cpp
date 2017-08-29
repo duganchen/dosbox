@@ -16,6 +16,8 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+// Bad fix to allow static linking of GLEW.
+#define GLEW_STATIC
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -51,6 +53,8 @@
 #include "cpu.h"
 #include "cross.h"
 #include "control.h"
+
+#include "../save_state.h"
 
 #define MAPPERFILE "mapper-sdl2-" VERSION ".map"
 //#define DISABLE_JOYSTICK
@@ -2394,4 +2398,30 @@ void GFX_GetSize(int &width, int &height, bool &fullscreen) {
 	width = sdl.draw.width;
 	height = sdl.draw.height;
 	fullscreen = sdl.desktop.fullscreen;
+}
+
+bool Get_Custom_SaveDir(std::string& savedir) {
+	std::string custom_savedir;
+	if (control->cmdline->FindString("-savedir",custom_savedir,false)) {
+		savedir=custom_savedir;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+// save state support
+void POD_Save_Sdlmain( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &sdl.mouse.autolock, sdl.mouse.autolock );
+	WRITE_POD( &sdl.mouse.requestlock, sdl.mouse.requestlock );
+}
+
+
+void POD_Load_Sdlmain( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &sdl.mouse.autolock, sdl.mouse.autolock );
+	READ_POD( &sdl.mouse.requestlock, sdl.mouse.requestlock );
 }

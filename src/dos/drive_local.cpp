@@ -41,6 +41,9 @@ public:
 	bool UpdateDateTimeFromHost(void);   
 	void FlagReadOnlyMedium(void);
 	void Flush(void);
+
+	Bit32u GetSeekPos(void);
+
 private:
 	FILE * fhandle;
 	bool read_only_medium;
@@ -524,6 +527,9 @@ Bit16u localFile::GetInformation(void) {
 	return read_only_medium?0x40:0;
 }
 	
+Bit32u localFile::GetSeekPos() {
+	return ftell( fhandle );
+}
 
 localFile::localFile(const char* _name, FILE * handle) {
 	fhandle=handle;

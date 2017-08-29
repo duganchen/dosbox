@@ -78,8 +78,15 @@ public:
 	virtual void	AddRef()					{ refCtr++; };
 	virtual Bits	RemoveRef()					{ return --refCtr; };
 	virtual bool	UpdateDateTimeFromHost()	{ return true; }
+
+	virtual Bit32u	GetSeekPos()	{ return 0xffffffff; }
+
 	void SetDrive(Bit8u drv) { hdrive=drv;}
 	Bit8u GetDrive(void) { return hdrive;}
+
+	virtual void SaveState( std::ostream& stream );
+	virtual void LoadState( std::istream& stream );
+
 	Bit32u flags;
 	Bit16u time;
 	Bit16u date;
@@ -247,6 +254,10 @@ public:
 
 	// disk cycling functionality (request resources)
 	virtual void Activate(void) {};
+
+	virtual void SaveState( std::ostream& stream );
+	virtual void LoadState( std::istream& stream );
+
 };
 
 enum { OPEN_READ=0, OPEN_WRITE=1, OPEN_READWRITE=2, OPEN_READ_NO_MOD=4, DOS_NOT_INHERIT=128};

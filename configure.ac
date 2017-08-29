@@ -442,7 +442,7 @@ case "$host" in
          AC_DEFINE(C_OPENGL,1)
        elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes -a x$have_glew32_lib = xyes; then 
          AC_MSG_RESULT(yes)
-         LIBS="$LIBS -lopengl32 -lglew32"
+         LIBS="$LIBS -lglew32 -lopengl32"
          AC_DEFINE(C_OPENGL,1)
        else
          AC_MSG_RESULT(no)
