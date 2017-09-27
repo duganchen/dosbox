@@ -25,7 +25,6 @@
 #include "dos_inc.h"
 
 bool DOS_IOCTL(void) {
-//	LOG(LOG_IOCTL,LOG_WARN)("%X %X %X %X",reg_ax,reg_bx,reg_cx,reg_dx);
 	Bitu handle=0;Bit8u drive=0;
 	/* calls 0-4,6,7,10,12,16 use a file handle */
 	if ((reg_al<4) || (reg_al==0x06) || (reg_al==0x07) || (reg_al==0x0a) || (reg_al==0x0c) || (reg_al==0x10)) {
@@ -143,6 +142,10 @@ bool DOS_IOCTL(void) {
 			// TODO Set bit 9 on drives that don't support direct I/O
 		}
 		reg_ax=0x300;
+		return true;
+	case 0x0A:		/* Is Device of Handle Remote? */
+		reg_dx=0x8000;
+		LOG(LOG_IOCTL,LOG_NORMAL)("0A:Faked output: device of handle %d is remote",handle);
 		return true;
 	case 0x0B:		/* Set sharing retry count */
 		if (reg_dx==0) {

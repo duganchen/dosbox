@@ -17,7 +17,7 @@
  */
 
 
-/*
+/* 
 	Remove the sdl code from here and have it handeld in the sdlmain.
 	That should call the mixer start from there or something.
 */
@@ -48,22 +48,12 @@
 #include "hardware.h"
 #include "programs.h"
 #include "midi.h"
+#include "../save_state.h"
 
 #define MIXER_SSIZE 4
-
-//#define MIXER_SHIFT 14
-//#define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
-
+#define MIXER_SHIFT 14
+#define MIXER_REMAIN ((1<<MIXER_SHIFT)-1)
 #define MIXER_VOLSHIFT 13
-
-#define FREQ_SHIFT 14
-#define FREQ_NEXT ( 1 << FREQ_SHIFT)
-#define FREQ_MASK ( FREQ_NEXT -1 )
-
-#define TICK_SHIFT 14
-#define TICK_NEXT ( 1 << TICK_SHIFT)
-#define TICK_MASK (TICK_NEXT -1)
-
 
 static INLINE Bit16s MIXER_CLIP(Bits SAMP) {
 	if (SAMP < MAX_AUDIO) {
@@ -75,17 +65,15 @@ static INLINE Bit16s MIXER_CLIP(Bits SAMP) {
 
 static struct {
 	Bit32s work[MIXER_BUFSIZE][2];
-	//Write/Read pointers for the buffer
 	Bitu pos,done;
 	Bitu needed, min_needed, max_needed;
-	//For every millisecond tick how many samples need to be generated
-	Bit32u tick_add;
-	Bit32u tick_counter;
+	Bit32u tick_add,tick_remain;
 	float mastervol[2];
 	MixerChannel * channels;
 	bool nosound;
 	Bit32u freq;
 	Bit32u blocksize;
+	bool swapstereo;
 } mixer;
 
 Bit8u MixTemp[MIXER_BUFSIZE];
@@ -99,7 +87,6 @@ MixerChannel * MIXER_AddChannel(MIXER_Handler handler,Bitu freq,const char * nam
 	chan->next=mixer.channels;
 	chan->SetVolume(1,1);
 	chan->enabled=false;
-	chan->interpolate = false;
 	mixer.channels=chan;
 	return chan;
 }
@@ -147,75 +134,68 @@ void MixerChannel::Enable(bool _yesno) {
 	if (_yesno==enabled) return;
 	enabled=_yesno;
 	if (enabled) {
-		freq_counter = 0;
+		freq_index=MIXER_REMAIN;
 		SDL_LockAudio();
 		if (done<mixer.done) done=mixer.done;
 		SDL_UnlockAudio();
 	}
 }
 
-void MixerChannel::SetFreq(Bitu freq) {
-	freq_add=(freq<<FREQ_SHIFT)/mixer.freq;
-
-	if (freq != mixer.freq) {
-		interpolate = true;
-	}
-	else {
-		interpolate = false;
-	}
+void MixerChannel::SetFreq(Bitu _freq) {
+	freq_add=(_freq<<MIXER_SHIFT)/mixer.freq;
 }
 
 void MixerChannel::Mix(Bitu _needed) {
 	needed=_needed;
 	while (enabled && needed>done) {
-		Bitu left = (needed - done);
-		handler(left);
+		Bitu todo=needed-done;
+		todo *= freq_add;
+		todo  = (todo >> MIXER_SHIFT) + ((todo & MIXER_REMAIN)!=0);
+		handler(todo);
 	}
 }
 
 void MixerChannel::AddSilence(void) {
 	if (done<needed) {
 		done=needed;
-		//Make sure the next samples are zero when they get switched to prev
-		nextSample[0] = 0;
-		nextSample[1] = 0;
-		//This should trigger an instant request for new samples
-		freq_counter = FREQ_NEXT;
+		last[0]=last[1]=0;
+		freq_index=MIXER_REMAIN;
 	}
 }
 
 template<class Type,bool stereo,bool signeddata,bool nativeorder>
 inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
-	//Position where to write the data
-	Bitu mixpos = mixer.pos + done;
-	//Position in the incoming data
-	Bitu pos = 0;
-	//Mix and data for the full length
-	while (1) {
-		//Does new data need to get read?
-		while (freq_counter >= FREQ_NEXT) {
-			//Would this overflow the source data, then it's time to leave
-			if (pos >= len)
-				return;
-			freq_counter -= FREQ_NEXT;
-			prevSample[0] = nextSample[0];
-			if (stereo) {
-				prevSample[1] = nextSample[1];
-			}
+	Bits diff[2];
+	Bitu mixpos=mixer.pos+done;
+	freq_index&=MIXER_REMAIN;
+	Bitu pos=0;Bitu new_pos;
+	int offset[2]; 
+	offset[0] = mixer.swapstereo ? 1:0; 
+	offset[1] = mixer.swapstereo ? 0:1; 
+
+	goto thestart;
+	for (;;) {
+		new_pos=freq_index >> MIXER_SHIFT;
+		if (pos<new_pos) {
+			last[0]+=diff[0];
+			if (stereo) last[1]+=diff[1];
+			pos=new_pos;
+thestart:
+			if (pos>=len) return;
 			if ( sizeof( Type) == 1) {
 				if (!signeddata) {
 					if (stereo) {
-						nextSample[0]=(((Bit8s)(data[pos*2+0] ^ 0x80)) << 8);
-						nextSample[1]=(((Bit8s)(data[pos*2+1] ^ 0x80)) << 8);
+						diff[0]=(((Bit8s)(data[pos*2+offset[0]] ^ 0x80)) << 8)-last[0]; 
+						diff[1]=(((Bit8s)(data[pos*2+offset[1]] ^ 0x80)) << 8)-last[1]; 
 					} else {
-						nextSample[0]=(((Bit8s)(data[pos] ^ 0x80)) << 8);
+						diff[0]=(((Bit8s)(data[pos] ^ 0x80)) << 8)-last[0];
 					}
 				} else {
 					if (stereo) {
-						nextSample[0]=(data[pos*2+0] << 8);
-						nextSample[1]=(data[pos*2+1] << 8);
+						diff[0]=(data[pos*2+offset[0]] << 8)-last[0]; 
+						diff[1]=(data[pos*2+offset[1]] << 8)-last[1]; 
 					} else {
-						nextSample[0]=(data[pos] << 8);
+						diff[0]=(data[pos] << 8)-last[0];
 					}
 				}
 			//16bit and 32bit both contain 16bit data internally
@@ -223,107 +203,123 @@ inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
 				if (signeddata) {
 					if (stereo) {
 						if (nativeorder) {
-							nextSample[0]=data[pos*2+0];
-							nextSample[1]=data[pos*2+1];
+							diff[0]=data[pos*2+offset[0]]-last[0]; 
+							diff[1]=data[pos*2+offset[1]]-last[1]; 
 						} else {
 							if ( sizeof( Type) == 2) {
-								nextSample[0]=(Bit16s)host_readw((HostPt)&data[pos*2+0]);
-								nextSample[1]=(Bit16s)host_readw((HostPt)&data[pos*2+1]);
+								diff[0]=(Bit16s)host_readw((HostPt)&data[pos*2+0])-last[0];
+								diff[1]=(Bit16s)host_readw((HostPt)&data[pos*2+1])-last[1];
 							} else {
-								nextSample[0]=(Bit32s)host_readd((HostPt)&data[pos*2+0]);
-								nextSample[1]=(Bit32s)host_readd((HostPt)&data[pos*2+1]);
+								diff[0]=(Bit32s)host_readd((HostPt)&data[pos*2+0])-last[0];
+								diff[1]=(Bit32s)host_readd((HostPt)&data[pos*2+1])-last[1];
 							}
 						}
 					} else {
 						if (nativeorder) {
-							nextSample[0] = data[pos];
+							diff[0]=data[pos]-last[0];
 						} else {
 							if ( sizeof( Type) == 2) {
-								nextSample[0]=(Bit16s)host_readw((HostPt)&data[pos]);
+								diff[0]=(Bit16s)host_readw((HostPt)&data[pos])-last[0];
 							} else {
-								nextSample[0]=(Bit32s)host_readd((HostPt)&data[pos]);
+								diff[0]=(Bit32s)host_readd((HostPt)&data[pos])-last[0];
 							}
 						}
 					}
 				} else {
 					if (stereo) {
 						if (nativeorder) {
-							nextSample[0]=(Bits)data[pos*2+0]-32768;
-							nextSample[1]=(Bits)data[pos*2+1]-32768;
+							diff[0]=(Bits)data[pos*2+offset[0]]-32768-last[0]; 
+							diff[1]=(Bits)data[pos*2+offset[1]]-32768-last[1]; 
 						} else {
 							if ( sizeof( Type) == 2) {
-								nextSample[0]=(Bits)host_readw((HostPt)&data[pos*2+0])-32768;
-								nextSample[1]=(Bits)host_readw((HostPt)&data[pos*2+1])-32768;
+								diff[0]=(Bits)host_readw((HostPt)&data[pos*2+0])-32768-last[0];
+								diff[1]=(Bits)host_readw((HostPt)&data[pos*2+1])-32768-last[1];
 							} else {
-								nextSample[0]=(Bits)host_readd((HostPt)&data[pos*2+0])-32768;
-								nextSample[1]=(Bits)host_readd((HostPt)&data[pos*2+1])-32768;
+								diff[0]=(Bits)host_readd((HostPt)&data[pos*2+0])-32768-last[0];
+								diff[1]=(Bits)host_readd((HostPt)&data[pos*2+1])-32768-last[1];
 							}
 						}
 					} else {
 						if (nativeorder) {
-							nextSample[0]=(Bits)data[pos]-32768;
+							diff[0]=(Bits)data[pos]-32768-last[0];
 						} else {
 							if ( sizeof( Type) == 2) {
-								nextSample[0]=(Bits)host_readw((HostPt)&data[pos])-32768;
+								diff[0]=(Bits)host_readw((HostPt)&data[pos])-32768-last[0];
 							} else {
-								nextSample[0]=(Bits)host_readd((HostPt)&data[pos])-32768;
+								diff[0]=(Bits)host_readd((HostPt)&data[pos])-32768-last[0];
 							}
 						}
 					}
 				}
 			}
-			//This sample has been handled now, increase position
-			pos++;
 		}
-		//Where to write
-		mixpos &= MIXER_BUFMASK;
-		Bit32s* write = mixer.work[mixpos];
-		if (!interpolate) {
-			write[0] += prevSample[0] * volmul[0];
-			write[1] += (stereo ? prevSample[1] : prevSample[0]) * volmul[1];
-		}
-		else {
-			Bits diff_mul = freq_counter & FREQ_MASK;
-			Bits sample = prevSample[0] + (((nextSample[0] - prevSample[0]) * diff_mul) >> FREQ_SHIFT);
-			write[0] += sample*volmul[0];
-			if (stereo) {
-				sample = prevSample[1] + (((nextSample[1] - prevSample[1]) * diff_mul) >> FREQ_SHIFT);
-			}
-			write[1] += sample*volmul[1];
-		}
-		//Prepare for next sample
-		freq_counter += freq_add;
-		mixpos++;
-		done++;
+		Bits diff_mul=freq_index & MIXER_REMAIN;
+		freq_index+=freq_add;
+		mixpos&=MIXER_BUFMASK;
+		Bits sample=last[0]+((diff[0]*diff_mul) >> MIXER_SHIFT);
+		mixer.work[mixpos][0]+=sample*volmul[0];
+		if (stereo) sample=last[1]+((diff[1]*diff_mul) >> MIXER_SHIFT);
+		mixer.work[mixpos][1]+=sample*volmul[1];
+		mixpos++;done++;
 	}
 }
 
 void MixerChannel::AddStretched(Bitu len,Bit16s * data) {
 	if (done>=needed) {
-		LOG_MSG("Can't add, buffer full");
+		LOG_MSG("Can't add, buffer full");	
 		return;
 	}
-	//Target samples this inputs gets stretched into
-	Bitu outlen=needed-done;
-	Bitu index = 0;
-	Bitu index_add = (len << FREQ_SHIFT)/outlen;
-	Bitu mixpos=mixer.pos+done;
-	done=needed;
+	Bitu outlen=needed-done;Bits diff;
+	freq_index=0;
+	Bitu temp_add=(len << MIXER_SHIFT)/outlen;
+	Bitu mixpos=mixer.pos+done;done=needed;
 	Bitu pos=0;
-
+	diff=data[0]-last[0];
 	while (outlen--) {
-		Bitu new_pos = index >> FREQ_SHIFT;
-		if (pos != new_pos) {
-			//Forward the previous sample
-			prevSample[0] = data[0];
-			data++;
+		Bitu new_pos=freq_index >> MIXER_SHIFT;
+		if (pos<new_pos) {
+			pos=new_pos;
+			last[0]+=diff;
+			diff=data[pos]-last[0];
 		}
-		Bits diff = data[0] - prevSample[0];
-		Bits diff_mul = index & FREQ_MASK;
-		index += index_add;
-		mixpos &= MIXER_BUFMASK;
-		Bits sample = prevSample[0]+((diff*diff_mul) >> FREQ_SHIFT);
+		Bits diff_mul=freq_index & MIXER_REMAIN;
+		freq_index+=temp_add;
+		mixpos&=MIXER_BUFMASK;
+		Bits sample=last[0]+((diff*diff_mul) >> MIXER_SHIFT);
 		mixer.work[mixpos][0]+=sample*volmul[0];
+		mixer.work[mixpos][1]+=sample*volmul[1];
+		mixpos++;
+	}
+}
+
+void MixerChannel::AddStretchedStereo(Bitu len/*combined L+R samples*/,Bit16s * data) {
+	if (done>=needed) {
+		LOG_MSG("Can't add, buffer full");	
+		return;
+	}
+	Bitu outlen=needed-done;Bits diff,diff2;
+	freq_index=0;
+	Bitu temp_add=(len << MIXER_SHIFT)/outlen;
+	Bitu mixpos=mixer.pos+done;done=needed;
+	Bitu pos=0;
+	diff=data[0]-last[0];
+	diff2=data[1]-last[1];
+	while (outlen--) {
+		Bitu new_pos=freq_index >> MIXER_SHIFT;
+		if (pos<new_pos) {
+			pos=new_pos;
+			last[0]+=diff;
+			last[1]+=diff2;
+			diff=data[pos*2]-last[0];
+			diff2=data[pos*2+1]-last[1];
+		}
+		Bits diff_mul=freq_index & MIXER_REMAIN;
+		freq_index+=temp_add;
+		mixpos&=MIXER_BUFMASK;
+		Bits sample;
+		sample=last[0]+((diff*diff_mul) >> MIXER_SHIFT);
+		mixer.work[mixpos][0]+=sample*volmul[0];
+		sample=last[1]+((diff2*diff_mul) >> MIXER_SHIFT);
 		mixer.work[mixpos][1]+=sample*volmul[1];
 		mixpos++;
 	}
@@ -391,7 +387,7 @@ void MixerChannel::FillUp(void) {
 
 extern bool ticksLocked;
 static inline bool Mixer_irq_important(void) {
-	/* In some states correct timing of the irqs is more important then
+	/* In some states correct timing of the irqs is more important then 
 	 * non stuttering audo */
 	return (ticksLocked || (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)));
 }
@@ -406,7 +402,7 @@ static void MIXER_MixData(Bitu needed) {
 	if (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)) {
 		Bit16s convert[1024][2];
 		Bitu added=needed-mixer.done;
-		if (added>1024)
+		if (added>1024) 
 			added=1024;
 		Bitu readpos=(mixer.pos+mixer.done)&MIXER_BUFMASK;
 		for (Bitu i=0;i<added;i++) {
@@ -420,16 +416,16 @@ static void MIXER_MixData(Bitu needed) {
 	}
 	//Reset the the tick_add for constant speed
 	if( Mixer_irq_important() )
-		mixer.tick_add = ((mixer.freq) << TICK_SHIFT)/1000;
+		mixer.tick_add = ((mixer.freq) << MIXER_SHIFT)/1000;
 	mixer.done = needed;
 }
 
 static void MIXER_Mix(void) {
 	SDL_LockAudio();
 	MIXER_MixData(mixer.needed);
-	mixer.tick_counter += mixer.tick_add;
-	mixer.needed+=(mixer.tick_counter >> TICK_SHIFT);
-	mixer.tick_counter &= TICK_MASK;
+	mixer.tick_remain+=mixer.tick_add;
+	mixer.needed+=(mixer.tick_remain>>MIXER_SHIFT);
+	mixer.tick_remain&=MIXER_REMAIN;
 	SDL_UnlockAudio();
 }
 
@@ -447,20 +443,17 @@ static void MIXER_Mix_NoSound(void) {
 		else chan->done=0;
 	}
 	/* Set values for next tick */
-	mixer.tick_counter += mixer.tick_add;
-	mixer.needed += (mixer.tick_counter >> TICK_SHIFT);
-	mixer.tick_counter &= TICK_MASK;
+	mixer.tick_remain+=mixer.tick_add;
+	mixer.needed=mixer.tick_remain>>MIXER_SHIFT;
+	mixer.tick_remain&=MIXER_REMAIN;
 	mixer.done=0;
 }
 
-static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
-	memset(stream, 0, len);
+static void MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 	Bitu need=(Bitu)len/MIXER_SSIZE;
 	Bit16s * output=(Bit16s *)stream;
 	Bitu reduce;
-	Bitu pos;
-	//Local resampling counter to manipulate the data when sending it off to the callback
-	Bitu index, index_add;
+	Bitu pos, index, index_add;
 	Bits sample;
 	/* Enough room in the buffer ? */
 	if (mixer.done < need) {
@@ -468,15 +461,15 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 		if((need - mixer.done) > (need >>7) ) //Max 1 procent stretch.
 			return;
 		reduce = mixer.done;
-		index_add = (reduce << TICK_SHIFT) / need;
-		mixer.tick_add = ((mixer.freq+mixer.min_needed) << TICK_SHIFT)/1000;
+		index_add = (reduce << MIXER_SHIFT) / need;
+		mixer.tick_add = ((mixer.freq+mixer.min_needed) << MIXER_SHIFT)/1000;
 	} else if (mixer.done < mixer.max_needed) {
 		Bitu left = mixer.done - need;
 		if (left < mixer.min_needed) {
 			if( !Mixer_irq_important() ) {
 				Bitu needed = mixer.needed - need;
 				Bitu diff = (mixer.min_needed>needed?mixer.min_needed:needed) - left;
-				mixer.tick_add = ((mixer.freq+(diff*3)) << TICK_SHIFT)/1000;
+				mixer.tick_add = ((mixer.freq+(diff*3)) << MIXER_SHIFT)/1000;
 				left = 0; //No stretching as we compensate with the tick_add value
 			} else {
 				left = (mixer.min_needed - left);
@@ -484,10 +477,10 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 			}
 //			LOG_MSG("needed underrun need %d, have %d, min %d, left %d", need, mixer.done, mixer.min_needed, left);
 			reduce = need - left;
-			index_add = (reduce << TICK_SHIFT) / need;
+			index_add = (reduce << MIXER_SHIFT) / need;
 		} else {
 			reduce = need;
-			index_add = (1 << TICK_SHIFT);
+			index_add = (1 << MIXER_SHIFT);
 //			LOG_MSG("regular run need %d, have %d, min %d, left %d", need, mixer.done, mixer.min_needed, left);
 
 			/* Mixer tick value being updated:
@@ -499,32 +492,32 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 			Bitu diff = left - mixer.min_needed;
 			if(diff > (mixer.min_needed<<1)) diff = mixer.min_needed<<1;
 			if(diff > (mixer.min_needed>>1))
-				mixer.tick_add = ((mixer.freq-(diff/5)) << TICK_SHIFT)/1000;
+				mixer.tick_add = ((mixer.freq-(diff/5)) << MIXER_SHIFT)/1000;
 			else if (diff > (mixer.min_needed>>4))
-				mixer.tick_add = ((mixer.freq-(diff>>3)) << TICK_SHIFT)/1000;
+				mixer.tick_add = ((mixer.freq-(diff>>3)) << MIXER_SHIFT)/1000;
 			else
-				mixer.tick_add = (mixer.freq<< TICK_SHIFT)/1000;
+				mixer.tick_add = (mixer.freq<< MIXER_SHIFT)/1000;
 		}
 	} else {
 		/* There is way too much data in the buffer */
 //		LOG_MSG("overflow run need %d, have %d, min %d", need, mixer.done, mixer.min_needed);
 		if (mixer.done > MIXER_BUFSIZE)
 			index_add = MIXER_BUFSIZE - 2*mixer.min_needed;
-		else
+		else 
 			index_add = mixer.done - 2*mixer.min_needed;
-		index_add = (index_add << TICK_SHIFT) / need;
+		index_add = (index_add << MIXER_SHIFT) / need;
 		reduce = mixer.done - 2* mixer.min_needed;
-		mixer.tick_add = ((mixer.freq-(mixer.min_needed/5)) << TICK_SHIFT)/1000;
+		mixer.tick_add = ((mixer.freq-(mixer.min_needed/5)) << MIXER_SHIFT)/1000;
 	}
 	/* Reduce done count in all channels */
 	for (MixerChannel * chan=mixer.channels;chan;chan=chan->next) {
 		if (chan->done>reduce) chan->done-=reduce;
 		else chan->done=0;
 	}
-
+   
 	// Reset mixer.tick_add when irqs are important
 	if( Mixer_irq_important() )
-		mixer.tick_add=(mixer.freq<< TICK_SHIFT)/1000;
+		mixer.tick_add=(mixer.freq<< MIXER_SHIFT)/1000;
 
 	mixer.done -= reduce;
 	mixer.needed -= reduce;
@@ -533,7 +526,7 @@ static void SDLCALL MIXER_CallBack(void * userdata, Uint8 *stream, int len) {
 	index = 0;
 	if(need != reduce) {
 		while (need--) {
-			Bitu i = (pos + (index >> TICK_SHIFT )) & MIXER_BUFMASK;
+			Bitu i = (pos + (index >> MIXER_SHIFT )) & MIXER_BUFMASK;
 			index += index_add;
 			sample=mixer.work[i][0]>>MIXER_VOLSHIFT;
 			*output++=MIXER_CLIP(sample);
@@ -611,7 +604,7 @@ public:
 		chan=mixer.channels;
 		WriteOut("Channel  Main    Main(dB)\n");
 		ShowVolume("MASTER",mixer.mastervol[0],mixer.mastervol[1]);
-		for (chan=mixer.channels;chan;chan=chan->next)
+		for (chan=mixer.channels;chan;chan=chan->next) 
 			ShowVolume(chan->name,chan->volmain[0],chan->volmain[1]);
 	}
 private:
@@ -649,6 +642,11 @@ MixerObject::~MixerObject(){
 	MIXER_DelChannel(MIXER_FindChannel(m_name));
 }
 
+#ifdef WIN32
+void MENU_swapstereo(bool enabled) {
+	mixer.swapstereo=enabled;
+}
+#endif
 
 void MIXER_Init(Section* sec) {
 	sec->AddDestroyFunction(&MIXER_Stop);
@@ -658,6 +656,7 @@ void MIXER_Init(Section* sec) {
 	mixer.freq=section->Get_int("rate");
 	mixer.nosound=section->Get_bool("nosound");
 	mixer.blocksize=section->Get_int("blocksize");
+	mixer.swapstereo=section->Get_bool("swapstereo");
 
 	/* Initialize the internal stuff */
 	mixer.channels=0;
@@ -678,29 +677,172 @@ void MIXER_Init(Section* sec) {
 	spec.userdata=NULL;
 	spec.samples=(Uint16)mixer.blocksize;
 
-	mixer.tick_counter=0;
+	mixer.tick_remain=0;
 	if (mixer.nosound) {
-		LOG_MSG("MIXER: No Sound Mode Selected.");
-		mixer.tick_add=((mixer.freq) << TICK_SHIFT)/1000;
+		LOG_MSG("MIXER:No Sound Mode Selected.");
+		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else if (SDL_OpenAudio(&spec, &obtained) <0 ) {
 		mixer.nosound = true;
-		LOG_MSG("MIXER: Can't open audio: %s , running in nosound mode.",SDL_GetError());
-		mixer.tick_add=((mixer.freq) << TICK_SHIFT)/1000;
+		LOG_MSG("MIXER:Can't open audio: %s , running in nosound mode.",SDL_GetError());
+		mixer.tick_add=((mixer.freq) << MIXER_SHIFT)/1000;
 		TIMER_AddTickHandler(MIXER_Mix_NoSound);
 	} else {
 		if((mixer.freq != obtained.freq) || (mixer.blocksize != obtained.samples))
-			LOG_MSG("MIXER: Got different values from SDL: freq %d, blocksize %d",obtained.freq,obtained.samples);
+			LOG_MSG("MIXER:Got different values from SDL: freq %d, blocksize %d",obtained.freq,obtained.samples);
 		mixer.freq=obtained.freq;
 		mixer.blocksize=obtained.samples;
-		mixer.tick_add=(mixer.freq << TICK_SHIFT)/1000;
+		mixer.tick_add=(mixer.freq << MIXER_SHIFT)/1000;
 		TIMER_AddTickHandler(MIXER_Mix);
 		SDL_PauseAudio(0);
 	}
 	mixer.min_needed=section->Get_int("prebuffer");
-	if (mixer.min_needed>100) mixer.min_needed=100;
+	if (mixer.min_needed>90) mixer.min_needed=90;
 	mixer.min_needed=(mixer.freq*mixer.min_needed)/1000;
 	mixer.max_needed=mixer.blocksize * 2 + 2*mixer.min_needed;
 	mixer.needed=mixer.min_needed+1;
 	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
 }
+
+
+
+// save state support
+void *MIXER_Mix_NoSound_PIC_Timer = (void*)MIXER_Mix_NoSound;
+void *MIXER_Mix_PIC_Timer = (void*)MIXER_Mix;
+
+
+void MixerChannel::SaveState( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &volmain, volmain );
+	WRITE_POD( &scale, scale );
+	WRITE_POD( &volmul, volmul );
+	WRITE_POD( &freq_add, freq_add );
+	WRITE_POD( &freq_index, freq_index );
+	WRITE_POD( &enabled, enabled );
+}
+
+
+void MixerChannel::LoadState( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &volmain, volmain );
+	READ_POD( &scale, scale );
+	READ_POD( &volmul, volmul );
+	READ_POD( &freq_add, freq_add );
+	READ_POD( &freq_index, freq_index );
+	READ_POD( &enabled, enabled );
+
+	//********************************************
+	//********************************************
+	//********************************************
+
+	// reset mixer channel (system data)
+	done = 0;
+	needed = 0;
+	last[0] = 0;
+	last[1] = 0;
+}
+
+extern void POD_Save_Adlib(std::ostream& stream);
+extern void POD_Save_Disney(std::ostream& stream);
+extern void POD_Save_Gameblaster(std::ostream& stream);
+extern void POD_Save_GUS(std::ostream& stream);
+extern void POD_Save_Innova(std::ostream& stream);
+extern void POD_Save_MPU401(std::ostream& stream);
+extern void POD_Save_PCSpeaker(std::ostream& stream);
+extern void POD_Save_PS1_Sound(std::ostream& stream);
+extern void POD_Save_Sblaster(std::ostream& stream);
+extern void POD_Save_Tandy_Sound(std::ostream& stream);
+extern void POD_Load_Adlib(std::istream& stream);
+extern void POD_Load_Disney(std::istream& stream);
+extern void POD_Load_Gameblaster(std::istream& stream);
+extern void POD_Load_GUS(std::istream& stream);
+extern void POD_Load_Innova(std::istream& stream);
+extern void POD_Load_MPU401(std::istream& stream);
+extern void POD_Load_PCSpeaker(std::istream& stream);
+extern void POD_Load_PS1_Sound(std::istream& stream);
+extern void POD_Load_Sblaster(std::istream& stream);
+extern void POD_Load_Tandy_Sound(std::istream& stream);
+
+namespace
+{
+class SerializeMixer : public SerializeGlobalPOD
+{
+public:
+	SerializeMixer() : SerializeGlobalPOD("Mixer")
+	{}
+
+private:
+	virtual void getBytes(std::ostream& stream)
+	{
+		//*************************************************
+		//*************************************************
+
+		SerializeGlobalPOD::getBytes(stream);
+
+
+		POD_Save_Adlib(stream);
+		POD_Save_Disney(stream);
+		POD_Save_Gameblaster(stream);
+		POD_Save_GUS(stream);
+		POD_Save_Innova(stream);
+		POD_Save_MPU401(stream);
+		POD_Save_PCSpeaker(stream);
+		POD_Save_PS1_Sound(stream);
+		POD_Save_Sblaster(stream);
+		POD_Save_Tandy_Sound(stream);
+	}
+
+	virtual void setBytes(std::istream& stream)
+	{
+		//*************************************************
+		//*************************************************
+
+		SerializeGlobalPOD::setBytes(stream);
+
+
+		POD_Load_Adlib(stream);
+		POD_Load_Disney(stream);
+		POD_Load_Gameblaster(stream);
+		POD_Load_GUS(stream);
+		POD_Load_Innova(stream);
+		POD_Load_MPU401(stream);
+		POD_Load_PCSpeaker(stream);
+		POD_Load_PS1_Sound(stream);
+		POD_Load_Sblaster(stream);
+		POD_Load_Tandy_Sound(stream);
+	}
+
+} dummy;
+}
+
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+
+class MixerChannel {
+	// - static func ptr
+	MIXER_Handler handler;
+
+	// - pure data
+	float volmain[2];
+	float scale;
+	Bit32s volmul[2];
+	Bitu freq_add,freq_index;
+
+	// - system data
+	Bitu done,needed;
+	Bits last[2];
+
+	// - static data
+	const char * name;
+
+	// - pure data
+	bool enabled;
+
+	// - static ptr
+	MixerChannel * next;
+*/

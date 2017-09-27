@@ -88,7 +88,7 @@ static void RestoreRegisters(void) {
 	reg_sp+=18;
 }
 
-extern void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused);
+extern void GFX_SetTitle(Bit32s cycles, Bits frameskip, Bits timing, bool paused);
 void DOS_UpdatePSPName(void) {
 	DOS_MCB mcb(dos.psp()-1);
 	static char name[9];
@@ -100,7 +100,7 @@ void DOS_UpdatePSPName(void) {
 		if ( !isprint(*reinterpret_cast<unsigned char*>(&name[i])) ) name[i] = '?';
 	}
 	RunningProgram = name;
-	GFX_SetTitle(-1,-1,false);
+	GFX_SetTitle(-1,-1,-1,false);
 }
 
 void DOS_Terminate(Bit16u pspseg,bool tsr,Bit8u exitcode) {
@@ -144,9 +144,9 @@ void DOS_Terminate(Bit16u pspseg,bool tsr,Bit8u exitcode) {
 		CPU_CycleLeft=0;
 		CPU_Cycles=0;
 		CPU_CycleMax=CPU_OldCycleMax;
-		GFX_SetTitle(CPU_OldCycleMax,-1,false);
+		GFX_SetTitle(CPU_OldCycleMax,-1,-1,false);
 	} else {
-		GFX_SetTitle(-1,-1,false);
+		GFX_SetTitle(-1,-1,-1,false);
 	}
 #if (C_DYNAMIC_X86) || (C_DYNREC)
 	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
@@ -255,10 +255,18 @@ static void SetupCMDLine(Bit16u pspseg,DOS_ParamBlock & block) {
 	psp.SetCommandTail(block.exec.cmdtail);
 }
 
+/* FIXME: This code (or the shell perhaps) isn't very good at returning or
+ *        printing an error message when it is unable to load and run an
+ *        executable for whatever reason. Worst offense is that if it can't
+ *        run an EXE due to lack of memory, it silently returns to the
+ *        shell without any error message. The least we could do is return
+ *        an error code so that the INT 21h EXEC call can print an informative
+ *        error message! --J.C. */
 bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	EXE_Header head;Bitu i;
 	Bit16u fhandle;Bit16u len;Bit32u pos;
-	Bit16u pspseg,envseg,loadseg,memsize,readsize;
+	Bit16u pspseg,envseg,loadseg,memsize=0xffff,readsize;
+	Bit16u minsize,maxsize,maxfree=0xffff;
 	PhysPt loadaddress;RealPt relocpt;
 	Bitu headersize=0,imagesize=0;
 	DOS_ParamBlock block(block_pt);
@@ -318,7 +326,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 			return false;
 		}
 		/* Get Memory */		
-		Bit16u minsize,maxsize;Bit16u maxfree=0xffff;DOS_AllocateMemory(&pspseg,&maxfree);
+		DOS_AllocateMemory(&pspseg,&maxfree);
 		if (iscom) {
 			minsize=0x1000;maxsize=0xffff;
 			if (machine==MCH_PCJR) {
@@ -368,19 +376,31 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		loadseg=pspseg+16;
 		if (!iscom) {
 			/* Check if requested to load program into upper part of allocated memory */
-			if ((head.minmemory == 0) && (head.maxmemory == 0))
-				loadseg = (Bit16u)(((pspseg+memsize)*0x10-imagesize)/0x10);
+			if ((head.minmemory == 0) && (head.maxmemory == 0)) {
+				loadseg = (pspseg+memsize);
+				loadseg -= (imagesize+0xF)/0x10;
+				if (loadseg < (pspseg+16)) loadseg = pspseg+16;
+				if ((loadseg+((imagesize+0xF)/0x10)) > (pspseg+memsize))
+					E_Exit("EXE loading error, unable to load to top of block, nor able to fit into block");
+			}
 		}
 	} else loadseg=block.overlay.loadseg;
 	/* Load the executable */
 	loadaddress=PhysMake(loadseg,0);
 
 	if (iscom) {	/* COM Load 64k - 256 bytes max */
+		/* how big is the COM image? make sure it fits */
+		pos=0;DOS_SeekFile(fhandle,&pos,DOS_SEEK_END);
+		readsize = pos;
+		if (readsize > (0xffff-256)) readsize = 0xffff-256;
+		pos += 256; /* plus stack */
+		if (pos > (memsize*0x10)) E_Exit("DOS:Not enough memory for COM executable");
+
 		pos=0;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
-		readsize=0xffff-256;
 		DOS_ReadFile(fhandle,loadbuf,&readsize);
 		MEM_BlockWrite(loadaddress,loadbuf,readsize);
 	} else {	/* EXE Load in 32kb blocks and then relocate */
+		if (imagesize > (memsize*0x10)) E_Exit("DOS:Not enough memory for EXE image");
 		pos=headersize;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
 		while (imagesize>0x7FFF) {
 			readsize=0x8000;DOS_ReadFile(fhandle,loadbuf,&readsize);
@@ -418,19 +438,52 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	if (flags==OVERLAY) return true;			/* Everything done for overlays */
 	RealPt csip,sssp;
 	if (iscom) {
+		unsigned int stack_sp = 0xfffe;
+
+		/* On most DOS systems the stack pointer is set to 0xFFFE.
+		 * Limiting the stack pointer to stay within the memory block
+		 * enables COM images to run correctly in less than 72KB of RAM.
+		 * Doing this resolves the random crashes observed with DOSBox's
+		 * builtin commands when less than 72KB of RAM is assigned.
+		 *
+		 * At some point I need to boot MS-DOS/PC-DOS 1.x and 2.x in small
+		 * amounts of RAM to verify that's what actually happens. --J.C. */
+		if (stack_sp >= (memsize*0x10))
+			stack_sp = (memsize*0x10)-2;
+
 		csip=RealMake(pspseg,0x100);
-		if (memsize<0x1000) {
-			LOG(LOG_EXEC,LOG_WARN)("COM format with only %X paragraphs available",memsize);
-			sssp=RealMake(pspseg,(memsize<<4)-2);
-		} else sssp=RealMake(pspseg,0xfffe);
-		mem_writew(Real2Phys(sssp),0);
+		sssp=RealMake(pspseg,stack_sp);
+		mem_writew(PhysMake(pspseg,stack_sp),0);
 	} else {
+		/* FIXME: I've heard of EXE files with entry points like FFFF:0100 or something (COM images turned EXE if I recall).
+		 *        Does this check validate those too? */
 		csip=RealMake(loadseg+head.initCS,head.initIP);
 		sssp=RealMake(loadseg+head.initSS,head.initSP);
+		if (sssp >= RealMake(pspseg+memsize,0)) E_Exit("DOS:Initial SS:IP beyond allocated memory block for EXE image");
+		if (csip >= RealMake(pspseg+memsize,0)) E_Exit("DOS:Initial CS:IP beyond allocated memory block for EXE image");
 		if (head.initSP<4) LOG(LOG_EXEC,LOG_ERROR)("stack underflow/wrap at EXEC");
 	}
 
-	if ((flags==LOAD) || (flags==LOADNGO)) {
+	if (flags==LOAD) {
+		SaveRegisters();
+		DOS_PSP callpsp(dos.psp());
+		/* Save the SS:SP on the PSP of calling program */
+		callpsp.SetStack(RealMakeSeg(ss,reg_sp));
+		reg_sp+=18;
+		/* Switch the psp's */
+		dos.psp(pspseg);
+		DOS_PSP newpsp(dos.psp());
+		dos.dta(RealMake(newpsp.GetSegment(),0x80));
+		/* First word on the stack is the value ax should contain on startup */
+		real_writew(RealSeg(sssp-2),RealOff(sssp-2),0xffff);
+		block.exec.initsssp = sssp-2;
+		block.exec.initcsip = csip;
+		block.SaveData();
+		return true;
+	}
+
+	if (flags==LOADNGO) {
+		if ((reg_sp>0xfffe) || (reg_sp<18)) LOG(LOG_EXEC,LOG_ERROR)("stack underflow/wrap at EXEC");
 		/* Get Caller's program CS:IP of the stack and set termination address to that */
 		RealSetVec(0x22,RealMake(mem_readw(SegPhys(ss)+reg_sp+2),mem_readw(SegPhys(ss)+reg_sp)));
 		SaveRegisters();
@@ -446,18 +499,29 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		/* copy fcbs */
 		newpsp.SetFCB1(block.exec.fcb1);
 		newpsp.SetFCB2(block.exec.fcb2);
-		/* Save the SS:SP on the PSP of new program */
-		newpsp.SetStack(RealMakeSeg(ss,reg_sp));
-
-		/* Setup bx, contains a 0xff in bl and bh if the drive in the fcb is not valid */
-		DOS_FCB fcb1(RealSeg(block.exec.fcb1),RealOff(block.exec.fcb1));
-		DOS_FCB fcb2(RealSeg(block.exec.fcb2),RealOff(block.exec.fcb2));
-		Bit8u d1 = fcb1.GetDrive(); //depends on 0 giving the dos.default drive
-		if ( (d1>=DOS_DRIVES) || !Drives[d1] ) reg_bl = 0xFF; else reg_bl = 0;
-		Bit8u d2 = fcb2.GetDrive();
-		if ( (d2>=DOS_DRIVES) || !Drives[d2] ) reg_bh = 0xFF; else reg_bh = 0;
-
-		/* Write filename in new program MCB */
+		/* Set the stack for new program */
+		SegSet16(ss,RealSeg(sssp));reg_sp=RealOff(sssp);
+		/* Add some flags and CS:IP on the stack for the IRET */
+		CPU_Push16(RealSeg(csip));
+		CPU_Push16(RealOff(csip));
+		/* DOS starts programs with a RETF, so critical flags
+		 * should not be modified (IOPL in v86 mode);
+		 * interrupt flag is set explicitly, test flags cleared */
+		reg_flags=(reg_flags&(~FMASK_TEST))|FLAG_IF;
+		//Jump to retf so that we only need to store cs:ip on the stack
+		reg_ip++;
+		/* Setup the rest of the registers */
+		reg_ax=reg_bx=0;reg_cx=0xff;
+		reg_dx=pspseg;
+		reg_si=RealOff(csip);
+		reg_di=RealOff(sssp);
+		reg_bp=0x91c;	/* DOS internal stack begin relict */
+		SegSet16(ds,pspseg);SegSet16(es,pspseg);
+#if C_DEBUG		
+		/* Started from debug.com, then set breakpoint at start */
+		DEBUG_CheckExecuteBreakpoint(RealSeg(csip),RealOff(csip));
+#endif
+		/* Add the filename to PSP and environment MCB's */
 		char stripname[8]= { 0 };Bitu index=0;
 		while (char chr=*name++) {
 			switch (chr) {
@@ -475,48 +539,6 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		DOS_MCB pspmcb(dos.psp()-1);
 		pspmcb.SetFileName(stripname);
 		DOS_UpdatePSPName();
-	}
-
-	if (flags==LOAD) {
-		/* First word on the stack is the value ax should contain on startup */
-		real_writew(RealSeg(sssp-2),RealOff(sssp-2),reg_bx);
-		/* Write initial CS:IP and SS:SP in param block */
-		block.exec.initsssp = sssp-2;
-		block.exec.initcsip = csip;
-		block.SaveData();
-		/* Changed registers */
-		reg_sp+=18;
-		reg_ax=RealOff(csip);
-		reg_bx=memsize;
-		reg_dx=0;
-		return true;
-	}
-
-	if (flags==LOADNGO) {
-		if ((reg_sp>0xfffe) || (reg_sp<18)) LOG(LOG_EXEC,LOG_ERROR)("stack underflow/wrap at EXEC");
-		/* Set the stack for new program */
-		SegSet16(ss,RealSeg(sssp));reg_sp=RealOff(sssp);
-		/* Add some flags and CS:IP on the stack for the IRET */
-		CPU_Push16(RealSeg(csip));
-		CPU_Push16(RealOff(csip));
-		/* DOS starts programs with a RETF, so critical flags
-		 * should not be modified (IOPL in v86 mode);
-		 * interrupt flag is set explicitly, test flags cleared */
-		reg_flags=(reg_flags&(~FMASK_TEST))|FLAG_IF;
-		//Jump to retf so that we only need to store cs:ip on the stack
-		reg_ip++;
-		/* Setup the rest of the registers */
-		reg_ax=reg_bx;
-		reg_cx=0xff;
-		reg_dx=pspseg;
-		reg_si=RealOff(csip);
-		reg_di=RealOff(sssp);
-		reg_bp=0x91c;	/* DOS internal stack begin relict */
-		SegSet16(ds,pspseg);SegSet16(es,pspseg);
-#if C_DEBUG		
-		/* Started from debug.com, then set breakpoint at start */
-		DEBUG_CheckExecuteBreakpoint(RealSeg(csip),RealOff(csip));
-#endif
 		return true;
 	}
 	return false;

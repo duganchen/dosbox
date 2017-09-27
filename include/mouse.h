@@ -36,7 +36,6 @@ void Mouse_ButtonPressed(Bit8u button);
 void Mouse_ButtonReleased(Bit8u button);
 
 void Mouse_AutoLock(bool enable);
-void Mouse_BeforeNewVideoMode(bool setmode);
-void Mouse_AfterNewVideoMode(bool setmode);
+void Mouse_NewVideoMode(void);
 
 #endif

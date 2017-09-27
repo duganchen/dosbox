@@ -16,8 +16,6 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#include "dosbox.h"
-#if C_DEBUG
 #ifdef WIN32
 
 #include <windows.h>
@@ -78,5 +76,4 @@ void WIN32_Console() {
 	SetConsoleTitle("DOSBox Debugger");
 	ResizeConsole(GetStdHandle(STD_OUTPUT_HANDLE),80,50);
 }
-#endif
 #endif

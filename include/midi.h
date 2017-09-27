@@ -32,13 +32,14 @@ public:
 	virtual void PlayMsg(Bit8u * /*msg*/) {};
 	virtual void PlaySysex(Bit8u * /*sysex*/,Bitu /*len*/) {};
 	virtual const char * GetName(void) { return "none"; };
+	virtual void Reset() {};
 	virtual void ListAll(Program * base) {};
 	virtual ~MidiHandler() { };
 	MidiHandler * next;
 };
 
 
-#define SYSEX_SIZE 8192
+#define SYSEX_SIZE 1024
 struct DB_Midi {
 	Bitu status;
 	Bitu cmd_len;

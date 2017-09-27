@@ -93,14 +93,13 @@
 #define VGAMEM_CTEXT 0xB800
 #define VGAMEM_MTEXT 0xB000
 
+/* FIXME: Wait, what?? What the hell kind of preprocessor macro is this??? Kill these macros! --J.C. */
 #define BIOS_NCOLS Bit16u ncols=real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
 #define BIOS_NROWS Bit16u nrows=(Bit16u)real_readb(BIOSMEM_SEG,BIOSMEM_NB_ROWS)+1;
 
 extern Bit8u int10_font_08[256 * 8];
 extern Bit8u int10_font_14[256 * 14];
 extern Bit8u int10_font_16[256 * 16];
-extern Bit8u int10_font_14_alternate[20 * 15 + 1];
-extern Bit8u int10_font_16_alternate[19 * 17 + 1];
 
 struct VideoModeBlock {
 	Bit16u	mode;
@@ -145,22 +144,30 @@ typedef struct {
 	bool vesa_oldvbe;
 } Int10Data;
 
+#define _EGA_HALF_CLOCK			0x0001
+#define _DOUBLESCAN			0x0002
+#define _VGA_PIXEL_DOUBLE		0x0004
+#define _S3_PIXEL_DOUBLE		0x0008
+#define _REPEAT1			0x0010
+#define _CGA_SYNCDOUBLE			0x0020
+
 extern Int10Data int10;
 
-static Bit8u CURSOR_POS_COL(Bit8u page) {
+static inline Bit8u CURSOR_POS_COL(Bit8u page) {
 	return real_readb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2);
 }
 
-static Bit8u CURSOR_POS_ROW(Bit8u page) {
+static inline Bit8u CURSOR_POS_ROW(Bit8u page) {
 	return real_readb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2+1);
 }
 
 bool INT10_SetVideoMode(Bit16u mode);
-void INT10_SetCurMode(void);
 
 void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit8u attr,Bit8u page);
 
 void INT10_SetActivePage(Bit8u page);
+bool INT10_SetCurMode(void);
+void INT10_DisplayCombinationCode(Bit16u * dcc,bool set);
 void INT10_GetFuncStateInformation(PhysPt save);
 
 void INT10_SetCursorShape(Bit8u first,Bit8u last);

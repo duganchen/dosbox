@@ -20,7 +20,7 @@
 #define DOSBOX_TIMER_H
 
 /* underlying clock rate in HZ */
-#include "SDL.h"
+#include <SDL.h>
 
 #define PIT_TICK_RATE 1193182
 
@@ -34,5 +34,9 @@ void TIMER_DelTickHandler(TIMER_TickHandler handler);
 
 /* This will add 1 milliscond to all timers */
 void TIMER_AddTick(void);
+
+/* Functions for the system control port 61h */
+bool TIMER_GetOutput2();
+void TIMER_SetGate2(bool in);
 
 #endif

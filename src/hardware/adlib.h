@@ -78,20 +78,26 @@ struct Timer {
 };
 
 struct Chip {
+	Chip() {
+		last_poll = 0;
+		poll_counter = 0;
+	}
 	//Last selected register
 	Timer timer[2];
 	//Check for it being a write to the timer
 	bool Write( Bit32u addr, Bit8u val );
 	//Read the current timer state, will use current double
 	Bit8u Read( );
+	//poll counter
+	double last_poll;
+	unsigned int poll_counter;
 };
 
 //The type of handler this is
 typedef enum {
 	MODE_OPL2,
 	MODE_DUALOPL2,
-	MODE_OPL3,
-	MODE_OPL3GOLD
+	MODE_OPL3
 } Mode;
 
 class Handler {
@@ -104,6 +110,10 @@ public:
 	virtual void Generate( MixerChannel* chan, Bitu samples ) = 0;
 	//Initialize at a specific sample rate and mode
 	virtual void Init( Bitu rate ) = 0;
+
+	virtual void SaveState( std::ostream& stream ) {}
+	virtual void LoadState( std::istream& stream ) {}
+
 	virtual ~Handler() {
 	}
 };
@@ -120,29 +130,21 @@ class Module: public Module_base {
 	MixerObject mixerObject;
 
 	//Mode we're running in
-	Mode mode;
+	//Mode mode;
 	//Last selected address in the chip for the different modes
 	union {
 		Bit32u normal;
 		Bit8u dual[2];
 	} reg;
-	struct {
-		bool active;
-		Bit8u index;
-		Bit8u lvol;
-		Bit8u rvol;
-		bool mixer;
-	} ctrl;
 	void CacheWrite( Bit32u reg, Bit8u val );
 	void DualWrite( Bit8u index, Bit8u reg, Bit8u val );
-	void CtrlWrite( Bit8u val );
-	Bitu CtrlRead( void );
 public:
 	static OPL_Mode oplmode;
 	MixerChannel* mixerChan;
 	Bit32u lastUsed;				//Ticks when adlib was last used to turn of mixing after a few second
 
 	Handler* handler;				//Handler that will generate the sound
+	Mode mode;
 	RegisterCache cache;
 	Capture* capture;
 	Chip	chip[2];
@@ -151,6 +153,9 @@ public:
 	void PortWrite( Bitu port, Bitu val, Bitu iolen );
 	Bitu PortRead( Bitu port, Bitu iolen );
 	void Init( Mode m );
+
+	virtual void SaveState( std::ostream& stream );
+	virtual void LoadState( std::istream& stream );
 
 	Module( Section* configuration); 
 	~Module();

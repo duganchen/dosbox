@@ -20,6 +20,8 @@
 #ifndef DOSBOX_MIXER_H
 #define DOSBOX_MIXER_H
 
+#include <sstream>
+
 #ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
 #endif
@@ -72,27 +74,23 @@ public:
 	void AddSamples_s16u_nonnative(Bitu len, const Bit16u * data);
 	void AddSamples_m32_nonnative(Bitu len, const Bit32s * data);
 	void AddSamples_s32_nonnative(Bitu len, const Bit32s * data);
-	
-	void AddStretched(Bitu len,Bit16s * data);		//Strech block up into needed data
 
+	void AddStretched(Bitu len,Bit16s * data);		//Strech block up into needed data
+	void AddStretchedStereo(Bitu len,Bit16s * data);		//Strech block up into needed data
 	void FillUp(void);
 	void Enable(bool _yesno);
+
+	void SaveState( std::ostream& stream );
+	void LoadState( std::istream& stream );
+
 	MIXER_Handler handler;
 	float volmain[2];
 	float scale;
 	Bit32s volmul[2];
-	
-	//This gets added the frequency counter each mixer step
-	Bitu freq_add;
-	//When this flows over a new sample needs to be read from the device
-	Bitu freq_counter;
-	//Timing on how many samples have been done and were needed by th emixer
-	Bitu done, needed;
-	//Previous and next samples
-	Bits prevSample[2];
-	Bits nextSample[2];
+	Bitu freq_add,freq_index;
+	Bitu done,needed;
+	Bits last[2];
 	const char * name;
-	bool interpolate;
 	bool enabled;
 	MixerChannel * next;
 };
@@ -117,6 +115,7 @@ public:
 
 /* PC Speakers functions, tightly related to the timer functions */
 void PCSPEAKER_SetCounter(Bitu cntr,Bitu mode);
-void PCSPEAKER_SetType(Bitu mode);
+void PCSPEAKER_SetType(bool pit_clock_gate_enabled, bool pit_output_enabled);
+void PCSPEAKER_SetPITControl(Bitu mode);
 
 #endif

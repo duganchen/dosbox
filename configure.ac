@@ -1,5 +1,5 @@
 dnl Init.
-AC_INIT(dosbox,SVN)
+AC_INIT(dosbox,SVN-Daum)
 AC_PREREQ(2.50)
 AC_CONFIG_SRCDIR(README)
 
@@ -24,26 +24,31 @@ dnl perharps join this with the other target depended checks. move them upwards
 if test x$host = xi386-pc-os2-emx ; then
     CXXFLAGS="$CXXFLAGS -Zmt"
     LDFLAGS="$LDFLAGS -Zomf -Zmt"
+    LIBS="$LIBS -los2me"
 fi
 
 dnl Check for SDL
-EXULT_CHECK_SDL(:,AC_MSG_ERROR([[*** SDL not found!]]))
+SDL_VERSION=1.2.0
+AM_PATH_SDL($SDL_VERSION,
+            :,
+	    AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
+)
 LIBS="$LIBS $SDL_LIBS"
 CPPFLAGS="$CPPFLAGS $SDL_CFLAGS"
 
-dnl Check if SDL is 2.0.x
-AC_MSG_CHECKING([for SDL version being 2.0.x])
+dnl Check if SDL is 1.2.x (1.3 not supported)
+AC_MSG_CHECKING([SDL version only being 1.2.X])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include "SDL.h"
 void blah(){
-#if !((SDL_MAJOR_VERSION == 2) && (SDL_MINOR_VERSION == 0))
-#error "Only SDL 2.0 supported"
+#if SDL_MINOR_VERSION != 2
+#error "Only SDL 1.2 supported"
 #endif
 ;
 }
 ])],AC_MSG_RESULT([yes]),[
  AC_MSG_RESULT([no]) 
- AC_MSG_ERROR([Only libSDL 2.0.x supported])])
+ AC_MSG_ERROR([Only libSDL 1.2.X supported])])
 
 dnl Checks for header files.
 
@@ -124,12 +129,6 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]],[[
 ]])], [AC_MSG_RESULT(yes)], [AC_DEFINE([DB_HAVE_NO_POWF],[1],[libm doesn't include powf])])
 LIBS=$LIBS_BACKUP
 
-dnl Look for clock_gettime, a DB_HAVE_CLOCK_GETTIME is set when present
-AH_TEMPLATE([DB_HAVE_CLOCK_GETTIME],[Determines if the function clock_gettime is available.])
-AC_SEARCH_LIBS([clock_gettime], [rt] , [found_clock_gettime=yes], [found_clock_gettime=no])
-if test x$found_clock_gettime = xyes; then
-  AC_DEFINE(DB_HAVE_CLOCK_GETTIME)
-fi
 
 dnl Checks for libraries.
 
@@ -147,7 +146,7 @@ CFLAGS="-Werror"
 
 AH_TEMPLATE([C_ATTRIBUTE_ALWAYS_INLINE],[Determines if the compilers supports always_inline attribute.])
 AC_MSG_CHECKING(if compiler allows __attribute__((always_inline)) )
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([ inline void __attribute__((always_inline)) test(){}
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([ void __attribute__((always_inline)) test(){}
 ])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_ATTRIBUTE_ALWAYS_INLINE)],AC_MSG_RESULT(no))
 
 AH_TEMPLATE([C_ATTRIBUTE_FASTCALL],[Determines if the compilers supports fastcall attribute.])
@@ -329,11 +328,10 @@ else
   AC_MSG_RESULT(no)
 fi 
 
-AH_TEMPLATE(C_FPU_X86,[Define to 1 to use a x86/x64 assembly fpu core])
+AH_TEMPLATE(C_FPU_X86,[Define to 1 to use a x86 assembly fpu core])
 AC_ARG_ENABLE(fpu-x86,AC_HELP_STRING([--disable-fpu-x86],[Disable x86 assembly fpu core]),,enable_fpu_x86=yes)
-AC_ARG_ENABLE(fpu-x64,AC_HELP_STRING([--disable-fpu-x64],[Disable x64 assembly fpu core]),,enable_fpu_x64=yes)
-AC_MSG_CHECKING(whether the x86/x64 assembly fpu core will be enabled) 
-if test x$enable_fpu_x86 = xno -o x$enable_fpu_x64 = xno; then 
+AC_MSG_CHECKING(whether x86 assembly fpu core will be enabled) 
+if test x$enable_fpu_x86 = xno ; then 
    AC_MSG_RESULT(no)
 else
   if test x$enable_fpu = xyes; then
@@ -358,39 +356,60 @@ else
   AC_MSG_RESULT(no)
 fi
 
+AH_TEMPLATE(C_LIBPNG,[Define to 1 if you have libpng])
 AH_TEMPLATE(C_SSHOT,[Define to 1 to enable screenshots, requires libpng])
 AC_CHECK_HEADER(png.h,have_png_h=yes,)
 AC_CHECK_LIB(png, png_get_io_ptr, have_png_lib=yes, ,-lz)
 if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
   LIBS="$LIBS -lpng -lz"
+  AC_DEFINE(C_LIBPNG,1)
   AC_DEFINE(C_SSHOT,1)
 else
   AC_MSG_WARN([Can't find libpng, screenshot support disabled])
+fi
+
+AH_TEMPLATE(C_PRINTER,[Define to 1 to use printer support])
+AC_ARG_ENABLE(printer,AC_HELP_STRING([--disable-printer],[Disable printer support]),,enable_printer=yes)
+AC_PATH_PROG(FREETYPE_CONFIG, freetype-config, no)
+if test "$FREETYPE_CONFIG" = "no" ; then
+   AC_MSG_WARN([Can't find FreeType2, printer disabled])
+else
+    AC_DEFINE(C_PRINTER,1)
+    CXXFLAGS="$CXXFLAGS `$FREETYPE_CONFIG --cflags`"
+    LIBS="$LIBS `$FREETYPE_CONFIG --libs`"
+fi
+
+AH_TEMPLATE(C_NE2000,[Define to 1 to enable NE2000 ethernet passthrough, requires libpcap])
+AC_CHECK_HEADER(pcap.h,have_pcap_h=yes,)
+AC_CHECK_LIB(pcap, pcap_open_live, have_pcap_lib=yes, ,-lz)
+if test x$have_pcap_lib = xyes -a x$have_pcap_h = xyes ; then
+  LIBS="$LIBS -lpcap";
+  AC_DEFINE(C_NE2000,1)
+else
+  AC_MSG_WARN([Can't find libpcap, NE2000 ethernet passthrough disabled])
 fi
 
 AH_TEMPLATE(C_MODEM,[Define to 1 to enable internal modem support, requires SDL_net])
 AH_TEMPLATE(C_IPX,[Define to 1 to enable IPX over Internet networking, requires SDL_net])
 AC_CHECK_HEADER(SDL_net.h,have_sdl_net_h=yes,)
 
-LIBSDL_HEADER="SDL2"
-
 if test x$host = xi386-pc-os2-emx ; then
-  AC_MSG_CHECKING(for SDLNet_Init in ${LIBSDL_HEADER}_net);
+  AC_MSG_CHECKING(for SDLNet_Init in SDL_net);
   LIBS_BACKUP=$LIBS;
-  LIBS="$LIBS -l${LIBSDL_HEADER}_Net";
+  LIBS="$LIBS -lSDL_Net";
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <SDL_Net.h>]],[[
 	SDLNet_Init ();
   ]])], [AC_MSG_RESULT(yes); have_sdl_net_lib=yes], AC_MSG_RESULT(no))
   LIBS=$LIBS_BACKUP
 else
-AC_CHECK_LIB(${LIBSDL_HEADER}_net, SDLNet_Init, have_sdl_net_lib=yes, , )
+AC_CHECK_LIB(SDL_net, SDLNet_Init, have_sdl_net_lib=yes, , )
 fi
 if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
-   LIBS="$LIBS -l${LIBSDL_HEADER}_net"
+   LIBS="$LIBS -lSDL_net"
    AC_DEFINE(C_MODEM,1)
    AC_DEFINE(C_IPX,1)
 else 
-   AC_MSG_WARN([Can't find ${LIBSDL_HEADER}_net, internal modem and ipx disabled])
+   AC_MSG_WARN([Can't find SDL_net, internal modem and ipx disabled])
 fi
 
 AH_TEMPLATE(C_X11_XKB,[define to 1 if you have XKBlib.h and X11 lib])
@@ -403,22 +422,6 @@ if test x$have_x11_lib = xyes -a x$have_x11_h = xyes ; then
    AC_MSG_RESULT(yes)
 else
    AC_MSG_RESULT(no)
-fi
-
-AH_TEMPLATE(C_FLUIDSYNTH,[Define to 1 to enable fluidsynth MIDI synthesis])
-AC_CHECK_HEADER(fluidsynth.h,have_fluidsynth_h=yes,)
-AC_CHECK_LIB(fluidsynth, new_fluid_synth, have_fluidsynth_lib=yes,,)
-if test x$have_fluidsynth_lib = xyes -a x$have_fluidsynth_h = xyes ; then
-  LIBS="$LIBS -lfluidsynth"
-  AC_DEFINE(C_FLUIDSYNTH,1)
-else
-  AC_MSG_WARN([fluidsynth MIDI synthesis not available])
-fi
-
-AH_TEMPLATE(C_WORDEXP,[Define to 1 if you have wordexp.h])
-AC_CHECK_HEADER(wordexp.h,have_wordexp_h=yes,)
-if test x$have_wordexp_h = xyes ; then
-  AC_DEFINE(C_WORDEXP,1)
 fi
 
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
@@ -435,11 +438,11 @@ case "$host" in
        AC_DEFINE(C_OPENGL,1)
        ;;
     *)
-       if test x$have_gl_h = xyes -a x$have_gl_lib = xyes; then 
+       if test x$have_gl_h = xyes -a x$have_gl_lib = xyes ; then 
          AC_MSG_RESULT(yes)
-         LIBS="$LIBS -lGL -lGLU"
+         LIBS="$LIBS -lGL"
          AC_DEFINE(C_OPENGL,1)
-       elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes; then 
+       elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes ; then 
          AC_MSG_RESULT(yes)
          LIBS="$LIBS -lopengl32"
          AC_DEFINE(C_OPENGL,1)
@@ -450,14 +453,15 @@ case "$host" in
 esac
 fi
 
-AH_TEMPLATE(C_RETINAFIX,[Define to 1 to use opengl display output support])
-AC_ARG_ENABLE(retinafix,AC_HELP_STRING([--enable-retinafix],[Enable fullscreen fix for retina Macs]),[
-   if test x$enable_retinafix = xyes; then
-     AC_MSG_RESULT([Fullscreen fix for retina Macs enabled])
-     AC_DEFINE(C_RETINAFIX,1)
-   fi 
-],)
-
+AH_TEMPLATE(C_FLUIDSYNTH,[Define to 1 to enable fluidsynth MIDI synthesis])
+AC_CHECK_HEADER(fluidsynth.h,have_fluidsynth_h=yes,)
+AC_CHECK_LIB(fluidsynth, new_fluid_synth, have_fluidsynth_lib=yes,,)
+if test x$have_fluidsynth_lib = xyes -a x$have_fluidsynth_h = xyes ; then
+  LIBS="$LIBS -lfluidsynth"
+  AC_DEFINE(C_FLUIDSYNTH,1)
+else
+  AC_MSG_WARN([fluidsynth MIDI synthesis not available])
+fi
 
 AH_TEMPLATE(C_SDL_SOUND,[Define to 1 to enable SDL_sound support])
 AC_CHECK_HEADER(SDL_sound.h,have_SDL_sound_h=yes,)
@@ -490,13 +494,59 @@ int main(int argc,char * argv[]) {
 };
 ])],AC_MSG_RESULT(yes);AC_DEFINE(C_SET_PRIORITY,1),AC_MSG_RESULT(no))
 
+AH_TEMPLATE(C_HAVE_PHYSFS,[Define to 1 if you have physfs library])
+AC_CHECK_LIB(physfs, PHYSFS_init, have_PHYSFS_init=yes,,)
+if test x$have_PHYSFS_init = xyes ; then
+    AC_DEFINE(C_HAVE_PHYSFS,1)
+    LIBS="$LIBS -lphysfs -lz"
+else
+    AC_MSG_WARN([Can't find PHYSFS_init])
+fi
 
 dnl Some target detection and actions for them
 case "$host" in
     *-*-cygwin* | *-*-mingw32*)
        LIBS="$LIBS -lwinmm"
+       AH_TEMPLATE(C_D3DSHADERS,[Define to 1 to use Direct3D shaders, requires d3d9.h and libd3dx9])
+       AC_ARG_WITH(dx-headers,[  --with-dx-headers=DIR   DirectX include files location],
+		   dx_headers="$withval", dx_headers="")
+       AC_ARG_WITH(dx-libs,[  --with-dx-libs=DIR      DirectX library location],
+		   dx_libs="$withval", dx_libs="")
+       ac_save_CPPFLAGS=$CPPFLAGS
+       if test x$dx_headers != x ; then
+        CPPFLAGS="$CPPFLAGS -I$dx_headers"
+       fi
+       AC_LANG(C++)
        AC_CHECK_HEADERS(ddraw.h)
+       AC_CHECK_HEADERS(d3d9.h,have_d3d9_h=yes,)
+       AC_MSG_CHECKING(whether direct3d display output will be enabled)
+       if test x$have_d3d9_h = xyes ; then
+        AC_MSG_RESULT(yes)
+        AC_ARG_ENABLE(shaders,AC_HELP_STRING([--disable-shaders],[Disable d3d pixelshader support (which requires libd3dx9)]),,[
+		AC_MSG_CHECKING(whether direct3d pixelshaders will be enabled)
+		ac_save_LIBS=$LIBS
+		if test x$dx_libs != x ; then
+		 dx_libs=" -L$dx_libs"
+		fi
+		LIBS="$LIBS$dx_libs -ld3dx9"
+		AC_TRY_LINK([#include <d3d9.h>
+			     #include <d3dx9.h>
+			     extern "C" int main();],D3DXCreateEffect(0, 0, 0, 0, 0, 0, 0, 0, 0), have_d3dx9_lib=yes,)
+		if test x$have_d3dx9_lib = xyes ; then
+		 AC_MSG_RESULT(yes)
+		 AC_DEFINE(C_D3DSHADERS,1)
+		else
+		 LIBS=$ac_save_LIBS
+		 AC_MSG_RESULT(no)
+		 AC_MSG_WARN([Can't find libd3dx9, pixelshader support disabled])
+		fi
+	],)
+       else
+        CPPFLAGS=$ac_save_CPPFLAGS
+        AC_MSG_RESULT(no)
+       fi
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2 only).])
+       AC_DEFINE(C_DIRECTLPT, 1, [ Define to 1 if you want parallel passthrough support (Win32 only).])
        if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
          LIBS="$LIBS -lws2_32"
        fi
@@ -507,12 +557,13 @@ case "$host" in
        dnl to do more to distinguish them.
        dnl For now I am lazy and do not add proper detection code.
        AC_DEFINE(MACOSX, 1, [Compiling on Mac OS X])
-       LIBS="$LIBS -framework CoreMIDI -framework AudioUnit -framework AudioToolbox -framework AppKit"
+       LIBS="$LIBS -framework CoreMIDI -framework AudioUnit -framework AudioToolbox"
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2).])
        ;;
     *-*-linux*)
        AC_DEFINE(LINUX, 1, [Compiling on GNU/Linux])
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2).])
+       AC_DEFINE(C_DIRECTLPT, 1, [ Define to 1 if you want parallel passthrough support (Win32, Linux).])
        ;;
     *-*-freebsd* | *-*-dragonfly* | *-*-netbsd* | *-*-openbsd*)
        dnl Disabled directserial for now. It doesn't do anything without
@@ -557,10 +608,13 @@ src/fpu/Makefile
 src/gui/Makefile
 src/hardware/Makefile
 src/hardware/serialport/Makefile
+src/hardware/reSID/Makefile
+src/hardware/parport/Makefile
 src/ints/Makefile
 src/libs/Makefile
 src/libs/zmbv/Makefile
 src/libs/gui_tk/Makefile
+src/libs/porttalk/Makefile
 src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile

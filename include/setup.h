@@ -122,38 +122,33 @@ public:
 	struct Changeable { enum Value {Always, WhenIdle,OnlyAtStart};};
 	const std::string propname;
 
-	Property(std::string const& _propname, Changeable::Value when):propname(_propname),change(when) { }
+	Property(std::string const& _propname, Changeable::Value when):propname(_propname),change(when) { use_global_config_str=false; }
 	void Set_values(const char * const * in);
 	void Set_help(std::string const& str);
 	char const* Get_help();
 	virtual	bool SetValue(std::string const& str)=0;
 	Value const& GetValue() const { return value;}
 	Value const& Get_Default_Value() const { return default_value; }
-	//CheckValue returns true, if value is in suggested_values;
+	//CheckValue returns true  if value is in suggested_values;
 	//Type specific properties are encouraged to override this and check for type
 	//specific features.
 	virtual bool CheckValue(Value const& in, bool warn);
-public:
+	//Set interval value to in or default if in is invalid. force always sets the value.
+	bool SetVal(Value const& in, bool forced,bool warn=true) {
+		if(forced || CheckValue(in,warn)) {value = in; return true;} else { value = default_value; return false;}}
 	virtual ~Property(){ } 
 	virtual const std::vector<Value>& GetValues() const;
 	Value::Etype Get_type(){return default_value.type;}
 	Changeable::Value getChange() {return change;}
 
 protected:
-	//Set interval value to in or default if in is invalid. force always sets the value.
-	//Can be overriden to set a different value if invalid.
-	virtual bool SetVal(Value const& in, bool forced,bool warn=true) {
-		if(forced || CheckValue(in,warn)) { 
-			value = in; return true;
-		} else { 
-			value = default_value; return false;
-		}
-	}
 	Value value;
 	std::vector<Value> suggested_values;
 	typedef std::vector<Value>::iterator iter;
 	Value default_value;
 	const Changeable::Value change;
+	bool use_global_config_str;
+	std::string help_string;
 };
 
 class Prop_int:public Property {
@@ -173,11 +168,8 @@ public:
 	int getMax() { return max;}
 	void SetMinMax(Value const& min,Value const& max) {this->min = min; this->max=max;}
 	bool SetValue(std::string const& in);
-	~Prop_int(){ }
+	virtual ~Prop_int(){ }
 	virtual bool CheckValue(Value const& in, bool warn);
-	// Override SetVal, so it takes min,max in account when there are no suggested values
-	virtual bool SetVal(Value const& in, bool forced,bool warn=true);
-	
 private:
 	Value min,max;
 };
@@ -189,7 +181,7 @@ public:
 		default_value = value = _value;
 	}
 	bool SetValue(std::string const& input);
-	~Prop_double(){ }
+	virtual ~Prop_double(){ }
 };
 
 class Prop_bool:public Property {
@@ -199,7 +191,7 @@ public:
 		default_value = value = _value;
 	}
 	bool SetValue(std::string const& in);
-	~Prop_bool(){ }
+	virtual ~Prop_bool(){ }
 };
 
 class Prop_string:public Property{
@@ -210,7 +202,7 @@ public:
 	}
 	bool SetValue(std::string const& in);
 	virtual bool CheckValue(Value const& in, bool warn);
-	~Prop_string(){ }
+	virtual ~Prop_string(){ }
 };
 class Prop_path:public Prop_string{
 public:
@@ -221,7 +213,7 @@ public:
 		realpath = _value;
 	}
 	bool SetValue(std::string const& in);
-	~Prop_path(){ }
+	virtual ~Prop_path(){ }
 };
 
 class Prop_hex:public Property {
@@ -231,7 +223,7 @@ public:
 		default_value = value = _value;
 	}
 	bool SetValue(std::string const& in);
-	~Prop_hex(){ }
+	virtual ~Prop_hex(){ }
 };
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
@@ -262,8 +254,8 @@ public:
 
 	virtual std::string GetPropValue(std::string const& _property) const =0;
 	virtual bool HandleInputline(std::string const& _line)=0;
-	virtual void PrintData(FILE* outfile) const =0;
-	virtual ~Section() { /*Children must call executedestroy ! */}
+	virtual void PrintData(FILE* outfile) = 0;
+	virtual ~Section() { /*Children must call executedestroy ! */ }
 };
 
 class Prop_multival;
@@ -281,7 +273,7 @@ public:
 	Prop_path* Add_path(std::string const& _propname, Property::Changeable::Value when, char const * const _value=NULL);
 	Prop_bool*  Add_bool(std::string const& _propname, Property::Changeable::Value when, bool _value=false);
 	Prop_hex* Add_hex(std::string const& _propname, Property::Changeable::Value when, Hex _value=0);
-//	void Add_double(char const * const _propname, double _value=0.0);   
+	Prop_double* Add_double(std::string const& _propname, Property::Changeable::Value when, double _value=0.0);   
 	Prop_multival *Add_multi(std::string const& _propname, Property::Changeable::Value when,std::string const& sep);
 	Prop_multival_remain *Add_multiremain(std::string const& _propname, Property::Changeable::Value when,std::string const& sep);
 
@@ -294,8 +286,8 @@ public:
 	Prop_path* Get_path(std::string const& _propname) const;
 	Prop_multival* Get_multival(std::string const& _propname) const;
 	Prop_multival_remain* Get_multivalremain(std::string const& _propname) const;
-	bool HandleInputline(std::string const& gegevens);
-	void PrintData(FILE* outfile) const;
+	virtual bool HandleInputline(std::string const& gegevens);
+	virtual void PrintData(FILE* outfile);
 	virtual std::string GetPropValue(std::string const& _property) const;
 	//ExecuteDestroy should be here else the destroy functions use destroyed properties
 	virtual ~Section_prop();
@@ -304,17 +296,17 @@ public:
 class Prop_multival:public Property{
 protected:
 	Section_prop* section;
-	std::string separator;
+	std::string seperator;
 	void make_default_value();
 public:
-	Prop_multival(std::string const& _propname, Changeable::Value when,std::string const& sep):Property(_propname,when), section(new Section_prop("")),separator(sep) {
+	Prop_multival(std::string const& _propname, Changeable::Value when,std::string const& sep):Property(_propname,when), section(new Section_prop("")),seperator(sep) {
 		default_value = value = "";
 	}
 	Section_prop *GetSection() { return section; }
 	const Section_prop *GetSection() const { return section; }
 	virtual bool SetValue(std::string const& input);
 	virtual const std::vector<Value>& GetValues() const;
-	~Prop_multival() { delete section; }
+	virtual ~Prop_multival() { if (section != NULL) { delete section; } }
 }; //value bevat totale string. setvalue zet elk van de sub properties en checked die.
 
 class Prop_multival_remain:public Prop_multival{
@@ -328,9 +320,9 @@ public:
 class Section_line: public Section{
 public:
 	Section_line(std::string const& _sectionname):Section(_sectionname){}
-	~Section_line(){ExecuteDestroy(true);}
-	bool HandleInputline(std::string const& gegevens);
-	void PrintData(FILE* outfile) const;
+	virtual ~Section_line() { ExecuteDestroy(true); }
+	virtual bool HandleInputline(std::string const& gegevens);
+	virtual void PrintData(FILE* outfile);
 	virtual std::string GetPropValue(std::string const& _property) const;
 	std::string data;
 };

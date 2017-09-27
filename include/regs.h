@@ -19,6 +19,8 @@
 #ifndef DOSBOX_REGS_H
 #define DOSBOX_REGS_H
 
+#include <iostream>
+
 #ifndef DOSBOX_MEM_H
 #include "mem.h"
 #endif
@@ -59,7 +61,7 @@ struct Segment {
 enum SegNames { es=0,cs,ss,ds,fs,gs};
 
 struct Segments {
-	Bit16u val[8];
+	Bitu val[8];
 	PhysPt phys[8];
 };
 
@@ -92,6 +94,13 @@ struct CPU_Regs {
 
 extern Segments Segs;
 extern CPU_Regs cpu_regs;
+
+//serialization
+std::ostream& operator<<(std::ostream& stream, const Segments& seg);
+std::istream& operator>>(std::istream& stream, Segments& seg);
+
+std::ostream& operator<<(std::ostream& stream, const CPU_Regs& reg);
+std::istream& operator>>(std::istream& stream, CPU_Regs& reg);
 
 static INLINE PhysPt SegPhys(SegNames index) {
 	return Segs.phys[index];

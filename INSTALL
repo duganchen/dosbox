@@ -67,8 +67,7 @@ In step 1 you could add the following switches:
         finished and isn't entirely accurate it's advised to leave it on. 
 
 --disable-fpu-x86
---disable-fpu-x64
-        disables the assembly fpu core. Although relatively new, the x86/x64 fpu 
+        disables the assembly fpu core. Although relatively new the x86 fpu 
         core has more accuracy then the regular fpu core. 
 
 --disable-dynamic-x86
