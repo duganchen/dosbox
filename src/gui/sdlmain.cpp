@@ -120,6 +120,7 @@ struct SDL_Block {
 	bool update_display_contents;
 	bool update_window;
 	int window_desired_width, window_desired_height;
+	Bitu force_rate_update;
 	struct {
 		Bit32u width;
 		Bit32u height;
@@ -1167,11 +1168,28 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 
 
 void GFX_EndUpdate( const Bit16u *changedLines ) {
+	static Uint32 last_frame_update = GetTicks();
+	bool force_refresh = false;
+
+	// If this is being called with no changes then we assume that a minimum
+	// forced frame refresh is desired and thus check if the time
+	// since last frame render is less than our desired minimal frame
+	// updates. If so then we re-render the frame.
+	if (
+		changedLines == 0 &&
+		sdl.force_rate_update &&
+		sdl.desktop.type == SCREEN_OPENGL
+	) {
+		force_refresh = sdl.force_rate_update < GetTicks() - last_frame_update;
+	}
+
 	if (!sdl.update_display_contents)
 		return;
-	if (!sdl.updating)
+
+	if (!sdl.updating && !force_refresh)
 		return;
 	sdl.updating=false;
+	last_frame_update = GetTicks();
 	switch (sdl.desktop.type) {
 	case SCREEN_SURFACE:
 		if (changedLines) {
@@ -1217,10 +1235,14 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 				}
 				index++;
 			}
-			glClear(GL_COLOR_BUFFER_BIT);
-			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-			SDL_GL_SwapWindow(sdl.window);
 		}
+		// Even if the lines did not change we show a frame. In combination
+		// with checking time_since_update this ensures a minimal amount
+		// of draws per-second.
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		SDL_GL_SwapWindow(sdl.window);
+
 		break;
 #endif
 	default:
@@ -1371,6 +1393,8 @@ static void GUI_StartUp(Section * sec) {
 	sdl.updating=false;
 	sdl.update_window=true;
 	sdl.update_display_contents=true;
+	// This will be changed later in main().
+	sdl.force_rate_update = 0;
 
 	GFX_SetIcon();
 
@@ -2342,6 +2366,10 @@ int main(int argc, char* argv[]) {
 		control->Init();
 		/* Some extra SDL Functions */
 		Section_prop * sdl_sec=static_cast<Section_prop *>(control->GetSection("sdl"));
+
+		// Grab the minimum desired render rate from the render section.
+		Section_prop * render_sec=static_cast<Section_prop *>(control->GetSection("render"));
+		sdl.force_rate_update = render_sec->Get_int("forcerateupdate");
 
 		if (control->cmdline->FindExist("-fullscreen") || sdl_sec->Get_bool("fullscreen")) {
 			if(!sdl.desktop.fullscreen) { //only switch if not already in fullscreen
