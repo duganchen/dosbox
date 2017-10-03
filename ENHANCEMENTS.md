@@ -30,8 +30,12 @@ play BGM using a soundfont. Specify that in your configuration file:
 	fluid.driver=alsa # set as appropriate
 	fluid.soundfont=/path/to/soundfont.sf2
 
-On OS X and Linux, DosBox will perform shell-expansion on the fluid.soundfont paths. That means that it'ss allowed to have dollar signs
+On OS X and Linux, DosBox will perform shell-expansion on the fluid.soundfont paths. That means that it's allowed to have dollar signs
 (environment variables) and tildes (home directories).
+
+If you've built FluidSynth into DosBox and you want to stop FluidSynth from loading, set the following:
+
+	mididevice=none
 
 ### OpenGL 3 Support
 
