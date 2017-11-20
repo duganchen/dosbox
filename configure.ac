@@ -18,6 +18,7 @@ AC_PROG_CPP
 AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_RANLIB
+AX_CXX_COMPILE_STDCXX(11)
 
 dnl Some needed libaries for OS2
 dnl perharps join this with the other target depended checks. move them upwards
