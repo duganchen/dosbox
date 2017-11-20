@@ -17,9 +17,18 @@
  */
 
 
+#define _USE_32BIT_TIME_T
+
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
+#if defined(WIN32)
+#include <windows.h>
+#else
+#include <sys/time.h>
+#endif
+
 #include "dosbox.h"
 #include "bios.h"
 #include "mem.h"
@@ -40,7 +49,78 @@ void DOS_SetError(Bit16u code) {
 	dos.errorcode=code;
 }
 
-const Bit8u DOS_DATE_months[] = {
+#if defined(_MSC_VER) || defined(_MSC_EXTENSIONS)
+	#define DELTA_EPOCH_IN_MICROSECS  11644473600000000Ui64
+#else
+	#define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
+#endif
+
+#if defined(WIN32)
+struct timezone {
+	int  tz_minuteswest; /* minutes W of Greenwich */
+	int  tz_dsttime;     /* type of dst correction */
+};
+
+int gettimeofday(struct timeval *tv, struct timezone *tz) {
+	// Define a structure to receive the current Windows filetime
+	FILETIME ft;
+
+	// Initialize the present time to 0 and the timezone to UTC
+	unsigned __int64 tmpres = 0;
+	static int tzflag = 0;
+
+	if (NULL != tv) {
+		GetSystemTimeAsFileTime(&ft);
+
+		// The GetSystemTimeAsFileTime returns the number of 100 nanosecond
+		// intervals since Jan 1, 1601 in a structure. Copy the high bits to
+		// the 64 bit tmpres, shift it left by 32 then or in the low 32 bits.
+		tmpres |= ft.dwHighDateTime;
+		tmpres <<= 32;
+		tmpres |= ft.dwLowDateTime;
+
+		// Convert to microseconds by dividing by 10
+		tmpres /= 10;
+
+		// The Unix epoch starts on Jan 1 1970.  Need to subtract the difference
+		// in seconds from Jan 1 1601.
+		tmpres -= DELTA_EPOCH_IN_MICROSECS;
+
+		// Finally change microseconds to seconds and place in the seconds value.
+		// The modulus picks up the microseconds.
+		tv->tv_sec = (long)(tmpres / 1000000UL);
+		tv->tv_usec = (long)(tmpres % 1000000UL);
+	}
+
+	if (NULL != tz) {
+		if(!tzflag) {
+			_tzset();
+			tzflag++;
+		}
+
+j		// Adjust for the timezone west of Greenwich
+		tz->tz_minuteswest = _timezone / 60;
+		tz->tz_dsttime = _daylight;
+	}
+
+	return 0;
+}
+/*
+int settimeofday(const struct timeval *tv, const struct timezone *tz) {
+	SYSTEMTIME systime;
+
+	if (NULL != tv) {
+		GetSystemTime(&systime);
+		systime.wYear = reg_cx;
+		systime.wMonth = reg_dh;
+		systime.wDay = reg_dl;
+		SetSystemTime(&systime);
+	}
+}
+*/
+#endif
+
+static const Bit8u DOS_DATE_months[] = {
 	0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
 };
 
@@ -112,7 +192,7 @@ static Bitu DOS_21Handler(void) {
 
 	char name1[DOSNAMEBUF+2+DOS_NAMELENGTH_ASCII];
 	char name2[DOSNAMEBUF+2+DOS_NAMELENGTH_ASCII];
-	
+
 	static Bitu time_start = 0; //For emulating temporary time changes.
 
 	switch (reg_ah) {
@@ -120,7 +200,7 @@ static Bitu DOS_21Handler(void) {
 		DOS_Terminate(mem_readw(SegPhys(ss)+reg_sp+2),false,0);
 		break;
 	case 0x01:		/* Read character from STDIN, with echo */
-		{	
+		{
 			Bit8u c;Bit16u n=1;
 			dos.echo=true;
 			DOS_ReadFile(STDIN,&c,&n);
@@ -165,7 +245,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x06:		/* Direct Console Output / Input */
 		switch (reg_dl) {
 		case 0xFF:	/* Input */
-			{	
+			{
 				//Simulate DOS overhead for timing sensitive games
 				//MM1
 				overhead();
@@ -207,7 +287,7 @@ static Bitu DOS_21Handler(void) {
 				break;
 		};
 	case 0x09:		/* Write string to STDOUT */
-		{	
+		{
 			Bit8u c;Bit16u n=1;
 			PhysPt buf=SegPhys(ds)+reg_dx;
 			while ((c=mem_readb(buf++))!='$') {
@@ -247,7 +327,7 @@ static Bitu DOS_21Handler(void) {
 				}
 				DOS_WriteFile(STDOUT,&c,&n);
 				mem_writeb(data+read+2,c);
-				if (c==13) 
+				if (c==13)
 					break;
 				read++;
 			};
@@ -277,7 +357,7 @@ static Bitu DOS_21Handler(void) {
 			case 0x7:
 			case 0x8:
 			case 0xa:
-				{ 
+				{
 					Bit8u oldah=reg_ah;
 					reg_ah=reg_al;
 					DOS_21Handler();
@@ -295,7 +375,7 @@ static Bitu DOS_21Handler(void) {
 //TODO Hope this doesn't do anything special
 	case 0x0d:		/* Disk Reset */
 //Sure let's reset a virtual disk
-		break;	
+		break;
 	case 0x0e:		/* Select Default Drive */
 		DOS_SetDefaultDrive(reg_dl);
 		reg_al=DOS_DRIVES;
@@ -344,11 +424,11 @@ static Bitu DOS_21Handler(void) {
 		else reg_al = 0xFF;
 		LOG(LOG_FCB,LOG_NORMAL)("DOS:0x16 FCB-Create used, result:al=%d",reg_al);
 		break;
-	case 0x17:		/* Rename file using FCB */		
+	case 0x17:		/* Rename file using FCB */
 		if (DOS_FCBRenameFile(SegValue(ds),reg_dx)) reg_al = 0x00;
 		else reg_al = 0xFF;
 		break;
-	case 0x1b:		/* Get allocation info for default drive */	
+	case 0x1b:		/* Get allocation info for default drive */
 		if (!DOS_GetAllocationInfo(0,&reg_cx,&reg_al,&reg_dx)) reg_al=0xff;
 		break;
 	case 0x1c:		/* Get allocation info for specific drive */
@@ -384,7 +464,7 @@ static Bitu DOS_21Handler(void) {
 		LOG(LOG_FCB,LOG_NORMAL)("DOS:0x28 FCB-Random(block) write used, result:al=%d",reg_al);
 		break;
 	case 0x29:		/* Parse filename into FCB */
-		{   
+		{
 			Bit8u difference;
 			char string[1024];
 			MEM_StrCopy(SegPhys(ds)+reg_si,string,1023); // 1024 toasts the stack
@@ -404,69 +484,115 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x26:		/* Create new PSP */
 		DOS_NewPSP(reg_dx,DOS_PSP(dos.psp()).GetSize());
-		reg_al=0xf0;	/* al destroyed */		
+		reg_al=0xf0;	/* al destroyed */
 		break;
 	case 0x2a:		/* Get System Date */
 		{
 			reg_ax=0; // get time
-			CALLBACK_RunRealInt(0x1a);
-			if(reg_al) DOS_AddDays(reg_al);
-			int a = (14 - dos.date.month)/12;
-			int y = dos.date.year - a;
-			int m = dos.date.month + 12*a - 2;
-			reg_al=(dos.date.day+y+(y/4)-(y/100)+(y/400)+(31*m)/12) % 7;
-			reg_cx=dos.date.year;
-			reg_dh=dos.date.month;
-			reg_dl=dos.date.day;
+
+			struct timeval tv;
+			struct tm *loctime;
+
+			gettimeofday(&tv, NULL);
+			loctime=localtime(&tv.tv_sec);
+
+			reg_al=loctime->tm_wday;
+			reg_cx=1900+loctime->tm_year;
+			reg_dh=1+loctime->tm_mon;
+			reg_dl=loctime->tm_mday;
+
+			LOG(LOG_FCB,LOG_NORMAL)("DOS:2a, %d %d %d %d",
+				reg_al, reg_cx, reg_dh, reg_dl);
 		}
 		break;
 	case 0x2b:		/* Set System Date */
-		if (reg_cx<1980) { reg_al=0xff;break;}
-		if ((reg_dh>12) || (reg_dh==0))	{ reg_al=0xff;break;}
-		if (reg_dl==0) { reg_al=0xff;break;}
- 		if (reg_dl>DOS_DATE_months[reg_dh]) {
-			if(!((reg_dh==2)&&(reg_cx%4 == 0)&&(reg_dl==29))) // february pass
-			{ reg_al=0xff;break; }
+		{
+			//Check input parameters
+			if (reg_cx<1980) { reg_al=0xff;break;}
+			if ((reg_dh>12) || (reg_dh==0))	{ reg_al=0xff;break;}
+			if (reg_dl==0) { reg_al=0xff;break;}
+	 		if (reg_dl>DOS_DATE_months[reg_dh]) {
+				if(!((reg_dh==2)&&(reg_cx%4 == 0)&&(reg_dl==29))) // february pass
+				{ reg_al=0xff;break; }
+			}
+
+#if defined (WIN32)
+			SYSTEMTIME systime;
+
+			GetSystemTime(&systime);
+			systime.wYear=reg_cx;
+			systime.wMonth=reg_dh;
+			systime.wDay=reg_dl;
+			SetSystemTime(&systime);
+#else
+			time_t mytime=time(0);
+			struct tm* tm_ptr=localtime(&mytime);
+
+			if (tm_ptr) {
+				tm_ptr->tm_mon=reg_dh-1;
+				tm_ptr->tm_mday=reg_dl;
+				tm_ptr->tm_year=reg_cx+(2000-1900);
+
+				const struct timeval tv={mktime(tm_ptr),0};
+				settimeofday(&tv, 0);
+			}
+#endif
+			reg_al=0; // successful
 		}
-		dos.date.year=reg_cx;
-		dos.date.month=reg_dh;
-		dos.date.day=reg_dl;
-		reg_al=0;
 		break;
 	case 0x2c: {	/* Get System Time */
 		reg_ax=0; // get time
-		CALLBACK_RunRealInt(0x1a);
-		if(reg_al) DOS_AddDays(reg_al);
-		reg_ah=0x2c;
 
-		Bitu ticks=((Bitu)reg_cx<<16)|reg_dx;
-		if(time_start<=ticks) ticks-=time_start;
-		Bitu time=(Bitu)((100.0/((double)PIT_TICK_RATE/65536.0)) * (double)ticks);
+		struct timeval tv;
+		struct timezone tz;
+		struct tm *loctime;
 
-		reg_dl=(Bit8u)((Bitu)time % 100); // 1/100 seconds
-		time/=100;
-		reg_dh=(Bit8u)((Bitu)time % 60); // seconds
-		time/=60;
-		reg_cl=(Bit8u)((Bitu)time % 60); // minutes
-		time/=60;
-		reg_ch=(Bit8u)((Bitu)time % 24); // hours
+		gettimeofday(&tv, &tz);
+		loctime=localtime(&tv.tv_sec);
 
-		//Simulate DOS overhead for timing-sensitive games
-        //Robomaze 2
-		overhead();
+		reg_dl=(Bit8u)(tv.tv_usec/10000);
+		reg_dh=(Bit8u)(loctime->tm_sec);
+		reg_cl=(Bit8u)(loctime->tm_min);
+		reg_ch=(Bit8u)(loctime->tm_hour);
+
+		LOG(LOG_FCB,LOG_NORMAL)("DOS:2c, %d %d %d %d",
+			reg_dl, reg_dh, reg_cl, reg_ch);
+
 		break;
 	}
-	case 0x2d:		/* Set System Time */
-		LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Set System Time not supported");
-		//Check input parameters nonetheless
+	case 0x2d: {	/* Set System Time */
+		//Check input parameters
 		if( reg_ch > 23 || reg_cl > 59 || reg_dh > 59 || reg_dl > 99 )
-			reg_al = 0xff; 
-		else { //Allow time to be set to zero. Restore the orginal time for all other parameters. (QuickBasic)
-			if (reg_cx == 0 && reg_dx == 0) {time_start = mem_readd(BIOS_TIMER);LOG_MSG("Warning: game messes with DOS time!");}
-			else time_start = 0;
-			reg_al = 0;
+			reg_al = 0xff;
+		else {
+			LOG_MSG("Warning: game messes with DOS time!");
+
+#if defined (WIN32)
+			SYSTEMTIME systime;
+
+			GetSystemTime(&systime);
+			systime.wHour=reg_ch;
+			systime.wMinute=reg_cl;
+			systime.wSecond=reg_dh;
+			SetSystemTime(&systime);
+#else
+			time_t mytime=time(0);
+			struct tm* tm_ptr=localtime(&mytime);
+
+			if (tm_ptr) {
+				tm_ptr->tm_hour=reg_ch;
+				tm_ptr->tm_min=reg_cl;
+				tm_ptr->tm_sec=reg_dh;
+
+				const struct timeval tv={mktime(tm_ptr),0};
+				settimeofday(&tv, 0);
+			}
+#endif
+
+			reg_al=0; // successful
 		}
 		break;
+	}
 	case 0x2e:		/* Set Verify flag */
 		dos.verify=(reg_al==1);
 		break;
@@ -571,7 +697,7 @@ static Bitu DOS_21Handler(void) {
 		};
 		LOG(LOG_MISC,LOG_ERROR)("DOS:0x37:Call for not supported switchchar");
 		break;
-	case 0x38:					/* Set Country Code */	
+	case 0x38:					/* Set Country Code */
 		if (reg_al==0) {		/* Get country specidic information */
 			PhysPt dest = SegPhys(ds)+reg_dx;
 			MEM_BlockWrite(dest,dos.tables.country,0x18);
@@ -642,7 +768,7 @@ static Bitu DOS_21Handler(void) {
 		}
 		break;
 	case 0x3f:		/* READ Read from file or device */
-		{ 
+		{
 			Bit16u toread=reg_cx;
 			dos.echo=true;
 			if (DOS_ReadFile(reg_bx,dos_copybuf,&toread)) {
@@ -701,7 +827,7 @@ static Bitu DOS_21Handler(void) {
 				Bit16u attr_val=reg_cx;
 				if (DOS_GetFileAttr(name1,&attr_val)) {
 					reg_cx=attr_val;
-					reg_ax=attr_val; /* Undocumented */   
+					reg_ax=attr_val; /* Undocumented */
 					CALLBACK_SCF(false);
 				} else {
 					CALLBACK_SCF(true);
@@ -753,7 +879,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x47:					/* CWD Get current directory */
 		if (DOS_GetCurrentDir(reg_dl,name1)) {
-			MEM_BlockWrite(SegPhys(ds)+reg_si,name1,(Bitu)(strlen(name1)+1));	
+			MEM_BlockWrite(SegPhys(ds)+reg_si,name1,(Bitu)(strlen(name1)+1));
 			reg_ax=0x0100;
 			CALLBACK_SCF(false);
 		} else {
@@ -777,7 +903,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x49:					/* Free memory */
 		if (DOS_FreeMemory(SegValue(es))) {
 			CALLBACK_SCF(false);
-		} else {            
+		} else {
 			reg_ax=dos.errorcode;
 			CALLBACK_SCF(true);
 		}
@@ -788,7 +914,7 @@ static Bitu DOS_21Handler(void) {
 			if (DOS_ResizeMemory(SegValue(es),&size)) {
 				reg_ax=SegValue(es);
 				CALLBACK_SCF(false);
-			} else {            
+			} else {
 				reg_ax=dos.errorcode;
 				reg_bx=size;
 				CALLBACK_SCF(true);
@@ -796,7 +922,7 @@ static Bitu DOS_21Handler(void) {
 			break;
 		}
 	case 0x4b:					/* EXEC Load and/or execute program */
-		{ 
+		{
 			MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 			LOG(LOG_EXEC,LOG_ERROR)("Execute %s %d",name1,reg_al);
 			if (!DOS_Execute(name1,SegPhys(es)+reg_bx,reg_al)) {
@@ -816,13 +942,13 @@ static Bitu DOS_21Handler(void) {
 	case 0x4e:					/* FINDFIRST Find first matching file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		if (DOS_FindFirst(name1,reg_cx)) {
-			CALLBACK_SCF(false);	
+			CALLBACK_SCF(false);
 			reg_ax=0;			/* Undocumented */
 		} else {
 			reg_ax=dos.errorcode;
 			CALLBACK_SCF(true);
 		};
-		break;		 
+		break;
 	case 0x4f:					/* FINDNEXT Find next matching file */
 		if (DOS_FindNext()) {
 			CALLBACK_SCF(false);
@@ -832,7 +958,7 @@ static Bitu DOS_21Handler(void) {
 			reg_ax=dos.errorcode;
 			CALLBACK_SCF(true);
 		};
-		break;		
+		break;
 	case 0x50:					/* Set current PSP */
 		dos.psp(reg_bx);
 		break;
@@ -862,12 +988,12 @@ static Bitu DOS_21Handler(void) {
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
 		MEM_StrCopy(SegPhys(es)+reg_di,name2,DOSNAMEBUF);
 		if (DOS_Rename(name1,name2)) {
-			CALLBACK_SCF(false);			
+			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
 			CALLBACK_SCF(true);
 		}
-		break;		
+		break;
 	case 0x57:					/* Get/Set File's Date and Time */
 		if (reg_al==0x00) {
 			if (DOS_GetFileDate(reg_bx,&reg_cx,&reg_dx)) {
@@ -877,7 +1003,7 @@ static Bitu DOS_21Handler(void) {
 			}
 		} else if (reg_al==0x01) {
 			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:57:Set File Date Time Faked");
-			CALLBACK_SCF(false);		
+			CALLBACK_SCF(false);
 		} else {
 			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:57:Unsupported subtion %X",reg_al);
 		}
@@ -972,11 +1098,11 @@ static Bitu DOS_21Handler(void) {
 	case 0x5f:					/* Network redirection */
 		reg_ax=0x0001;		//Failing it
 		CALLBACK_SCF(true);
-		break; 
+		break;
 	case 0x60:					/* Canonicalize filename or path */
 		MEM_StrCopy(SegPhys(ds)+reg_si,name1,DOSNAMEBUF);
 		if (DOS_Canonicalize(name1,name2)) {
-				MEM_BlockWrite(SegPhys(es)+reg_di,name2,(Bitu)(strlen(name2)+1));	
+				MEM_BlockWrite(SegPhys(es)+reg_di,name2,(Bitu)(strlen(name2)+1));
 				CALLBACK_SCF(false);
 			} else {
 				reg_ax=dos.errorcode;
@@ -989,7 +1115,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x63:					/* DOUBLE BYTE CHARACTER SET */
 		if(reg_al == 0) {
 			SegSet16(ds,RealSeg(dos.tables.dbcs));
-			reg_si=RealOff(dos.tables.dbcs);		
+			reg_si=RealOff(dos.tables.dbcs);
 			reg_al = 0;
 			CALLBACK_SCF(false); //undocumented
 		} else reg_al = 0xff; //Doesn't officially touch carry flag
@@ -998,7 +1124,7 @@ static Bitu DOS_21Handler(void) {
 		LOG(LOG_DOSMISC,LOG_NORMAL)("set driver look ahead flag");
 		break;
 	case 0x65:					/* Get extented country information and a lot of other useless shit*/
-		{ /* Todo maybe fully support this for now we set it standard for USA */ 
+		{ /* Todo maybe fully support this for now we set it standard for USA */
 			LOG(LOG_DOSMISC,LOG_ERROR)("DOS:65:Extended country information call %X",reg_ax);
 			if((reg_al <=  0x07) && (reg_cx < 0x05)) {
 				DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
@@ -1057,7 +1183,7 @@ static Bitu DOS_21Handler(void) {
 			case 0x21: /* Capitalize String (cx=length) */
 			case 0x22: /* Capatilize ASCIZ string */
 				data = SegPhys(ds) + reg_dx;
-				if(reg_al == 0x21) len = reg_cx; 
+				if(reg_al == 0x21) len = reg_cx;
 				else len = mem_strlen(data); /* Is limited to 1024 */
 
 				if(len > DOS_COPYBUFSIZE - 1) E_Exit("DOS:0x65 Buffer overflow");
@@ -1072,7 +1198,7 @@ static Bitu DOS_21Handler(void) {
 				CALLBACK_SCF(false);
 				break;
 			default:
-				E_Exit("DOS:0x65:Unhandled country information call %2X",reg_al);	
+				E_Exit("DOS:0x65:Unhandled country information call %2X",reg_al);
 			};
 			break;
 		}
@@ -1112,9 +1238,9 @@ static Bitu DOS_21Handler(void) {
 				LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Set Disk serial number");
 			default:
 				E_Exit("DOS:Illegal Get Serial Number call %2X",reg_al);
-			}	
+			}
 			break;
-		} 
+		}
 	case 0x6c:					/* Extended Open/Create */
 		MEM_StrCopy(SegPhys(ds)+reg_si,name1,DOSNAMEBUF);
 		if (DOS_OpenFileExtended(name1,reg_bx,reg_cx,reg_dx,&reg_ax,&reg_cx)) {
@@ -1203,7 +1329,7 @@ public:
 		callback[1].Set_RealVec(0x21);
 	//Pseudo code for int 21
 	// sti
-	// callback 
+	// callback
 	// iret
 	// retf  <- int 21 4c jumps here to mimic a retf Cyber
 
@@ -1236,7 +1362,7 @@ public:
 		DOS_SetupMisc();							/* Some additional dos interrupts */
 		DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(25); /* Else the next call gives a warning. */
 		DOS_SetDefaultDrive(25);
-	
+
 		dos.version.major=5;
 		dos.version.minor=0;
 		dos.direct_output=false;
