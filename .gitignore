@@ -1,3 +1,61 @@
-.ycm_extra_conf.py
-*.orig
-*.rej
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# VIM backup files
+*~
+
+# Intermediate automake files
+*.in
+
+# other
+*.opcodes.p
+
+# automake output
+aclocal.m4
+autom4te.cache/
+compile
+configure
+depcomp
+install-sh
+missing
+config.h
+test1
+test1.c
+test1.symbols.h
+./opcc
+.deps/
+Makefile
+config.log
+config.status
+stamp-h1
+
+config\.guess
+
+config\.sub

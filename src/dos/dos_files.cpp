@@ -25,10 +25,15 @@
 #include "dosbox.h"
 #include "bios.h"
 #include "mem.h"
+
+#include "../save_state.h"
+
 #include "regs.h"
 #include "dos_inc.h"
 #include "drives.h"
 #include "cross.h"
+
+#define alloca __builtin_alloca
 
 #define DOS_FILESTART 4
 
@@ -1317,4 +1322,213 @@ void DOS_SetupFiles (void) {
 		Drives[i]=0;
 	}
 	Drives[25]=new Virtual_Drive();
+}
+
+// save state support
+void DOS_File::SaveState( std::ostream& stream )
+{
+	Bit32u file_namelen, seek_pos;
+
+
+	file_namelen = strlen( name )+1;
+	seek_pos = GetSeekPos();
+
+	//******************************************
+	//******************************************
+	//******************************************
+
+	// - pure data
+	WRITE_POD( &file_namelen, file_namelen );
+	WRITE_POD_SIZE( name, file_namelen );
+
+	WRITE_POD( &flags, flags );
+	WRITE_POD( &open, open );
+
+	WRITE_POD( &attr, attr );
+	WRITE_POD( &time, time );
+	WRITE_POD( &date, date );
+	WRITE_POD( &refCtr, refCtr );
+	WRITE_POD( &hdrive, hdrive );
+
+	//******************************************
+	//******************************************
+	//******************************************
+
+	// - reloc ptr
+	WRITE_POD( &seek_pos, seek_pos );
+}
+
+
+void DOS_File::LoadState( std::istream& stream )
+{
+	Bit32u file_namelen, seek_pos;
+	char *file_name;
+
+	//******************************************
+	//******************************************
+	//******************************************
+
+	// - pure data
+	READ_POD( &file_namelen, file_namelen );
+	file_name = (char*)alloca( file_namelen * sizeof(char) );
+	READ_POD_SIZE( file_name, file_namelen );
+
+	READ_POD( &flags, flags );
+	READ_POD( &open, open );
+
+	READ_POD( &attr, attr );
+	READ_POD( &time, time );
+	READ_POD( &date, date );
+	READ_POD( &refCtr, refCtr );
+	READ_POD( &hdrive, hdrive );
+
+	//******************************************
+	//******************************************
+	//******************************************
+
+	// - reloc ptr
+	READ_POD( &seek_pos, seek_pos );
+
+
+	if( open ) Seek( &seek_pos, DOS_SEEK_SET );
+	else Close();
+}
+
+
+void POD_Save_DOS_Files( std::ostream& stream )
+{
+	// 1. Do drives first (directories -> files)
+	// 2. Then files next
+	
+	for( int lcv=0; lcv<DOS_DRIVES; lcv++ ) {
+		Bit8u drive_valid;
+
+
+		drive_valid = 0;
+		if( Drives[lcv] == 0 ) drive_valid = 0xff;
+
+		//**********************************************
+		//**********************************************
+		//**********************************************
+
+		// - reloc ptr
+		WRITE_POD( &drive_valid, drive_valid );
+
+
+		if( drive_valid == 0xff ) continue;
+		Drives[lcv]->SaveState(stream);
+	}
+
+
+	for( int lcv=0; lcv<DOS_FILES; lcv++ ) {
+		Bit8u file_valid;
+		char *file_name;
+		Bit8u file_namelen, file_drive, file_flags;
+		
+
+		file_valid = 0;
+		if( Files[lcv] == 0 ) file_valid = 0xff;
+		else {
+			if( strcmp( Files[lcv]->GetName(), "CON" ) == 0 ) file_valid = 0xfe;
+			if( strcmp( Files[lcv]->GetName(), "LPT1" ) == 0 ) file_valid = 0xfe;
+			if( strcmp( Files[lcv]->GetName(), "PRN" ) == 0 ) file_valid = 0xfe;
+			if( strcmp( Files[lcv]->GetName(), "AUX" ) == 0 ) file_valid = 0xfe;
+		}
+		
+				
+		// - reloc ptr
+		WRITE_POD( &file_valid, file_valid );
+		if( file_valid >= 0xfe ) continue;
+
+		//**********************************************
+		//**********************************************
+		//**********************************************
+
+		file_namelen = strlen( Files[lcv]->name ) + 1;
+		file_name = (char *) alloca( file_namelen );
+		strcpy( file_name, Files[lcv]->name );
+		
+		file_drive = Files[lcv]->GetDrive();
+		file_flags = Files[lcv]->flags;
+
+
+		// - Drives->FileOpen vars (repeat copy)
+		WRITE_POD( &file_namelen, file_namelen );
+		WRITE_POD_SIZE( file_name, file_namelen );
+
+		WRITE_POD( &file_drive, file_drive );
+		WRITE_POD( &file_flags, file_flags );
+
+
+		Files[lcv]->SaveState(stream);
+	}
+}
+
+
+void POD_Load_DOS_Files( std::istream& stream )
+{
+	// 1. Do drives first (directories -> files)
+	// 2. Then files next
+
+	for( int lcv=0; lcv<DOS_DRIVES; lcv++ ) {
+		Bit8u drive_valid;
+		
+		// - reloc ptr
+		READ_POD( &drive_valid, drive_valid );
+		if( drive_valid == 0xff ) continue;
+
+
+		if( Drives[lcv] ) Drives[lcv]->LoadState(stream);
+	}
+
+
+	for( int lcv=0; lcv<DOS_FILES; lcv++ ) {
+		Bit8u file_valid;
+		char *file_name;
+		Bit8u file_namelen, file_drive, file_flags;
+		
+		// - reloc ptr
+		READ_POD( &file_valid, file_valid );
+
+		// ignore system files
+		if( file_valid == 0xfe ) continue;
+
+		// shutdown old file
+		if( Files[lcv] ) {
+			// invalid file state - abort
+			if( strcmp( Files[lcv]->GetName(), "CON" ) == 0 ) break;
+			if( strcmp( Files[lcv]->GetName(), "LPT1" ) == 0 ) break;
+			if( strcmp( Files[lcv]->GetName(), "PRN" ) == 0 ) break;
+			if( strcmp( Files[lcv]->GetName(), "AUX" ) == 0 ) break;
+
+
+			while( Files[lcv]->IsOpen() ) Files[lcv]->Close();
+
+			delete Files[lcv];
+			Files[lcv]=0;
+		}
+
+
+		// ignore NULL file
+		if( file_valid == 0xff ) continue;
+
+		//**********************************************
+		//**********************************************
+		//**********************************************
+
+		// - Drives->FileOpen vars (repeat copy)
+		
+		READ_POD( &file_namelen, file_namelen );
+		file_name = (char *) alloca( file_namelen );
+		READ_POD_SIZE( file_name, file_namelen );
+
+		READ_POD( &file_drive, file_drive );
+		READ_POD( &file_flags, file_flags );
+
+
+		// NOTE: Must open regardless to get 'new' DOS_File class
+		Drives[file_drive]->FileOpen( &Files[lcv], file_name, file_flags );
+		
+		if( Files[lcv] ) Files[lcv]->LoadState(stream);
+	}
 }
