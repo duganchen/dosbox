@@ -56,9 +56,6 @@ typedef struct {
 		bool dblw,dblh;
 		double ratio;
 		float fps;
-
-		double scrn_ratio;
-
 	} src;
 	struct {
 		Bitu count;
