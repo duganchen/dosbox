@@ -25,8 +25,6 @@
 #include "../src/cpu/lazyflags.h"
 #include "callback.h"
 
-#include "../save_state.h"
-
 //#define ENABLE_PORTLOG
 
 IO_WriteHandler * io_writehandlers[3][IO_MAX];
@@ -522,20 +520,4 @@ void IO_Destroy(Section*) {
 void IO_Init(Section * sect) {
 	test = new IO(sect);
 	sect->AddDestroyFunction(&IO_Destroy);
-}
-
-//save state support
-namespace
-{
-class SerializeIO : public SerializeGlobalPOD
-{
-public:
-    SerializeIO() : SerializeGlobalPOD("IO handler")
-    {
-        //io_writehandlers -> quasi constant
-        //io_readhandlers  -> quasi constant
-
-        registerPOD(iof_queue.used); registerPOD(iof_queue.entries);
-    }
-} dummy;
 }

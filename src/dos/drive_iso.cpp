@@ -38,9 +38,6 @@ public:
 	bool Seek(Bit32u *pos, Bit32u type);
 	bool Close();
 	Bit16u GetInformation(void);
-
-	Bit32u GetSeekPos(void);
-
 private:
 	isoDrive *drive;
 	Bit8u buffer[ISO_FRAMESIZE];
@@ -134,10 +131,6 @@ bool isoFile::Close() {
 
 Bit16u isoFile::GetInformation(void) {
 	return 0x40;		// read-only drive
-}
-
-Bit32u isoFile::GetSeekPos() {
-	return filePos - fileBegin;
 }
 
 int  MSCDEX_RemoveDrive(char driveLetter);

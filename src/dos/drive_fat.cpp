@@ -46,9 +46,6 @@ public:
 	bool Close();
 	Bit16u GetInformation(void);
 	bool UpdateDateTimeFromHost(void);   
-
-	Bit32u GetSeekPos(void);
-
 public:
 	Bit32u firstCluster;
 	Bit32u seekpos;
@@ -280,10 +277,6 @@ Bit16u fatFile::GetInformation(void) {
 
 bool fatFile::UpdateDateTimeFromHost(void) {
 	return true;
-}
-
-Bit32u fatFile::GetSeekPos() {
-	return seekpos;
 }
 
 Bit32u fatDrive::getClustFirstSect(Bit32u clustNum) {

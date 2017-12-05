@@ -38,9 +38,6 @@ public:
 	static void CycleAllDisks(void);
 	static void Init(Section* sec);
 	
-	static void SaveState( std::ostream& stream );
-	static void LoadState( std::istream& stream );
-
 private:
 	static struct DriveInfo {
 		std::vector<DOS_Drive*> disks;
