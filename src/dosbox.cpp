@@ -520,15 +520,6 @@ void DOSBOX_Init(void) {
 	Pint->SetMinMax(0,10);
 	Pint->Set_help("How many frames DOSBox skips before drawing one.");
 
-	Pstring = secprop->Add_string("forceframeupdate", Property::Changeable::OnlyAtStart, "false");
-	Pstring->Set_help(
-		"Force a minimum frame drawing rate. DOS apps often don't update the screen\n"
-		"if nothing has changed. This can cause issues with overlays that hook into\n"
-		"the rendering (notably Steam overlay/Big Picture). Setting this to *true*\n"
-		"will ensure a minimal frame re-draw happens on such scenes.\n"
-		"You can set your min desired rate by setting this to a number in\n"
-		"milliseconds (100 ~ 10fps)");
-
 	Pbool = secprop->Add_bool("aspect",Property::Changeable::Always,true);
 	Pbool->Set_help("Do aspect correction, if your output method doesn't support scaling this can slow things down!.");
 

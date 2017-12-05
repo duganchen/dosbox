@@ -20,7 +20,6 @@
 #include <sys/types.h>
 #include <assert.h>
 #include <math.h>
-#include <string>
 
 #include "dosbox.h"
 #include "video.h"
@@ -230,9 +229,9 @@ void RENDER_EndUpdate( bool abort ) {
 			total += render.frameskip.hadSkip[i];
 		LOG_MSG( "Skipped frame %d %d", PIC_Ticks, (total * 100) / RENDER_SKIP_CACHE );
 #endif
-		// Force output to update the screen even if nothing changed.
-		// Currently only the OpenGL output is supported.
-		if (render.forceRateUpdate) GFX_EndUpdate( 0 );
+		// Force output to update the screen even if nothing changed...
+		// works only with custom GLSL shaders (GFX_StartUpdate() was probably not even called)
+		if (render.forceUpdate) GFX_EndUpdate( 0 );
 	}
 	render.frameskip.index = (render.frameskip.index + 1) & (RENDER_SKIP_CACHE - 1);
 	render.updating=false;
@@ -577,11 +576,11 @@ static void ChangeScaler(bool pressed) {
 } */
 
 void RENDER_SetForceUpdate(bool f) {
-	render.forceRateUpdate = f;
+	render.forceUpdate = f;
 }
 
 bool RENDER_GetForceUpdate() {
-	return render.forceRateUpdate;
+	return render.forceUpdate;
 }
 
 void RENDER_Init(Section * sec) {
@@ -599,34 +598,7 @@ void RENDER_Init(Section * sec) {
 	render.aspect=section->Get_bool("aspect");
 	render.frameskip.max=section->Get_int("frameskip");
 	render.frameskip.count=0;
-
-	// Get the minimum refresh rate.
-	// Using std::string so we can later use the more reliable stoi() function.
-	std::string forceframeupdate = section->Get_string("forceframeupdate");
-	if (forceframeupdate == "true") {
-		// @todo calculate a  minimum based on refresh rate.
-		// Current thinking is 20% of refresh rate or 100ms,
-		// whichever is higher.
-		render.forceRateUpdate = 100;
-	} else if (forceframeupdate == "false") {
-		render.forceRateUpdate = 0;
-	} else {
-		// We should have an integer value representing number of milliseconds.
-		try {
-			render.forceRateUpdate = std::stoi(forceframeupdate);
-		} catch(const std::exception&) {
-			// @todo We should probably catch the more specific exceptions for better
-			// informing the user.
-			LOG_MSG("Invalid value for 'forceframeupdate'! Should either be: true, false or a number.");
-			render.forceRateUpdate = 0;
-		}
-	}
-	if (render.forceRateUpdate ) {
-		LOG_MSG("Minimum frame refresh set: %lu", render.forceRateUpdate );
-	}
-	section->Add_int("forcerateupdate", Property::Changeable::OnlyAtStart, render.forceRateUpdate );
-
-
+	render.forceUpdate=false;
 	std::string cline;
 	std::string scaler;
 	//Check for commandline paramters and parse them through the configclass so they get checked against allowed values
