@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2012  The DOSBox Team
+ *  Copyright (C) 2002-2018  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -122,7 +122,15 @@ static Bitu MPU401_ReadStatus(Bitu port,Bitu iolen) {
 }
 
 static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
-	if (mpu.state.reset) {mpu.state.cmd_pending=val+1;return;}
+	if (mpu.mode==M_UART && val!=0xff) return;
+	if (mpu.state.reset) {
+		if (mpu.state.cmd_pending || (val!=0x3f && val!=0xff)) {
+			mpu.state.cmd_pending=val+1;
+			return;
+		}
+		PIC_RemoveEvents(MPU401_ResetDone);
+		mpu.state.reset=false;
+	}
 	if (val<=0x2f) {
 		switch (val&3) { /* MIDI stop, start, continue */
 			case 1: {MIDI_RawOutByte(0xfc);break;}
@@ -200,7 +208,7 @@ static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 			mpu.clock.timebase=192;
 			break;
 		/* Commands with data byte */
-		case 0xe0: case 0xe1: case 0xe2: case 0xe4: case 0xe6: 
+		case 0xe0: case 0xe1: case 0xe2: case 0xe4: case 0xe6:
 		case 0xe7: case 0xec: case 0xed: case 0xee: case 0xef:
 			mpu.state.command_byte=val;
 			break;
@@ -246,8 +254,11 @@ static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 			LOG(LOG_MISC,LOG_NORMAL)("MPU-401:Reset %X",val);
 			PIC_AddEvent(MPU401_ResetDone,MPU401_RESETBUSY);
 			mpu.state.reset=true;
+			if (mpu.mode==M_UART) {
+				MPU401_Reset();
+				return;	//do not send ack in UART mode
+			}
 			MPU401_Reset();
-			if (mpu.mode==M_UART) return;//do not send ack in UART mode
 			break;
 		case 0x3f:	/* UART mode */
 			LOG(LOG_MISC,LOG_NORMAL)("MPU-401:Set UART mode %X",val);
@@ -451,7 +462,7 @@ static void MPU401_WriteData(Bitu port,Bitu val,Bitu iolen) {
 						mpu.playbuf[mpu.state.channel].type=T_MIDI_NORM;
 						length=mpu.playbuf[mpu.state.channel].length=2;
 						break;
-					case 0x80: case 0x90: case 0xa0:  case 0xb0: case 0xe0: 
+					case 0x80: case 0x90: case 0xa0:  case 0xb0: case 0xe0:
 						mpu.playbuf[mpu.state.channel].type=T_MIDI_NORM;
 						length=mpu.playbuf[mpu.state.channel].length=3;
 						break;
@@ -523,7 +534,7 @@ static void MPU401_Event(Bitu val) {
 			mpu.playbuf[i].counter--;
 			if (mpu.playbuf[i].counter<=0) UpdateTrack(i);
 		}
-	}		
+	}
 	if (mpu.state.conductor) {
 		mpu.condbuf.counter--;
 		if (mpu.condbuf.counter<=0) UpdateConductor();
@@ -537,7 +548,6 @@ static void MPU401_Event(Bitu val) {
 	}
 	if (!mpu.state.irq_pending && mpu.state.req_mask) MPU401_EOIHandler();
 next_event:
-	PIC_RemoveEvents(MPU401_Event);
 	Bitu new_time;
 	if ((new_time=mpu.clock.tempo*mpu.clock.timebase)==0) return;
 	PIC_AddEvent(MPU401_Event,MPU401_TIMECONSTANT/new_time);
@@ -628,12 +638,12 @@ public:
 		if (!MIDI_Available()) return;
 		/*Enabled and there is a Midi */
 		installed = true;
-		
+
 		WriteHandler[0].Install(0x330,&MPU401_WriteData,IO_MB);
 		WriteHandler[1].Install(0x331,&MPU401_WriteCommand,IO_MB);
 		ReadHandler[0].Install(0x330,&MPU401_ReadData,IO_MB);
 		ReadHandler[1].Install(0x331,&MPU401_ReadStatus,IO_MB);
-	
+
 		mpu.queue_used=0;
 		mpu.queue_pos=0;
 		mpu.mode=M_UART;

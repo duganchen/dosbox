@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2018  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -296,6 +296,9 @@ restart_core:
 run_block:
 	cache.block.running=0;
 	BlockReturn ret=gen_runcode(block->cache.start);
+#if C_DEBUG
+	cycle_count += 32;
+#endif
 	switch (ret) {
 	case BR_Iret:
 #if C_DEBUG

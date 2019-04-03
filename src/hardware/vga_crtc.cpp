@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2018  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -242,7 +242,7 @@ void vga_write_p3d5(Bitu port,Bitu val,Bitu iolen) {
 		break;
 	case 0x12:	/* Vertical Display End Register */
 		if (val!=crtc(vertical_display_end)) {
-			if (abs((Bits)val-(Bits)crtc(vertical_display_end))<3) {
+			if (abs(static_cast<int>((Bits)val-(Bits)crtc(vertical_display_end)))<3) {
 				// delay small vde changes a bit to avoid screen resizing
 				// if they are reverted in a short timeframe
 				PIC_RemoveEvents(VGA_SetupDrawing);

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2018  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -361,7 +361,7 @@ void CAPTURE_AddImage(Bitu width, Bitu height, Bitu bpp, Bitu pitch, Bitu flags,
 		}
 #ifdef PNG_TEXT_SUPPORTED
 		int fields = 1;
-		png_text text[1];
+		png_text text[1] = {};
 		const char* text_s = "DOSBox " VERSION;
 		size_t strl = strlen(text_s);
 		char* ptext_s = new char[strl + 1];

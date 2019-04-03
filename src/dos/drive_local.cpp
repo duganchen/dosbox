@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2018  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -29,23 +29,6 @@
 #include "support.h"
 #include "cross.h"
 #include "inout.h"
-
-class localFile : public DOS_File {
-public:
-	localFile(const char* name, FILE * handle);
-	bool Read(Bit8u * data,Bit16u * size);
-	bool Write(Bit8u * data,Bit16u * size);
-	bool Seek(Bit32u * pos,Bit32u type);
-	bool Close();
-	Bit16u GetInformation(void);
-	bool UpdateDateTimeFromHost(void);   
-	void FlagReadOnlyMedium(void);
-	void Flush(void);
-private:
-	FILE * fhandle;
-	bool read_only_medium;
-	enum { NONE,READ,WRITE } last_action;
-};
 
 
 bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/) {

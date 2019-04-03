@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2018  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,9 +41,24 @@ public:
 		if(conf && *conf) {
 			std::string strconf(conf);
 			std::istringstream configmidi(strconf);
-			unsigned int nummer = midiOutGetNumDevs();
+			unsigned int total = midiOutGetNumDevs();
+			unsigned int nummer = total;
 			configmidi >> nummer;
-			if(nummer < midiOutGetNumDevs()){
+			if (configmidi.fail() && total) {
+				lowcase(strconf);
+				for(unsigned int i = 0; i< total;i++) {
+					MIDIOUTCAPS mididev;
+					midiOutGetDevCaps(i, &mididev, sizeof(MIDIOUTCAPS));
+					std::string devname(mididev.szPname);
+					lowcase(devname);
+					if (devname.find(strconf) != std::string::npos) {
+						nummer = i;
+						break;
+					}
+				}
+			}
+
+			if (nummer < total) {
 				MIDIOUTCAPS mididev;
 				midiOutGetDevCaps(nummer, &mididev, sizeof(MIDIOUTCAPS));
 				LOG_MSG("MIDI: win32 selected %s",mididev.szPname);

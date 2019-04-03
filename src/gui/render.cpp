@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2018  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -591,9 +591,9 @@ void RENDER_Init(Section * sec) {
 	std::string cline;
 	std::string scaler;
 	//Check for commandline paramters and parse them through the configclass so they get checked against allowed values
-	if (control->cmdline->FindString("-scaler",cline,false)) {
+	if (control->cmdline->FindString("-scaler",cline,true)) {
 		section->HandleInputline(std::string("scaler=") + cline);
-	} else if (control->cmdline->FindString("-forcescaler",cline,false)) {
+	} else if (control->cmdline->FindString("-forcescaler",cline,true)) {
 		section->HandleInputline(std::string("scaler=") + cline + " forced");
 	}
 	   

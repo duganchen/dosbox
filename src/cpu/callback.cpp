@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2018  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@
 CallBack_Handler CallBack_Handlers[CB_MAX];
 char* CallBack_Description[CB_MAX];
 
-static Bitu call_stop,call_idle,call_default,call_default2;
+static Bitu call_stop,call_idle,call_default;
 Bitu call_priv_io;
 
 static Bitu illegal_handler(void) {
@@ -458,6 +458,48 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		phys_writew(physAddress+0x02,(Bit16u)0x0ECD);		// int 0e
 		phys_writeb(physAddress+0x04,(Bit8u)0xCF);		//An IRET Instruction
 		return (use_cb?9:5);
+	case CB_VESA_WAIT:
+		if (use_cb) E_Exit("VESA wait must not implement a callback handler!");
+		phys_writeb(physAddress+0x00,(Bit8u)0xFB);		// sti
+		phys_writeb(physAddress+0x01,(Bit8u)0x50);		// push ax
+		phys_writeb(physAddress+0x02,(Bit8u)0x52);		// push dx
+		phys_writeb(physAddress+0x03,(Bit8u)0xBA);		// mov dx,
+		phys_writew(physAddress+0x04,(Bit16u)0x03DA);	// 0x3da
+		phys_writeb(physAddress+0x06,(Bit8u)0xEC);		// in al,dx
+		phys_writew(physAddress+0x07,(Bit16u)0x08A8);	// test al,8
+		phys_writew(physAddress+0x09,(Bit16u)0xFB75);	// jne $-5
+		phys_writeb(physAddress+0x0B,(Bit8u)0xEC);		// in al,dx
+		phys_writew(physAddress+0x0C,(Bit16u)0x08A8);	// test al,8
+		phys_writew(physAddress+0x0E,(Bit16u)0xFB74);	// je $-5
+		phys_writeb(physAddress+0x10,(Bit8u)0x5A);		// pop dx
+		phys_writeb(physAddress+0x11,(Bit8u)0x58);		// pop ax
+		phys_writeb(physAddress+0x12,(Bit8u)0xCB);		//A RETF Instruction
+		return 19;
+	case CB_VESA_PM:
+		if (use_cb) {
+			phys_writeb(physAddress+0x00,(Bit8u)0xFE);	//GRP 4
+			phys_writeb(physAddress+0x01,(Bit8u)0x38);	//Extra Callback instruction
+			phys_writew(physAddress+0x02,(Bit16u)callback);	//The immediate word
+			physAddress+=4;
+		}
+		phys_writew(physAddress+0x00,(Bit16u)0xC3F6);	// test bl,
+		phys_writeb(physAddress+0x02,(Bit8u)0x80);		// 0x80
+		phys_writew(physAddress+0x03,(Bit16u)0x1674);	// je $+22
+		phys_writew(physAddress+0x05,(Bit16u)0x5066);	// push ax
+		phys_writew(physAddress+0x07,(Bit16u)0x5266);	// push dx
+		phys_writew(physAddress+0x09,(Bit16u)0xBA66);	// mov dx,
+		phys_writew(physAddress+0x0B,(Bit16u)0x03DA);	// 0x3da
+		phys_writeb(physAddress+0x0D,(Bit8u)0xEC);		// in al,dx
+		phys_writew(physAddress+0x0E,(Bit16u)0x08A8);	// test al,8
+		phys_writew(physAddress+0x10,(Bit16u)0xFB75);	// jne $-5
+		phys_writeb(physAddress+0x12,(Bit8u)0xEC);		// in al,dx
+		phys_writew(physAddress+0x13,(Bit16u)0x08A8);	// test al,8
+		phys_writew(physAddress+0x15,(Bit16u)0xFB74);	// je $-5
+		phys_writew(physAddress+0x17,(Bit16u)0x5A66);	// pop dx
+		phys_writew(physAddress+0x19,(Bit16u)0x5866);	// pop ax
+		if (use_cb)
+			phys_writeb(physAddress+0x1B,(Bit8u)0xC3);	//A RETN Instruction
+		return (use_cb?32:27);
 	default:
 		E_Exit("CALLBACK:Setup:Illegal type %d",type);
 	}
@@ -575,8 +617,6 @@ void CALLBACK_Init(Section* /*sec*/) {
 	/* Default handlers for unhandled interrupts that have to be non-null */
 	call_default=CALLBACK_Allocate();
 	CALLBACK_Setup(call_default,&default_handler,CB_IRET,"default");
-	call_default2=CALLBACK_Allocate();
-	CALLBACK_Setup(call_default2,&default_handler,CB_IRET,"default");
 
 	/* Only setup default handler for first part of interrupt table */
 	for (Bit16u ct=0;ct<0x60;ct++) {
@@ -597,10 +637,9 @@ void CALLBACK_Init(Section* /*sec*/) {
 
 	}
 	// setup a few interrupt handlers that point to bios IRETs by default
-	real_writed(0,0x0e*4,CALLBACK_RealPointer(call_default2));	//design your own railroad
 	real_writed(0,0x66*4,CALLBACK_RealPointer(call_default));	//war2d
 	real_writed(0,0x67*4,CALLBACK_RealPointer(call_default));
-	real_writed(0,0x68*4,CALLBACK_RealPointer(call_default));
+	if (machine==MCH_CGA) real_writed(0,0x68*4,0);				//Popcorn
 	real_writed(0,0x5c*4,CALLBACK_RealPointer(call_default));	//Network stuff
 	//real_writed(0,0xf*4,0); some games don't like it
 
