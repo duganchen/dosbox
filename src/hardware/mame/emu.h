@@ -12,6 +12,8 @@
 #include <float.h>
 #include <stdlib.h>
 #include <memory.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 #ifndef M_PI
 #define M_PI           3.14159265358979323846
