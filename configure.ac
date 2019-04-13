@@ -134,7 +134,7 @@ fi
 dnl Checks for libraries.
 
 #Check if the compiler support attributes
-AH_TEMPLATE([C_HAS_ATTRIBUTE],[Determines if the compilers supports attributes for structures.])
+AH_TEMPLATE([C_HAS_ATTRIBUTE],[Determines if the compiler supports attributes for structures.])
 AC_MSG_CHECKING(if compiler allows __attribute__)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 typedef struct { } __attribute__((packed)) junk;]],
@@ -145,12 +145,12 @@ typedef struct { } __attribute__((packed)) junk;]],
 OLDCFLAGS="$CFLAGS"
 CFLAGS="-Werror"
 
-AH_TEMPLATE([C_ATTRIBUTE_ALWAYS_INLINE],[Determines if the compilers supports always_inline attribute.])
+AH_TEMPLATE([C_ATTRIBUTE_ALWAYS_INLINE],[Determines if the compiler supports always_inline attribute.])
 AC_MSG_CHECKING(if compiler allows __attribute__((always_inline)) )
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([ inline void __attribute__((always_inline)) test(){}
 ])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_ATTRIBUTE_ALWAYS_INLINE)],AC_MSG_RESULT(no))
 
-AH_TEMPLATE([C_ATTRIBUTE_FASTCALL],[Determines if the compilers supports fastcall attribute.])
+AH_TEMPLATE([C_ATTRIBUTE_FASTCALL],[Determines if the compiler supports fastcall attribute.])
 AC_MSG_CHECKING(if compiler allows __attribute__((fastcall)) )
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([ void __attribute__((fastcall)) test(){}
 ])],[ AC_MSG_RESULT(yes);AC_DEFINE(C_ATTRIBUTE_FASTCALL)],AC_MSG_RESULT(no))
@@ -212,14 +212,14 @@ AC_ARG_ENABLE(debug,AC_HELP_STRING([--enable-debug],[Enable debug mode]),[
 
    if test x$enable_debug = xno; then
      AC_MSG_RESULT([Debugger not enabled])
-   elif test x$have_curses_lib = xyes -a x$have_curses_h = xyes ; then
-     LIBS="$LIBS -lcurses"
+   elif test x$have_ncurses_lib = xyes -a x$have_curses_h = xyes ; then
+     LIBS="$LIBS -lncurses"
      AC_DEFINE(C_DEBUG,1)
      if test x$enable_debug = xheavy ; then 
        AC_DEFINE(C_HEAVY_DEBUG,1)
      fi
-   elif test x$have_ncurses_lib = xyes -a x$have_curses_h = xyes ; then
-     LIBS="$LIBS -lncurses"
+   elif test x$have_curses_lib = xyes -a x$have_curses_h = xyes ; then
+     LIBS="$LIBS -lcurses"
      AC_DEFINE(C_DEBUG,1)
      if test x$enable_debug = xheavy ; then 
        AC_DEFINE(C_HEAVY_DEBUG,1)
@@ -236,13 +236,14 @@ AC_ARG_ENABLE(debug,AC_HELP_STRING([--enable-debug],[Enable debug mode]),[
 ],)
 
 AH_TEMPLATE(C_CORE_INLINE,[Define to 1 to use inlined memory functions in cpu core])
-AC_ARG_ENABLE(core-inline,AC_HELP_STRING([--enable-core-inline],[Enable inlined memory handling in CPU Core]),[
-  if test x$enable_core_inline = xyes ; then 
-    AC_MSG_RESULT([enabling inlined memory handling in CPU Core])
+AC_ARG_ENABLE(core-inline,AC_HELP_STRING([--disable-core-inline],[Disable inlined memory handling in CPU Core]),,enable_core_inline=yes)
+AC_MSG_CHECKING(whether memory handling in the CPU Core will be inlined)
+if test x$enable_core_inline = xyes ; then
+    AC_MSG_RESULT(yes)
     AC_DEFINE(C_CORE_INLINE,1)
-  fi
-],)
-
+else
+    AC_MSG_RESULT(no)
+fi
 
 dnl The target cpu checks for dynamic cores
 AH_TEMPLATE(C_TARGETCPU,[The type of cpu this target has])
@@ -272,11 +273,59 @@ case "$host_cpu" in
     c_targetcpu="m68k"
     c_unalignedmemory=yes
     ;;
+   armv7l)
+    AC_DEFINE(C_TARGETCPU,ARMV7LE)
+    AC_MSG_RESULT(ARMv7 Little Endian)
+    c_targetcpu="arm"
+    c_unalignedmemory=yes
+    ;;
+   armv6l)
+    AC_DEFINE(C_TARGETCPU,ARMV4LE)
+    AC_MSG_RESULT(ARMv6 Little Endian)
+    c_targetcpu="arm"
+    dnl c_unalignedmemory=yes
+    ;;
+   aarch64)
+    AC_DEFINE(C_TARGETCPU,ARMV8LE)
+    AC_MSG_RESULT(ARMv8 Little Endian 64-bit)
+    c_targetcpu="arm"
+    c_unalignedmemory=yes
+    ;;
    *)
     AC_DEFINE(C_TARGETCPU,UNKNOWN)
     AC_MSG_RESULT(unknown)
     c_unalignedmemory=no
     ;;
+esac
+
+dnl check for size of pointer being 4 
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+#if SIZEOF_INT_P != 4
+#error size intp is not 4, this not something to worry about
+#endif
+void blah() {
+;
+}
+])],[c_sizep=4],[c_sizep=0])
+
+
+dnl automake 1.14 and upwards rewrite the host to have always 64 bit unless i386 as host is passed
+dnl this can make building a 32 bit executable a bit tricky, as dosbox relies on the host to select the
+dnl dynamic/dynrec core
+AC_MSG_CHECKING([whether Apple user wants to override the build process to produce a 32 bit binary])
+case "$host" in 
+  *-*-darwin*)
+   if test x$c_targetcpu = xx86_64 -a x$c_sizep = x4 ; then
+     AC_MSG_RESULT(yes)
+     AC_DEFINE(C_TARGETCPU,X86)
+     c_targetcpu="x86"
+   else
+     AC_MSG_RESULT(no)
+   fi
+   ;;
+  *)
+   AC_MSG_RESULT([no, not on Apple])
+   ;;
 esac
 
 AC_ARG_ENABLE(dynamic-core,AC_HELP_STRING([--disable-dynamic-core],[Disable all dynamic cores]),,enable_dynamic_core=yes)
@@ -313,8 +362,13 @@ dnl x86 only enable it if dynamic-x86 is disabled.
     if test x$c_targetcpu = xx86_64 ; then
         AC_DEFINE(C_DYNREC,1)
         AC_MSG_RESULT(yes)
-    else      
-      AC_MSG_RESULT(no)
+    else
+      if test x$c_targetcpu = xarm ; then
+        AC_DEFINE(C_DYNREC,1)
+	AC_MSG_RESULT(yes)
+      else 
+        AC_MSG_RESULT(no)
+      fi
     fi
   fi
 fi
@@ -448,6 +502,8 @@ case "$host" in
        fi
        ;;
 esac
+else
+   AC_MSG_RESULT(no)
 fi
 
 AH_TEMPLATE(C_RETINAFIX,[Define to 1 to use opengl display output support])
@@ -458,6 +514,25 @@ AC_ARG_ENABLE(retinafix,AC_HELP_STRING([--enable-retinafix],[Enable fullscreen f
    fi 
 ],)
 
+AH_TEMPLATE(C_DDRAW,[Define to 1 to enable output=ddraw (Win32)])
+AC_ARG_ENABLE(ddraw,AC_HELP_STRING([--disable-ddraw],[Disable ddraw support]),,enable_ddraw=yes)
+AC_CHECK_HEADER(ddraw.h, have_ddraw_h=yes , have_ddraw_h=no , )
+AC_MSG_CHECKING(whether ddraw display output will be enabled)
+if test x$enable_ddraw = xyes; then
+case "$host" in
+    *-*-cygwin* | *-*-mingw32*)
+       if test x$have_ddraw_h = xyes ; then
+         AC_MSG_RESULT(yes)
+         AC_DEFINE(C_DDRAW,1)
+       else
+         AC_MSG_RESULT(no)
+       fi
+       ;;
+    *)
+       AC_MSG_RESULT(no)
+       ;;
+esac
+fi
 
 AH_TEMPLATE(C_SDL_SOUND,[Define to 1 to enable SDL_sound support])
 AC_CHECK_HEADER(SDL_sound.h,have_SDL_sound_h=yes,)
@@ -495,7 +570,6 @@ dnl Some target detection and actions for them
 case "$host" in
     *-*-cygwin* | *-*-mingw32*)
        LIBS="$LIBS -lwinmm"
-       AC_CHECK_HEADERS(ddraw.h)
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2 only).])
        if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
          LIBS="$LIBS -lws2_32"
@@ -556,6 +630,7 @@ src/dos/Makefile
 src/fpu/Makefile
 src/gui/Makefile
 src/hardware/Makefile
+src/hardware/mame/Makefile
 src/hardware/serialport/Makefile
 src/ints/Makefile
 src/libs/Makefile

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2018  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -133,6 +133,8 @@ typedef struct {
 		RealPt video_dcc_table;
 		RealPt oemstring;
 		RealPt vesa_modes;
+		RealPt wait_retrace;
+		RealPt set_window;
 		RealPt pmode_interface;
 		Bit16u pmode_interface_size;
 		Bit16u pmode_interface_start;
@@ -147,11 +149,11 @@ typedef struct {
 
 extern Int10Data int10;
 
-static Bit8u CURSOR_POS_COL(Bit8u page) {
+static inline Bit8u CURSOR_POS_COL(Bit8u page) {
 	return real_readb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2);
 }
 
-static Bit8u CURSOR_POS_ROW(Bit8u page) {
+static inline Bit8u CURSOR_POS_ROW(Bit8u page) {
 	return real_readb(BIOSMEM_SEG,BIOSMEM_CURSOR_POS+page*2+1);
 }
 
@@ -208,9 +210,9 @@ Bit8u VESA_GetSVGAMode(Bit16u & mode);
 Bit8u VESA_SetCPUWindow(Bit8u window,Bit8u address);
 Bit8u VESA_GetCPUWindow(Bit8u window,Bit16u & address);
 Bit8u VESA_ScanLineLength(Bit8u subcall, Bit16u val, Bit16u & bytes,Bit16u & pixels,Bit16u & lines);
-Bit8u VESA_SetDisplayStart(Bit16u x,Bit16u y);
+Bit8u VESA_SetDisplayStart(Bit16u x,Bit16u y,bool wait);
 Bit8u VESA_GetDisplayStart(Bit16u & x,Bit16u & y);
-Bit8u VESA_SetPalette(PhysPt data,Bitu index,Bitu count);
+Bit8u VESA_SetPalette(PhysPt data,Bitu index,Bitu count,bool wait);
 Bit8u VESA_GetPalette(PhysPt data,Bitu index,Bitu count);
 
 /* Sub Groups */

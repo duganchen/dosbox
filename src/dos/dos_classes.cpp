@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2018  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -155,6 +155,10 @@ Bit8u DOS_InfoBlock::GetUMBChainState(void) {
 
 void DOS_InfoBlock::SetUMBChainState(Bit8u _umbchaining) {
 	sSave(sDIB,chainingUMB,_umbchaining);
+}
+
+void DOS_InfoBlock::SetBlockDevices(Bit8u _count) {
+	sSave(sDIB,blockDevices,_count);
 }
 
 RealPt DOS_InfoBlock::GetPointer(void) {

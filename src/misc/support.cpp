@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2018  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -43,7 +43,13 @@ void lowcase(std::string &str) {
 	int (*tf)(int) = std::tolower;
 	std::transform(str.begin(), str.end(), str.begin(), tf);
 }
-  
+
+void trim(std::string &str) {
+	std::string::size_type loc = str.find_first_not_of(" \r\t\f\n");
+	if (loc != std::string::npos) str.erase(0,loc);
+	loc = str.find_last_not_of(" \r\t\f\n");
+	if (loc != std::string::npos) str.erase(loc+1);
+}
 
 /* 
 	Ripped some source from freedos for this one.

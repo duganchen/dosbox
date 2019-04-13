@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2018  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ extern char** environ;
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
-#if (HAVE_DDRAW_H)
+#if C_DDRAW
 #include <ddraw.h>
 struct private_hwdata {
 	LPDIRECTDRAWSURFACE3 dd_surface;
@@ -239,7 +239,9 @@ const std::string fragment_shader_default_src =
 
 static int SDL_Init_Wrapper(void)
 {
-	int result = ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER
+	// Don't init timers, GetTicks seems to work fine and they can use a fair amount of power (Macs again) 
+	// Please report problems with audio and other things.
+	int result = ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO /*|SDL_INIT_TIMER*/
 		|SDL_INIT_NOPARACHUTE
 	));
 	return result;
@@ -376,7 +378,8 @@ check_surface:
 		break;
 #if C_OPENGL
 	case SCREEN_OPENGL:
-		if (flags & GFX_RGBONLY || !(flags&GFX_CAN_32)) goto check_surface; // BGRA otherwise
+		//We only accept 32bit output from the scalers here
+		if (!(flags&GFX_CAN_32)) goto check_surface;
 		flags|=GFX_SCALING;
 		flags&=~(GFX_CAN_8|GFX_CAN_15|GFX_CAN_16);
 		break;
@@ -795,7 +798,7 @@ dosurface:
 #if C_OPENGL
 	case SCREEN_OPENGL:
 	{
-		if (!(flags&GFX_CAN_32) || (flags & GFX_RGBONLY)) goto dosurface; // BGRA otherwise
+		if (!(flags&GFX_CAN_32)) goto dosurface;
 		int texsize=2 << int_log2(width > height ? width : height);
 		if (texsize>sdl.opengl.max_texsize) {
 			LOG_MSG("SDL:OPENGL: No support for texturesize of %d, falling back to surface",texsize);
@@ -1747,14 +1750,32 @@ void GFX_HandleVideoResize(int width, int height) {
 	sdl.update_window = true;
 }
 
+#if defined(MACOSX)
+#define DB_POLLSKIP 3
+#else
+//Not used yet, see comment below
+#define DB_POLLSKIP 1
+#endif
+
 void GFX_Events() {
+	//Don't poll too often. This can be heavy on the OS, especially Macs.
+	//In idle mode 3000-4000 polls are done per second without this check.
+	//Macs, with this code,  max 250 polls per second. (non-macs unused default max 500)
+	//Currently not implemented for all platforms, given the ALT-TAB stuff for WIN32.
+#if defined (MACOSX)
+	static int last_check = 0;
+	int current_check = GetTicks();
+	if (current_check - last_check <=  DB_POLLSKIP) return;
+	last_check = current_check;
+#endif
+
 	SDL_Event event;
 #if defined (REDUCE_JOYSTICK_POLLING)
-	static int poll_delay=0;
-	int time=GetTicks();
-	if (time-poll_delay>20) {
-		poll_delay=time;
-		if (sdl.num_joysticks>0) SDL_JoystickUpdate();
+	static int poll_delay = 0;
+	int time = GetTicks();
+	if (time - poll_delay > 20) {
+		poll_delay = time;
+		if (sdl.num_joysticks > 0) SDL_JoystickUpdate();
 		MAPPER_UpdateJoysticks();
 	}
 #endif
@@ -2229,7 +2250,7 @@ int main(int argc, char* argv[]) {
 #endif  //defined(WIN32) && !(C_DEBUG)
 		if (control->cmdline->FindExist("-version") ||
 		    control->cmdline->FindExist("--version") ) {
-			printf("\nDOSBox version %s, copyright 2002-2015 DOSBox Team.\n\n",VERSION);
+			printf("\nDOSBox version %s, copyright 2002-2018 DOSBox Team.\n\n",VERSION);
 			printf("DOSBox is written by the DOSBox Team (See AUTHORS file))\n");
 			printf("DOSBox comes with ABSOLUTELY NO WARRANTY.  This is free software,\n");
 			printf("and you are welcome to redistribute it under certain conditions;\n");
@@ -2257,7 +2278,7 @@ int main(int argc, char* argv[]) {
 
 	/* Display Welcometext in the console */
 	LOG_MSG("DOSBox version %s",VERSION);
-	LOG_MSG("Copyright 2002-2015 DOSBox Team, published under GNU GPL.");
+	LOG_MSG("Copyright 2002-2018 DOSBox Team, published under GNU GPL.");
 	LOG_MSG("---");
 
 	/* Init SDL */
