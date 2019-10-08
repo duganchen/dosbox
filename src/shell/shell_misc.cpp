@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2018  The DOSBox Team
+ *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -11,9 +11,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 
@@ -253,17 +253,21 @@ void DOS_Shell::InputCommand(char * line) {
 					if ((path = strrchr(line+completion_index,'/'))) completion_index = (Bit16u)(path-line+1);
 
 					// build the completion list
-					char mask[DOS_PATHLENGTH];
+					char mask[DOS_PATHLENGTH] = {0};
+					if (strlen(p_completion_start) + 3 >= DOS_PATHLENGTH) {
+						//Beep;
+						break;
+					}
 					if (p_completion_start) {
-						strcpy(mask, p_completion_start);
+						safe_strncpy(mask, p_completion_start,DOS_PATHLENGTH);
 						char* dot_pos=strrchr(mask,'.');
 						char* bs_pos=strrchr(mask,'\\');
 						char* fs_pos=strrchr(mask,'/');
 						char* cl_pos=strrchr(mask,':');
 						// not perfect when line already contains wildcards, but works
 						if ((dot_pos-bs_pos>0) && (dot_pos-fs_pos>0) && (dot_pos-cl_pos>0))
-							strcat(mask, "*");
-						else strcat(mask, "*.*");
+							strncat(mask, "*",DOS_PATHLENGTH - 1);
+						else strncat(mask, "*.*",DOS_PATHLENGTH - 1);
 					} else {
 						strcpy(mask, "*.*");
 					}

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2018  The DOSBox Team
+ *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -11,9 +11,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 
@@ -298,6 +298,8 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 //			DSP_ChangeMode(MODE_DMA_MASKED);
 			LOG(LOG_SB,LOG_NORMAL)("DMA masked,stopping output, left %d",chan->currcnt);
 		}
+	} else if (event==DMA_TRANSFEREND) {
+		if (sb.mode==MODE_DMA) sb.mode=MODE_DMA_MASKED;
 	} else if (event==DMA_UNMASKED) {
 		if (sb.mode==MODE_DMA_MASKED && sb.dma.mode!=DSP_DMA_NONE) {
 			DSP_ChangeMode(MODE_DMA);
@@ -537,6 +539,8 @@ static void GenerateDMASound(Bitu size) {
 				sb.dma.mode = DSP_DMA_NONE;
 			}
 			else {
+				//Copied this value as the count for the final single cycle
+				sb.dma.total = 0;
 				LOG(LOG_SB, LOG_NORMAL)("Switch to Single cycle transfer begun");
 			}
 		} else {
@@ -996,6 +1000,8 @@ static void DSP_DoCommand(void) {
 		DSP_SB2_ABOVE;
 		/* Set mode to single transfer so it ends with current block */
 		sb.dma.autoinit=false;		//Should stop itself
+		sb.dma.total = 0;			//This will cancel the switch to single cycle mode
+		//Should really have some sb.dma.autoexit variable since we don't support continue autoinit dsp commands
 		break;
 	case 0xe0:	/* DSP Identification - SB2.0+ */
 		DSP_FlushData();
