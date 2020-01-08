@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2018  The DOSBox Team
+ *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -11,9 +11,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 
@@ -78,7 +78,7 @@ static Bitu PROGRAMS_Handler(void) {
 	HostPt writer=(HostPt)&index;
 	for (;size>0;size--) *writer++=mem_readb(reader++);
 	Program * new_program;
-	if (index > internal_progs.size()) E_Exit("something is messing with the memory");
+	if (index >= internal_progs.size()) E_Exit("something is messing with the memory");
 	PROGRAMS_Main * handler = internal_progs[index];
 	(*handler)(&new_program);
 	new_program->Run();
@@ -220,9 +220,16 @@ Bitu Program::GetEnvCount(void) {
 }
 
 bool Program::SetEnv(const char * entry,const char * new_string) {
-	PhysPt env_read=PhysMake(psp->GetEnvironment(),0);
-	PhysPt env_write=env_read;
-	char env_string[1024+1];
+	PhysPt env_read = PhysMake(psp->GetEnvironment(),0);
+	
+	//Get size of environment.
+	DOS_MCB mcb(psp->GetEnvironment()-1);
+	Bit16u envsize = mcb.GetSize()*16;
+
+
+	PhysPt env_write = env_read;
+	PhysPt env_write_start = env_read;
+	char env_string[1024+1] = { 0 };
 	do 	{
 		MEM_StrCopy(env_read,env_string,1024);
 		if (!env_string[0]) break;
@@ -235,16 +242,19 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 	} while (1);
 /* TODO Maybe save the program name sometime. not really needed though */
 	/* Save the new entry */
+
+	//ensure room
+	if (envsize <= (env_write-env_write_start) + strlen(entry) + 1 + strlen(new_string) + 2) return false;
+
 	if (new_string[0]) {
 		std::string bigentry(entry);
 		for (std::string::iterator it = bigentry.begin(); it != bigentry.end(); ++it) *it = toupper(*it);
-		sprintf(env_string,"%s=%s",bigentry.c_str(),new_string); 
-//		sprintf(env_string,"%s=%s",entry,new_string); //oldcode
+		snprintf(env_string,1024+1,"%s=%s",bigentry.c_str(),new_string);
 		MEM_BlockWrite(env_write,env_string,(Bitu)(strlen(env_string)+1));
 		env_write += (PhysPt)(strlen(env_string)+1);
 	}
 	/* Clear out the final piece of the environment */
-	mem_writed(env_write,0);
+	mem_writeb(env_write,0);
 	return true;
 }
 
@@ -709,9 +719,14 @@ void CONFIG::Run(void) {
 			// Input has been parsed (pvar[0]=section, [1]=property, [2]=value)
 			// now execute
 			Section* tsec = control->GetSection(pvars[0]);
-			std::string value;
-			value += pvars[2];
+			std::string value(pvars[2]);
+			//Due to parsing there can be a = at the start of value.
+			while (value.size() && (value.at(0) ==' ' ||value.at(0) =='=') ) value.erase(0,1);
 			for(Bitu i = 3; i < pvars.size(); i++) value += (std::string(" ") + pvars[i]);
+			if (value.empty() ) {
+				WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
+				return;
+			}
 			std::string inputline = pvars[1] + "=" + value;
 			
 			tsec->ExecuteDestroy(false);

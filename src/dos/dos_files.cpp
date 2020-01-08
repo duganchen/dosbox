@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2018  The DOSBox Team
+ *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -11,9 +11,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 
@@ -52,7 +52,7 @@ Bit8u DOS_GetDefaultDrive(void) {
 
 void DOS_SetDefaultDrive(Bit8u drive) {
 //	if (drive<=DOS_DRIVES && ((drive<2) || Drives[drive])) DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(drive);
-	if (drive<=DOS_DRIVES && ((drive<2) || Drives[drive])) {dos.current_drive = drive; DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(drive);}
+	if (drive<DOS_DRIVES && ((drive<2) || Drives[drive])) {dos.current_drive = drive; DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(drive);}
 }
 
 bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
@@ -1281,14 +1281,14 @@ bool DOS_FileExists(char const * const name) {
 bool DOS_GetAllocationInfo(Bit8u drive,Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters) {
 	if (!drive) drive =  DOS_GetDefaultDrive();
 	else drive--;
-	if (drive >= DOS_DRIVES || !Drives[drive] || Drives[drive]->isRemovable()) {
+	if (drive >= DOS_DRIVES || !Drives[drive]) {
 		DOS_SetError(DOSERR_INVALID_DRIVE);
 		return false;
 	}
 	Bit16u _free_clusters;
 	Drives[drive]->AllocationInfo(_bytes_sector,_sectors_cluster,_total_clusters,&_free_clusters);
 	SegSet16(ds,RealSeg(dos.tables.mediaid));
-	reg_bx=RealOff(dos.tables.mediaid+drive*5);
+	reg_bx=RealOff(dos.tables.mediaid+drive*9);
 	return true;
 }
 

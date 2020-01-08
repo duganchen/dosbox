@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2018  The DOSBox Team
+ *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -11,9 +11,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 
@@ -497,7 +497,7 @@ static Bitu DOS_21Handler(void) {
 			if (drive < DOS_DRIVES && Drives[drive] && !Drives[drive]->isRemovable()) {
 				reg_al = 0x00;
 				SegSet16(ds,dos.tables.dpb);
-				reg_bx = drive*5;//Faking the first entry (drive number) and media id
+				reg_bx = drive*9;
 				LOG(LOG_DOSMISC,LOG_ERROR)("Get drive parameter block.");
 			} else {
 				reg_al=0xff;
@@ -1190,7 +1190,6 @@ static Bitu DOS_25Handler(void) {
 		SETFLAGBIT(CF,false);
 		reg_ax = 0;
 	}
-	SETFLAGBIT(IF,true);
     return CBRET_NONE;
 }
 static Bitu DOS_26Handler(void) {
@@ -1202,7 +1201,6 @@ static Bitu DOS_26Handler(void) {
 		SETFLAGBIT(CF,false);
 		reg_ax = 0;
 	}
-	SETFLAGBIT(IF,true);
     return CBRET_NONE;
 }
 
@@ -1223,10 +1221,10 @@ public:
 	// iret
 	// retf  <- int 21 4c jumps here to mimic a retf Cyber
 
-		callback[2].Install(DOS_25Handler,CB_RETF,"DOS Int 25");
+		callback[2].Install(DOS_25Handler,CB_RETF_STI,"DOS Int 25");
 		callback[2].Set_RealVec(0x25);
 
-		callback[3].Install(DOS_26Handler,CB_RETF,"DOS Int 26");
+		callback[3].Install(DOS_26Handler,CB_RETF_STI,"DOS Int 26");
 		callback[3].Set_RealVec(0x26);
 
 		callback[4].Install(DOS_27Handler,CB_IRET,"DOS Int 27");

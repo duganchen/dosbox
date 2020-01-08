@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2018  The DOSBox Team
+ *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -11,9 +11,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 
@@ -38,7 +38,7 @@ static void MPU401_EOIHandlerDispatch(void);
 #define MPU401_REVISION	0x01
 #define MPU401_QUEUE 32
 #define MPU401_TIMECONSTANT (60000000/1000.0f)
-#define MPU401_RESETBUSY 27.0f
+#define MPU401_RESETBUSY 14.0f
 
 enum MpuMode { M_UART,M_INTELLIGENT };
 enum MpuDataType {T_OVERFLOW,T_MARK,T_MIDI_SYS,T_MIDI_NORM,T_COMMAND};
@@ -124,7 +124,7 @@ static Bitu MPU401_ReadStatus(Bitu port,Bitu iolen) {
 static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
 	if (mpu.mode==M_UART && val!=0xff) return;
 	if (mpu.state.reset) {
-		if (mpu.state.cmd_pending || (val!=0x3f && val!=0xff)) {
+		if (mpu.state.cmd_pending || val!=0xff) {
 			mpu.state.cmd_pending=val+1;
 			return;
 		}
@@ -605,7 +605,7 @@ static void MPU401_Reset(void) {
 	mpu.state.cmask=0xff;
 	mpu.state.amask=mpu.state.tmask=0;
 	mpu.state.midi_mask=0xffff;
-	mpu.state.data_onoff=0;
+	mpu.state.data_onoff=-1;
 	mpu.state.command_byte=0;
 	mpu.state.block_ack=false;
 	mpu.clock.tempo=mpu.clock.old_tempo=100;

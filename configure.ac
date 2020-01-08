@@ -413,13 +413,20 @@ else
 fi
 
 AH_TEMPLATE(C_SSHOT,[Define to 1 to enable screenshots, requires libpng])
+AC_ARG_ENABLE(screenshots,AC_HELP_STRING([--disable-screenshots],[Disable screenshots and movie recording]),,enable_screenshots=yes)
 AC_CHECK_HEADER(png.h,have_png_h=yes,)
 AC_CHECK_LIB(png, png_get_io_ptr, have_png_lib=yes, ,-lz)
-if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
-  LIBS="$LIBS -lpng -lz"
-  AC_DEFINE(C_SSHOT,1)
+AC_MSG_CHECKING([whether screenshots will be enabled])
+if test x$enable_screenshots = xyes; then 
+    if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
+    LIBS="$LIBS -lpng -lz"
+    AC_DEFINE(C_SSHOT,1)
+    AC_MSG_RESULT([yes])
+  else
+    AC_MSG_RESULT([no, can't find libpng.])
+  fi
 else
-  AC_MSG_WARN([Can't find libpng, screenshot support disabled])
+  AC_MSG_RESULT([no])
 fi
 
 AH_TEMPLATE(C_MODEM,[Define to 1 to enable internal modem support, requires SDL_net])
@@ -554,6 +561,9 @@ AH_TEMPLATE(C_HAVE_MPROTECT,[Define to 1 if you have the mprotect function])
 AC_CHECK_HEADER([sys/mman.h], [
 AC_CHECK_FUNC([mprotect],[AC_DEFINE(C_HAVE_MPROTECT,1)])
 ])
+
+dnl Check for realpath. Used on Linux
+AC_CHECK_FUNCS([realpath])
 
 dnl Setpriority
 AH_TEMPLATE(C_SET_PRIORITY,[Define to 1 if you have setpriority support])

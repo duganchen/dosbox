@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2018  The DOSBox Team
+ *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -11,9 +11,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 
@@ -21,6 +21,7 @@
 #include "cross.h"
 #include "support.h"
 #include <string>
+#include <limits.h>
 #include <stdlib.h>
 
 #ifdef WIN32
@@ -85,7 +86,7 @@ void Cross::CreatePlatformConfigDir(std::string& in) {
 	in += "\\DOSBox";
 	mkdir(in.c_str());
 #elif defined(MACOSX)
-	in = "~/Library/Preferences/";
+	in = "~/Library/Preferences";
 	ResolveHomedir(in);
 #else
 	//Don't create it. Assume it exists
@@ -155,6 +156,7 @@ dir_information* open_directory(const char* dirname) {
 }
 
 bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
+	if (!dirp) return false;
 	dirp->handle = FindFirstFile(dirp->base_path, &dirp->search_data);
 	if (INVALID_HANDLE_VALUE == dirp->handle) {
 		return false;
@@ -169,6 +171,7 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
 }
 
 bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
+	if (!dirp) return false;
 	int result = FindNextFile(dirp->handle, &dirp->search_data);
 	if (result==0) return false;
 
@@ -181,7 +184,7 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 }
 
 void close_directory(dir_information* dirp) {
-	if (dirp->handle != INVALID_HANDLE_VALUE) {
+	if (dirp && dirp->handle != INVALID_HANDLE_VALUE) {
 		FindClose(dirp->handle);
 		dirp->handle = INVALID_HANDLE_VALUE;
 	}
@@ -197,10 +200,12 @@ dir_information* open_directory(const char* dirname) {
 }
 
 bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
+	if (!dirp) return false;
 	return read_directory_next(dirp,entry_name,is_directory);
 }
 
 bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
+	if (!dirp) return false;
 	struct dirent* dentry = readdir(dirp->dir);
 	if (dentry==NULL) {
 		return false;
@@ -236,7 +241,64 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
 }
 
 void close_directory(dir_information* dirp) {
-	closedir(dirp->dir);
+	if (dirp) closedir(dirp->dir);
 }
 
 #endif
+
+FILE *fopen_wrap(const char *path, const char *mode) {
+#if defined(WIN32) || defined(OS2)
+	;
+#elif defined (MACOSX)
+	;
+#else  
+#if defined (HAVE_REALPATH)
+	char work[CROSS_LEN] = {0};
+	strncpy(work,path,CROSS_LEN-1);
+	char* last = strrchr(work,'/');
+	
+	if (last) {
+		if (last != work) {
+			*last = 0;
+			//If this compare fails, then we are dealing with files in / 
+			//Which is outside the scope, but test anyway. 
+			//However as realpath only works for exising files. The testing is 
+			//in that case not done against new files.
+		}
+		char* check = realpath(work,NULL);
+		if (check) {
+			if ( ( strlen(check) == 5 && strcmp(check,"/proc") == 0) || strncmp(check,"/proc/",6) == 0) {
+//				LOG_MSG("lst hit %s blocking!",path);
+				free(check);
+				return NULL;
+			}
+			free(check);
+		}
+	}
+
+#if 0
+//Lightweight version, but then existing files can still be read, which is not ideal	
+	if (strpbrk(mode,"aw+") != NULL) {
+		LOG_MSG("pbrk ok");
+		char* check = realpath(path,NULL);
+		//Will be null if file doesn't exist.... ENOENT
+		//TODO What about unlink /proc/self/mem and then create it ?
+		//Should be safe for what we want..
+		if (check) {
+			if (strncmp(check,"/proc/",6) == 0) {
+				free(check);
+				return NULL;
+			}
+			free(check);
+		}
+	}
+*/
+#endif //0 
+
+#endif //HAVE_REALPATH
+#endif
+
+	return fopen(path,mode);
+}
+
+

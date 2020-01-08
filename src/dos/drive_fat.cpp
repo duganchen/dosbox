@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2018  The DOSBox Team
+ *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -11,9 +11,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 
@@ -705,7 +705,7 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
 		imgDTA    = new DOS_DTA(imgDTAPtr);
 	}
 
-	diskfile = fopen(sysFilename, "rb+");
+	diskfile = fopen_wrap(sysFilename, "rb+");
 	if(!diskfile) {created_successfully = false;return;}
 	fseek(diskfile, 0L, SEEK_END);
 	filesize = (Bit32u)ftell(diskfile) / 1024L;
@@ -737,7 +737,7 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
 			}
 		}
 
-		if(m==4) LOG_MSG("No good partiton found in image.");
+		if(m==4) LOG_MSG("No good partition found in image.");
 
 		partSectOff = startSector;
 	} else {

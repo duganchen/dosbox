@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2018  The DOSBox Team
+ *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -11,9 +11,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 
@@ -159,16 +159,14 @@ CacheBlockDynRec * LinkBlocks(BlockReturn ret) {
 	// the last instruction was a control flow modifying instruction
 	Bitu temp_ip=SegPhys(cs)+reg_eip;
 	CodePageHandlerDynRec * temp_handler=(CodePageHandlerDynRec *)get_tlb_readhandler(temp_ip);
-	if (temp_handler->flags & PFLAG_HASCODE) {
+	if (temp_handler->flags & (cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16)) {
 		// see if the target is an already translated block
 		block=temp_handler->FindCacheBlock(temp_ip & 4095);
-		if (!block) return NULL;
-
-		// found it, link the current block to
-		cache.block.running->LinkTo(ret==BR_Link2,block);
-		return block;
+		if (block) { // found it, link the current block to
+			cache.block.running->LinkTo(ret==BR_Link2,block);
+		}
 	}
-	return NULL;
+	return block;
 }
 
 /*

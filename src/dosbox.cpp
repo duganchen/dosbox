@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2018  The DOSBox Team
+ *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -11,9 +11,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 
@@ -433,9 +433,9 @@ void DOSBOX_Init(void) {
 	Pint->SetMinMax(1,63);
 	Pint->Set_help(
 		"Amount of memory DOSBox has in megabytes.\n"
-		"  This value is best left at its default to avoid problems with some games,\n"
-		"  though few games might require a higher value.\n"
-		"  There is generally no speed advantage when raising this value.");
+		"This value is best left at its default to avoid problems with some games,\n"
+		"though few games might require a higher value.\n"
+		"There is generally no speed advantage when raising this value.");
 	secprop->AddInitFunction(&CALLBACK_Init);
 	secprop->AddInitFunction(&PIC_Init);//done
 	secprop->AddInitFunction(&PROGRAMS_Init);
@@ -578,10 +578,10 @@ void DOSBOX_Init(void) {
 
 	Pstring = secprop->Add_string("midiconfig",Property::Changeable::WhenIdle,"");
 	Pstring->Set_help("Special configuration options for the device driver. This is usually the id or part of the name of the device you want to use (find the id/name with mixer/listmidi).\n"
-	                  "  Or in the case of coreaudio, you can specify a soundfont here.\n"
-	                  "  When using a Roland MT-32 rev. 0 as midi output device, some games may require a delay in order to prevent 'buffer overflow' issues.\n"
-	                  "  In that case, add 'delaysysex', for example: midiconfig=2 delaysysex\n"
-	                  "  See the README/Manual for more details.");
+	                  "Or in the case of coreaudio, you can specify a soundfont here.\n"
+	                  "When using a Roland MT-32 rev. 0 as midi output device, some games may require a delay in order to prevent 'buffer overflow' issues.\n"
+	                  "In that case, add 'delaysysex', for example: midiconfig=2 delaysysex\n"
+	                  "See the README/Manual for more details.");
 
 #ifdef C_FLUIDSYNTH
 	const char *fluiddrivers[] = {"pulseaudio", "alsa", "oss", "coreaudio", "dsound", "portaudio", "sndman", "jack", "file", "default",0};
