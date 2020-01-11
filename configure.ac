@@ -466,6 +466,10 @@ else
    AC_MSG_RESULT(no)
 fi
 
+AC_CHECK_LIB(GLEW, glewInit, , AC_MSG_ERROR([GLEW not found]),[])
+AC_CHECK_HEADER([GL/glew.h],[],[AC_MSG_ERROR([You need to install the development files for GLEW. On Debian-style distros this is libglew-dev])])
+LIBS="$LIBS -lGLEW"
+
 AH_TEMPLATE(C_FLUIDSYNTH,[Define to 1 to enable fluidsynth MIDI synthesis])
 AC_CHECK_HEADER(fluidsynth.h,have_fluidsynth_h=yes,)
 AC_CHECK_LIB(fluidsynth, new_fluid_synth, have_fluidsynth_lib=yes,,)

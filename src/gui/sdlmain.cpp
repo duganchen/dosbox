@@ -56,7 +56,7 @@
 //#define DISABLE_JOYSTICK
 
 #if C_OPENGL
-#include "../libs/glew-2.0.0/glew.h"
+#include <GL/glew.h>
 #include "SDL_opengl.h"
 #endif //C_OPENGL
 
